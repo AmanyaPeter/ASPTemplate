@@ -11,7 +11,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
        : base(options)
     {
     }
-    public DbSet<ApplicationAuditLog> AuditLogs { get; set; }
+    public DbSet<Role> AuditLogs { get; set; }
 
 }
 
