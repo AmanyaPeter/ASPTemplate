@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notification Center - Bank of Uganda Innovation Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/css/site.css">
+<style>
+        body { font-family: 'Public Sans', sans-serif; background-color: #FEF7EF; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-dot {
+            box-shadow: 0 0 0 4px rgba(221, 144, 36, 0.1);
+        }
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #380001 0%, #5a0c08 100%);
+        }
+    </style>
+</head>
+<body class="text-on-background">
+<!-- Sidebar Navigation Shell -->
+<nav class="fixed left-0 top-0 h-screen flex flex-col p-md bg-primary-container shadow-md w-64 z-50 overflow-y-auto">
+<div class="flex flex-col items-center mb-xl">
+<img alt="Bank of Uganda Crest" class="w-12 h-12 object-contain bg-white rounded-full p-1 mb-sm" src="../BOU logo.png"/>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary-container text-center leading-tight">IMTS</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container opacity-70 ">Digital Vault of Ideas</p>
+</div>
+<div class="flex flex-col gap-xs flex-grow">
+<!-- Dashboard -->
+<a class="flex items-center gap-sm p-sm text-on-primary-fixed-variant opacity-80 font-label-md text-label-md hover:bg-on-primary-fixed-variant/20 transition-colors rounded-lg" href="staffdashboard.html">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<!-- My Ideas -->
+<a class="flex items-center gap-sm p-sm text-on-primary-fixed-variant opacity-80 font-label-md text-label-md hover:bg-on-primary-fixed-variant/20 transition-colors rounded-lg" href="MyIdeas.html">
+<span class="material-symbols-outlined">lightbulb</span>
+                My Ideas
+            </a>
+<!-- Submit New Idea -->
+<a class="flex items-center gap-sm p-sm text-on-primary-fixed-variant opacity-80 font-label-md text-label-md hover:bg-on-primary-fixed-variant/20 transition-colors rounded-lg" href="submitinnovationideaform.html">
+<span class="material-symbols-outlined">add_circle</span>
+                Submit New Idea
+            </a>
+<!-- Notifications (Active) -->
+<a class="flex items-center gap-sm p-sm bg-secondary-container text-on-secondary-container rounded-lg font-bold font-label-md text-label-md active:scale-95 duration-150 ease-in-out" href="notifications.html">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+                Notifications
+            </a>
+<!-- Settings -->
+<a class="flex items-center gap-sm p-sm text-on-primary-fixed-variant opacity-80 font-label-md text-label-md hover:bg-on-primary-fixed-variant/20 transition-colors rounded-lg" href="settings.html">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</div>
+<div class="mt-auto border-t border-[#DD9024]/20 pt-4 flex flex-col gap-2">
+<button onclick="window.location.href='submitinnovationideaform.html'" class="w-full bg-[#DD9024] text-black font-bold py-2.5 px-md rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">rocket_launch</span>
+<span>Submit Idea</span>
+</button>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-350 hover:bg-white/10 transition-all text-xs rounded-lg" href="support.html">
+<span class="material-symbols-outlined text-sm">help</span>
+Support
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-500/10 transition-all text-xs rounded-lg" href="../login.html">
+<span class="material-symbols-outlined text-sm">logout</span>
+Log Out
+</a>
+</div>
+</nav>
+<!-- Top App Bar -->
+<header class="flex justify-between items-center w-full px-gutter h-16 ml-64 max-w-[calc(100%-16rem)] fixed top-0 bg-surface border-b border-outline-variant z-40">
+<div class="flex items-center">
+<span class="font-title-lg text-title-lg font-bold text-primary">Innovation Management System</span>
+</div>
+<div class="flex items-center gap-md">
+<!-- Search Bar -->
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-full pl-10 pr-4 py-1.5 w-64 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none text-body-md" placeholder="Search notifications..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined text-primary hover:text-secondary transition-colors p-2 rounded-full hover:bg-surface-container">account_balance</button>
+<button onclick="window.location.href='support.html'" class="material-symbols-outlined text-primary hover:text-secondary transition-colors p-2 rounded-full hover:bg-surface-container">help_outline</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 rounded-full border-2 border-brand-gold bg-cover bg-center" data-alt="A professional headshot of a financial executive at the Bank of Uganda, looking confident and smiling slightly. The background is a blurred office environment with soft lighting, matching the corporate and authoritative aesthetic of a central bank." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCJ7KjjrkMDZCnH8l9IJGSUtdvUR6Crq1W1B_aECU2S5IFPWgDY2YEE-TsbhnhnT1qKTwe7NYxr7jwl5jHufrIP87OUVzgde58GtKrpO0QgH-Ygbm4-yJbzcg-BkmiIXMbXDnRKAunQvvHZ7zz29uQDHnMjETpVu_7hErUXobCQfLX0RWAGFmIVoowRc1VqcsCalF9WrksI7ay7L54_JKdU_YMeQ1Okvac_mAV5LTHBRHy7jewWNCn9VA')"></div>
+<div class="hidden xl:block">
+<p class="font-label-md text-label-md text-on-surface leading-none">Namaganda Rose</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Senior Analyst</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="max-w-[1280px] mx-auto px-gutter py-xl">
+<!-- Page Header Area -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-brand-maroon">Notification Center</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Stay updated with the latest activity across the digital vault.</p>
+</div>
+<button class="flex items-center gap-xs bg-brand-gold hover:bg-on-secondary-fixed-variant text-on-primary px-md py-sm rounded-lg font-bold shadow-sm transition-all transform active:scale-95">
+<span class="material-symbols-outlined text-body-md">done_all</span>
+                    Mark All as Read
+                </button>
+</div>
+<!-- Filter Bar -->
+<div class="flex items-center gap-sm mb-md overflow-x-auto pb-2 scrollbar-hide">
+<button class="px-md py-2 bg-brand-maroon text-on-primary rounded-full font-label-md text-label-md whitespace-nowrap">All Notifications</button>
+<button class="px-md py-2 bg-surface border border-outline-variant text-on-surface-variant hover:border-brand-gold hover:text-brand-gold transition-all rounded-full font-label-md text-label-md whitespace-nowrap">New Ideas</button>
+<button class="px-md py-2 bg-surface border border-outline-variant text-on-surface-variant hover:border-brand-gold hover:text-brand-gold transition-all rounded-full font-label-md text-label-md whitespace-nowrap">Status Changes</button>
+<button class="px-md py-2 bg-surface border border-outline-variant text-on-surface-variant hover:border-brand-gold hover:text-brand-gold transition-all rounded-full font-label-md text-label-md whitespace-nowrap">Comments</button>
+<button class="px-md py-2 bg-surface border border-outline-variant text-on-surface-variant hover:border-brand-gold hover:text-brand-gold transition-all rounded-full font-label-md text-label-md whitespace-nowrap">System Updates</button>
+</div>
+<!-- Notifications List -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<!-- Notification Item: Unread -->
+<div class="flex items-start gap-md p-md border-b border-outline-variant hover:bg-brand-cream/50 transition-colors group cursor-pointer relative">
+<div class="w-2 h-full absolute left-0 top-0 bg-brand-gold"></div>
+<div class="w-12 h-12 rounded-lg bg-secondary-container/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-brand-gold" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-md text-label-md text-brand-maroon">Idea Submission</span>
+<span class="w-2 h-2 rounded-full bg-brand-gold active-dot"></span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">New idea submitted: <span class="font-bold">"Mobile Micro-Lending Portal for Rural SMEs"</span> by Kato John.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 2 hours ago
+                        </p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button onclick="window.location.href='ideadetails.html'" class="text-brand-maroon font-bold text-label-md flex items-center gap-1 hover:underline">
+                            View Details
+                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Notification Item: Status Change -->
+<div class="flex items-start gap-md p-md border-b border-outline-variant hover:bg-brand-cream/50 transition-colors group cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-brand-gold">refresh</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-md text-label-md text-brand-maroon">Status Update</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">Your idea <span class="font-bold">"Blockchain-based Land Registry Integration"</span> moved to <span class="text-brand-gold font-bold">Feasibility Study</span> phase.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 5 hours ago
+                        </p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button onclick="window.location.href='ideadetails.html'" class="text-brand-maroon font-bold text-label-md flex items-center gap-1 hover:underline">
+                            View Roadmap
+                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Notification Item: Comment -->
+<div class="flex items-start gap-md p-md border-b border-outline-variant hover:bg-brand-cream/50 transition-colors group cursor-pointer relative">
+<div class="w-2 h-full absolute left-0 top-0 bg-brand-gold"></div>
+<div class="w-12 h-12 rounded-lg bg-secondary-container/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-brand-gold" style="font-variation-settings: 'FILL' 1;">chat</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-md text-label-md text-brand-maroon">New Comment</span>
+<span class="w-2 h-2 rounded-full bg-brand-gold active-dot"></span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug"><span class="font-bold">Director of Research</span> commented on your proposal: "This aligns perfectly with our 2025 digital strategy..."</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> Yesterday, 4:30 PM
+                        </p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-brand-maroon font-bold text-label-md flex items-center gap-1 hover:underline">
+                            Reply
+                            <span class="material-symbols-outlined text-[18px]">reply</span>
+</button>
+</div>
+</div>
+<!-- Notification Item: System Update -->
+<div class="flex items-start gap-md p-md border-b border-outline-variant hover:bg-brand-cream/50 transition-colors group cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-brand-maroon">security</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-md text-label-md text-brand-maroon">System Security</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">The Innovation Management System will undergo scheduled maintenance on <span class="font-bold">Saturday, Oct 26th</span> from 02:00 to 04:00 EAT.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 1 day ago
+                        </p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-brand-maroon font-bold text-label-md flex items-center gap-1 hover:underline">
+                            Read Policy
+                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Notification Item: Idea Approved -->
+<div class="flex items-start gap-md p-md border-b border-outline-variant hover:bg-brand-cream/50 transition-colors group cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-brand-gold" style="font-variation-settings: 'FILL' 1;">stars</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-md text-label-md text-brand-maroon">Recognition</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">Congratulations! Your idea <span class="font-bold">"E-Payment Gateway for Government Bonds"</span> has been selected for the <span class="text-brand-gold font-bold">Innovation Excellence Award</span>.</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 2 days ago
+                        </p>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-brand-maroon font-bold text-label-md flex items-center gap-1 hover:underline">
+                            View Certificate
+                            <span class="material-symbols-outlined text-[18px]">military_tech</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination Controls -->
+<div class="flex items-center justify-between mt-lg">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Showing 1 to 5 of 48 notifications</p>
+<div class="flex items-center gap-xs">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-brand-maroon text-on-primary font-bold">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors">3</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual FAB (Hidden on this screen as per instructions, but available for dashboard navigation) -->
+<div class="fixed bottom-margin right-margin md:hidden">
+<button class="bg-brand-gold text-on-primary-fixed w-14 h-14 rounded-full shadow-xl flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<script>
+        // Micro-interaction for notification items
+        document.querySelectorAll('.group').forEach(item => {
+            item.addEventListener('click', function() {
+                const unreadDot = this.querySelector('.active-dot');
+                const accentBorder = this.querySelector('.bg-brand-gold.absolute');
+                if (unreadDot) {
+                    unreadDot.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => unreadDot.remove(), 500);
+                }
+                if (accentBorder) {
+                    accentBorder.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => accentBorder.remove(), 500);
+                }
+            });
+        });
+
+        // Filter button toggle logic
+        const filterButtons = document.querySelectorAll('.filter-bar button');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('bg-brand-maroon', 'text-on-primary');
+                    b.classList.add('bg-surface', 'border', 'border-outline-variant', 'text-on-surface-variant');
+                });
+                btn.classList.add('bg-brand-maroon', 'text-on-primary');
+                btn.classList.remove('bg-surface', 'border', 'border-outline-variant', 'text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>
