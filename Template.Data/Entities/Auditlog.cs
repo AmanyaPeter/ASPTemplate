@@ -7,6 +7,8 @@ namespace Template.Data.Entities
         public int Id { get; set; }
         public string LogEntryId { get; set; } // AUD-YYYYMMDD-XXXXX
         public string UserId { get; set; }
+        public User User { get; set; }
+
         public string Username { get; set; } // Denormalized for performance
         public string EventType { get; set; } // Login, Logout, Create, Edit, Delete, View
         public string OperationPerformed { get; set; }
