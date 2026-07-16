@@ -57,4 +57,4 @@ public class InnovationIdea
 		public DateTime? UpdatedDate { get; set; }
 		public Guid? UpdatedBy { get; set; }
 		public byte[] RowVersion { get; set; }
-	}
+	}}

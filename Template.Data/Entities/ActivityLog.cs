@@ -1,4 +1,4 @@
-namespace ASPTemplate.Template.Data.Entities
+namespace Template.Data.Entities
 {
 public class ActivityLog
 	{
