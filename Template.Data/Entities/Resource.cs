@@ -1,24 +1,35 @@
 namespace Template.Data.Entities
 {
-    public class Resource
+    public class Resource : AuditableEntity
     {
         public int Id { get; set; }
-        public string ResourceTitle { get; set; }
-        public string Category { get; set; } // Innovation Strategy, Policy, Templates, etc.
+
+        public required string ResourceTitle { get; set; }
+
+        public ResourceCategory Category { get; set; }
+
         public string? Description { get; set; }
-        public string FileName { get; set; }
-        public string FilePath { get; set; }
+
+        public required string FileName { get; set; }
+
+        public required string FilePath { get; set; }
+
         public long FileSizeBytes { get; set; }
-        public string FileType { get; set; }
+
+        public required string FileType { get; set; }
+
         public string? MimeType { get; set; }
-        public string? Tags { get; set; } // Comma-separated keywords
-        public int DownloadCount { get; set; } = 0;
+
+        public string? Tags { get; set; }
+
+        public int DownloadCount { get; set; }
+
         public bool IsActive { get; set; } = true;
-        
-        // Audit Fields
+
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
-        public string UploadedBy { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public string? UpdatedBy { get; set; }
+
+        public Guid UploadedById { get; set; }
+
+        public ApplicationUser UploadedBy { get; set; }
     }
 }
