@@ -4,7 +4,7 @@ namespace Template.Data.Entities
     {
         public int Id { get; set; }
         public string UserId { get; set; }
-        public int? IdeaId { get; set; }
+        public Guid? IdeaId { get; set; }
         public string SurveyType { get; set; }
         public string ResponseData { get; set; } // JSON format
         

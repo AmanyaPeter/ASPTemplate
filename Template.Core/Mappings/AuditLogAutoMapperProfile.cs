@@ -14,7 +14,7 @@ namespace Template.Core.Mappings
     {
         public AuditLogAutoMapperProfile()
         {
-            CreateMap<ApplicationAuditLog, ApplicationAuditLogViewModel>().ReverseMap();
+            CreateMap<Role, ApplicationAuditLogViewModel>().ReverseMap();
         }
     }
 }
