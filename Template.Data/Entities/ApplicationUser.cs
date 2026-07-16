@@ -26,3 +26,4 @@ namespace Template.Data.Entities
 
   public ICollection<InnovationIdea> Ideas { get; set; } = new List<InnovationIdea>();
 }
+}

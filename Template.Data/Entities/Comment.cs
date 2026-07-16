@@ -1,3 +1,5 @@
+using Template.Common.AuditColumn;
+
 namespace Template.Data.Entities
 {
 
@@ -6,10 +8,10 @@ namespace Template.Data.Entities
         public Guid Id { get; set; }
 
         public Guid IdeaId { get; set; }
-        public InnovationIdea Idea { get; set; }
+        public required InnovationIdea Idea { get; set; }
 
         public Guid UserId { get; set; }
-        public ApplicationUser User { get; set; }
+        public required ApplicationUser User { get; set; }
 
         public required string CommentText { get; set; }
 

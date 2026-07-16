@@ -1,3 +1,5 @@
+using Template.Common.Enums;
+
 namespace Template.Data.Entities
 {
 public class Notification

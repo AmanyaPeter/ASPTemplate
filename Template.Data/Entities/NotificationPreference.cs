@@ -1,4 +1,7 @@
-  namespace Template.Data.Entities
+using Template.Common.AuditColumn;
+using Template.Common.Enums;
+
+namespace Template.Data.Entities
 {
     public class NotificationPreference : AuditableEntity
     {

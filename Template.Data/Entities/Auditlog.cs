@@ -1,4 +1,5 @@
 using Template.Common.AuditColumn;
+using Template.Common.Enums;
 
 namespace Template.Data.Entities
 {
@@ -9,7 +10,7 @@ namespace Template.Data.Entities
     public required string LogEntryId { get; set; }
 
     public Guid UserId { get; set; }              // or string if IdentityUser
-    public ApplicationUser User { get; set; }
+    public ApplicationUser User { get; set; }= null!;
 
     public required string Username { get; set; }
 

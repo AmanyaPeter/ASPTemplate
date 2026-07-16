@@ -1,3 +1,5 @@
+using Template.Common.AuditColumn;
+
 namespace Template.Data.Entities
 {
     public class Role : AuditableEntity

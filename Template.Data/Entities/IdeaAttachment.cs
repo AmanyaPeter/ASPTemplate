@@ -1,3 +1,5 @@
+using Template.Common.AuditColumn;
+
 namespace Template.Data.Entities
 {
     public class IdeaAttachment : AuditableEntity
@@ -5,7 +7,7 @@ namespace Template.Data.Entities
         public Guid Id { get; set; }
 
         public Guid IdeaId { get; set; }
-        public InnovationIdea Idea { get; set; }
+        public required InnovationIdea Idea { get; set; }
 
         public required string FileName { get; set; }
 
@@ -18,7 +20,7 @@ namespace Template.Data.Entities
         public required string MimeType { get; set; }
 
         public Guid UploadedById { get; set; }
-        public ApplicationUser UploadedBy { get; set; }
+        public required ApplicationUser UploadedBy { get; set; }
 
         public int DownloadCount { get; set; }
 

@@ -1,3 +1,6 @@
+using Template.Common.AuditColumn;
+using Template.Common.Enums;
+
 namespace Template.Data.Entities
 {
     public class Resource : AuditableEntity
@@ -30,6 +33,6 @@ namespace Template.Data.Entities
 
         public Guid UploadedById { get; set; }
 
-        public ApplicationUser UploadedBy { get; set; }
+        public required ApplicationUser UploadedBy { get; set; }
     }
 }
