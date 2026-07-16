@@ -19,8 +19,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<InnovationIdea> InnovationIdeas { get; set; }
     public DbSet<StageHistory> StageHistories { get; set; }
       
-    public DbSet<Permission> Permissions { get; set; }
-    public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<InnovationDraft> InnovationDrafts { get; set; }
     public DbSet<IdeaAttachment> IdeaAttachments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
