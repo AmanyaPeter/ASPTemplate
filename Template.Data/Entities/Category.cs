@@ -11,9 +11,9 @@ public class Category
     public int IdeasCount { get; set; }  // Denormalized for quick stats
     
     public DateTime CreatedDate { get; set; }
-    public Guid CreatedBy { get; set; }
+    public string CreatedBy { get; set; }
     public DateTime? UpdatedDate { get; set; }
-    public Guid? UpdatedBy { get; set; }
+    public string? UpdatedBy { get; set; }
     
     // Navigation
     //public virtual ICollection<InnovationIdea> Ideas { get; set; }

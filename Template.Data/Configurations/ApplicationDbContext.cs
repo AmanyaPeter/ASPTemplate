@@ -1,4 +1,4 @@
-﻿using Template.Data.Entities;
+using Template.Data.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
        : base(options)
     {
     }
-    public DbSet<Role> AuditLogs { get; set; }
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Comment> Comments { get; set; }
+    public DbSet<IdeaTimeline> IdeaTimelines { get; set; }
+    public DbSet<InnovationIdea> InnovationIdeas { get; set; }
+    public DbSet<StageHistory> StageHistories { get; set; }
       
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }

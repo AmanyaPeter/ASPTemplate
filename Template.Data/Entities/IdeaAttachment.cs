@@ -10,7 +10,7 @@ namespace Template.Data.Entities
 		public string FileType { get; set; }
 		public string MimeType { get; set; }
 		public DateTime UploadedDate { get; set; }
-		public Guid UploadedBy { get; set; }
+		public string UploadedBy { get; set; }
 		public int DownloadCount { get; set; }
 		public bool IsDeleted { get; set; }
 	}

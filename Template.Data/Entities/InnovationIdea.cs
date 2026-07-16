@@ -6,7 +6,7 @@ public class InnovationIdea
 		public string ReferenceNumber { get; set; }
 		public string SubmissionType { get; set; }
 		public DateTime SubmissionDate { get; set; }
-		public Guid SubmitterId { get; set; }
+		public string SubmitterId { get; set; }
 		public string TeamMembers { get; set; }
 		public string Title { get; set; }
 		public string SummaryDescription { get; set; }
@@ -35,7 +35,7 @@ public class InnovationIdea
  
 		public string CurrentStage { get; set; }
 		public string CurrentStatus { get; set; }
-		public Guid? AssignedReviewerId { get; set; }
+		public string? AssignedReviewerId { get; set; }
 		public DateTime? ReviewStartDate { get; set; }
 		public DateTime? ReviewEndDate { get; set; }
 		public DateTime? StageDeadlineDate { get; set; }
@@ -43,18 +43,18 @@ public class InnovationIdea
 		public bool IsOverdue { get; set; }
 		public DateTime? DecisionDate { get; set; }
 		public string DecisionReason { get; set; }
-		public Guid? DecisionMadeBy { get; set; }
+		public string? DecisionMadeBy { get; set; }
 		public bool IsLocked { get; set; }
 		public DateTime? LockedAt { get; set; }
-		public Guid? LockedBy { get; set; }
+		public string? LockedBy { get; set; }
 		public bool IsRetracted { get; set; }
 		public DateTime? RetractedAt { get; set; }
 		public bool IsDeleted { get; set; }
 		public DateTime? DeletedAt { get; set; }
-		public Guid? DeletedBy { get; set; }
+		public string? DeletedBy { get; set; }
 		public DateTime CreatedDate { get; set; }
-		public Guid CreatedBy { get; set; }
+		public string CreatedBy { get; set; }
 		public DateTime? UpdatedDate { get; set; }
-		public Guid? UpdatedBy { get; set; }
+		public string? UpdatedBy { get; set; }
 		public byte[] RowVersion { get; set; }
 	}}

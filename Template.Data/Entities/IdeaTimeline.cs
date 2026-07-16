@@ -11,9 +11,9 @@ namespace Template.Data.Entities
 		public bool IsOverdue { get; set; }
 		public int DaysOverdue { get; set; }
 		public string OverrideReason { get; set; }
-		public Guid? ApprovedBy { get; set; }
+		public string? ApprovedBy { get; set; }
 		public DateTime? ApprovedAt { get; set; }
 		public DateTime CreatedDate { get; set; }
-		public Guid CreatedBy { get; set; }
+		public string CreatedBy { get; set; }
 	}
 }
