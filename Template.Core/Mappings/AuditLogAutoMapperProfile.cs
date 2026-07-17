@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Template.Core.Models.AuditLogs;
 using Template.Core.Models.Permissions;
 using Template.Data.Entities;
@@ -14,7 +14,7 @@ namespace Template.Core.Mappings
     {
         public AuditLogAutoMapperProfile()
         {
-            CreateMap<Role, ApplicationAuditLogViewModel>().ReverseMap();
+            CreateMap<AuditLog, ApplicationAuditLogViewModel>().ReverseMap();
         }
     }
 }

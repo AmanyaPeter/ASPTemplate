@@ -12,26 +12,35 @@
 			<h3 class="card-title">Audit Logs</h3>
 		</div>
 		<div class="card-body">
-			@* <div class="table-responsive"> *@
 			<table id="logs" class="table table-hover table-striped align-middle w-100">
 				<thead>
 					<tr>
-						<th>UserName</th>
-						<th>Machine Name</th>
-						<th>Message</th>
-						<th>Level</th>
+						<th>Username</th>
+						<th>Event Type</th>
+						<th>Operation</th>
+						<th>Source IP</th>
+						<th>Affected Entity</th>
+						<th>Status</th>
 						<th>Timestamp</th>
+						<th>Action Details</th>
 					</tr>
 				</thead>
 				<tbody>
 					@foreach (var log in Model)
 					{
 						<tr>
-							<td>@log.UserName</td>
-							<td>@log.MachineName</td>
-							<td>@log.Message</td>
-							<td>@log.Level</td>
-							<td>@Html.DisplayFor(modelItem => log.TimeStamp)</td>
+							<td>@log.Username</td>
+							<td>@log.EventType</td>
+							<td>@log.OperationPerformed</td>
+							<td>@log.SourceIP</td>
+							<td>@log.AffectedEntityType (@log.AffectedEntityId)</td>
+							<td>
+								<span class="badge @(log.Status == Template.Common.Enums.AuditStatus.Success ? "bg-success" : "bg-danger")">
+									@log.Status
+								</span>
+							</td>
+							<td>@log.CreatedDate.ToString("dd MMM yyyy HH:mm:ss")</td>
+							<td>@log.ActionDetails</td>
 						</tr>
 					}
 				</tbody>
@@ -45,12 +54,6 @@
 		</div>
 	}
 </div>
-@* @if (!Model.Any()) *@
-@* { *@
-@*     <div class="card-footer text-center text-muted"> *@
-@*         <i class="ti ti-mood-empty me-2"></i> No logs found *@
-@*     </div> *@
-@* } *@
 
 @section Scripts {
 	<script src="https://cdn.datatables.net/buttons/3.2.2/js/dataTables.buttons.js"></script>
