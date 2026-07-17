@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Template.Core.Repository.Roles
 {
-    public interface IRoleRepository: IRepositoryBase<IdentityRole, string>
+public interface IRoleRepository: IRepositoryBase<IdentityRole<Guid>, string>
     {
         //Task<bool> Create(ApplicationRole model);
         Task<bool> Delete(string id);

@@ -51,7 +51,7 @@ namespace Template.Web.Controllers
                 return View(model);
             }
 
-            var role = _mapper.Map<IdentityRole>(model);
+            var role = _mapper.Map<IdentityRole<Guid>>(model);
 
             var result = await _roleRepo.Create(role);
 
@@ -79,7 +79,7 @@ namespace Template.Web.Controllers
 
             var viewModel = new RoleListViewModel
             {
-                Id = role.Id,
+                Id = role.Id.ToString(),
                 Name = role.Name
             }; // fix
 

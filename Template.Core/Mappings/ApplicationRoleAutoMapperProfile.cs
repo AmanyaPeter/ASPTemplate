@@ -14,11 +14,11 @@ namespace Template.Core.Mappings
     {
         public ApplicationRoleAutoMapperProfile()
         {
-            CreateMap<IdentityRole, ApplicationRoleViewModel>().ReverseMap();
-            //CreateMap<IdentityRole, RoleListViewModel>();
+            CreateMap<IdentityRole<Guid>, ApplicationRoleViewModel>().ReverseMap();
+            //CreateMap<IdentityRole<Guid>, RoleListViewModel>();
 
-            //CreateMap<RoleListViewModel, IdentityRole>().ReverseMap();
-            CreateMap<RoleListViewModel, IdentityRole>()
+            //CreateMap<RoleListViewModel, IdentityRole<Guid>>().ReverseMap();
+            CreateMap<RoleListViewModel, IdentityRole<Guid>>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? Guid.NewGuid().ToString()))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
                 .ForMember(dest => dest.NormalizedName, opt => opt.Ignore())

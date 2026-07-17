@@ -60,8 +60,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 //builder.Services.AddAuthorizationBuilder();
 builder.Services.AddAuthorization();
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddRoles<IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+    .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddApiEndpoints();
 
@@ -147,7 +147,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 //app.UseMiddleware<LastActivityMiddleware>();
-app.MapIdentityApi<IdentityUser>();
+app.MapIdentityApi<ApplicationUser>();
 
 app.MapControllerRoute(
     name: "default",
