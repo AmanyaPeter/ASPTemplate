@@ -4,6 +4,6 @@ namespace Template.Core.Repository.AuditLogs
 {
     public interface IAuditLogRepository
     {
-        Task<ICollection<Role>> FindAll();
+        Task<ICollection<AuditLog>> FindAll();
     }
 }

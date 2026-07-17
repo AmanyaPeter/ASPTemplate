@@ -11,7 +11,7 @@ namespace Template.Web.Models.Idea
     public class IdeaDetailViewModel
     {
         public Guid Id { get; set; }
-        public required string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Submitter { get; set; }
         public DateTime SubmissionDate { get; set; }
         public string? SummaryDescription { get; set; }

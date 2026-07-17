@@ -47,7 +47,7 @@ namespace Template.Core.Repository.Accounts
         //update user
         public async Task<bool> Update(ApplicationUser model)
         {
-            var user = await _userManager.FindByIdAsync(model.Id);
+            var user = await _userManager.FindByIdAsync(model.Id.ToString());
 
             if (user != null)
             {
@@ -109,7 +109,11 @@ namespace Template.Core.Repository.Accounts
 
         public async Task<bool> IsExists(string id)
         {
-            return await _userManager.Users.AnyAsync(r => r.Id == id);
+            if (Guid.TryParse(id, out var guidId))
+            {
+                return await _userManager.Users.AnyAsync(r => r.Id == guidId);
+            }
+            return false;
         }
         public async Task<ApplicationUser> FindByName(string username)
         {

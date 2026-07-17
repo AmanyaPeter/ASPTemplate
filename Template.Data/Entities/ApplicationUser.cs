@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using static Template.Common.Static.SystemPermissions;
 
 namespace Template.Data.Entities
@@ -6,6 +6,14 @@ namespace Template.Data.Entities
   public class ApplicationUser : IdentityUser<Guid>
 {
     public string FullName { get; set; }
+    public string FirstName { get; set; }
+    public string? MiddleName { get; set; }
+    public string LastName { get; set; }
+    public string Title { get; set; }
+    public DateTime? DisableDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public bool IsLoggedIn { get; set; }
+    public DateTime LastActivity { get; set; }
     public string BusinessUnit { get; set; }
     public string JobTitle { get; set; }
     public string Station { get; set; }

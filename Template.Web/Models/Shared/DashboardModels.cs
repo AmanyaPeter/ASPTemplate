@@ -1,3 +1,5 @@
+using Template.Web.Models.Notification;
+
 namespace Template.Web.Models.Shared
 {
     public class AdminDashboardModel
