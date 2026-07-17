@@ -1,0 +1,76 @@
+Using the gap report you just produced, fix the views in Template.Web/Views
+to properly match their entities. Work through the views in the priority
+order you listed. For each view, make only the fixes below — do not touch
+anything flagged as needing a design decision (see excluded list at the
+bottom).
+
+FIX THESE CATEGORIES:
+
+1. Missing fields — add a properly bound form element (input/textarea/select
+   as appropriate to the property's type) for any entity property that has
+   no corresponding UI element, using the existing view's markup/CSS
+   conventions (match surrounding class names, layout, and Tag Helper style
+   already used in that file — don't introduce a new pattern).
+
+2. Dead fields — remove or comment out (with a `@* TODO: remove — no
+   matching entity property *@` note, not silently delete) any form field
+   that doesn't map to a real entity property, unless it's clearly a
+   client-side-only UI element (e.g. a "confirm password" field, a wizard
+   step indicator). If you're not sure whether a field is dead or just
+   ahead of the entity model, leave it and flag it in your summary instead
+   of guessing.
+
+3. Enum dropdowns — for every enum-backed property, replace free-text
+   inputs with a <select> using asp-for and asp-items bound to the enum,
+   e.g.:
+     <select asp-for="Category" asp-items="Html.GetEnumSelectList<ResourceCategory>()"></select>
+   Apply this to: Resource.Category (ResourceCategory), Report.Type
+   (ReportType), Report.Format (ReportFormat), Report.Frequency
+   (ScheduleFrequency), Notification.Type (NotificationType), AuditLog
+   fields (read-only display, not a dropdown — audit logs aren't edited).
+
+4. Validation attributes — for every entity property marked `required` or
+   non-nullable, ensure the corresponding view has asp-validation-for
+   wired up and, where the view has its own model/DTO (not binding
+   directly to the entity), that the DTO's validation attributes
+   ([Required], [MaxLength], etc.) match the entity's constraints. Do not
+   bind views directly to entity classes if they currently use a
+   ViewModel/DTO — add or update the DTO instead, and note in your summary
+   if a view is binding directly to an entity (that's worth flagging even
+   if you fix it, since it's generally bad practice for anything with
+   [Authorize]-gated write actions).
+
+5. Type mismatches — fix input types to match the underlying property
+   type (date pickers for DateTime, number inputs with correct
+   min/max/step for numeric fields, hidden fields for IDs that shouldn't
+   be user-editable).
+
+DO NOT TOUCH (excluded — needs a design decision first, not a code fix):
+- Any rendering of InnovationIdea.CurrentStage or CurrentStatus — these
+  are still typed as string pending the Stage/Status unification decision.
+  Leave these exactly as they are, even if they look like they "should" be
+  a dropdown — the enum they'd bind to isn't finalized yet.
+- Any Business Unit, Station, Strategic Alignment, or team-member fields
+  in Submit.cshtml — these reference entities that don't exist yet
+  (BusinessUnit, Station, IdeaTeamMember, StrategicObjective). Leave the
+  markup as-is; do not delete it, do not try to wire it to anything.
+- Anything involving the Role entity vs. ASP.NET Identity's IdentityRole
+  — Role/*.cshtml stays as-is until that conflict is resolved.
+
+PROCESS:
+- Work one view at a time, in the priority order from the gap report.
+- After each view, run a build (`dotnet build`) to confirm nothing broke
+  before moving to the next one — do not batch all fixes and build once
+  at the end.
+- After each view, give a short summary: what you changed, what you left
+  alone and why, and anything you weren't confident enough to fix
+  automatically.
+- If a fix requires a new ViewModel/DTO class that doesn't exist yet,
+  create it in Template.Web/Models (or the existing ViewModels folder if
+  one exists — check first) rather than binding the view directly to the
+  entity.
+
+Stop and ask before doing anything not covered by the categories above —
+in particular, do not rename controller actions, do not change routing,
+and do not modify anything in Template.Data/Entities or Template.Common
+even if you think an entity itself has a bug. This pass is view-side only.

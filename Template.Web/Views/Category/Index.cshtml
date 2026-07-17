@@ -47,8 +47,8 @@
                     <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search categories..." asp-for="SearchTerm">
                     <select class="ims-staff-form-control" asp-for="StatusFilter" style="min-width:150px;">
                         <option value="">All Statuses</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
                     </select>
                     <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" asp-page-handler="ApplyFilters">Apply</button>
                 </div>
@@ -78,8 +78,8 @@
                                     <td>@category.Description</td>
                                     <td>@category.CreatedDate.ToString("dd MMM yyyy")</td>
                                     <td>
-                                        <span class="ims-staff-badge @(category.Status == "Active" ? "ims-staff-badge-success" : "ims-staff-badge-inactive")">
-                                            @category.Status
+                                        <span class="ims-staff-badge @(category.IsActive ? "ims-staff-badge-success" : "ims-staff-badge-inactive")">
+                                            @(category.IsActive ? "Active" : "Inactive")
                                         </span>
                                     </td>
                                     <td>
@@ -138,11 +138,10 @@
                         <span asp-validation-for="Category.Description" class="ims-staff-validation-feedback"></span>
                     </div>
                     <div class="ims-staff-form-group">
-                        <label for="CategoryStatus">Status</label>
-                        <select id="CategoryStatus" class="ims-staff-form-control" asp-for="Category.Status">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
+                        <label for="CategoryIsActive">Active</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="CategoryIsActive" asp-for="Category.IsActive" role="switch" style="width:3em;height:1.5em;">
+                        </div>
                     </div>
                 </div>
                 <div class="ims-staff-modal-footer">
@@ -184,7 +183,7 @@
                 document.getElementById('categoryId').value = '';
                 document.getElementById('CategoryName').value = '';
                 document.getElementById('CategoryDescription').value = '';
-                document.getElementById('CategoryStatus').value = 'Active';
+                document.getElementById('CategoryIsActive').checked = true;
                 document.getElementById('categorySaveBtn').textContent = 'Save Category';
                 document.getElementById('categoryModal').style.display = 'block';
                 document.body.style.overflow = 'hidden';

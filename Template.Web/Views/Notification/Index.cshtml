@@ -5,46 +5,10 @@
 }
 
 <body class="ims-staff-dashboard">
-    <!-- Sidebar -->
-    <aside class="ims-staff-sidebar">
-        <div class="ims-staff-sidebar-brand">
-            <div class="ims-staff-brand-logo"><img src="~/boulogo.ico" alt="BOU"></div>
-            <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
-        </div>
-        <ul class="ims-staff-sidebar-nav">
-            <li><a asp-page="/Staff/Dashboard"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
-            <li><a asp-page="/Staff/SubmitIdea"><span class="ims-staff-nav-icon"><i data-lucide="plus" style="width:18px;height:18px;"></i></span><span>Submit Idea</span></a></li>
-            <li><a asp-page="/Staff/MyIdeas"><span class="ims-staff-nav-icon"><i data-lucide="list" style="width:18px;height:18px;"></i></span><span>My Ideas</span></a></li>
-            <li><a asp-page="/Staff/Notifications" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="mail" style="width:18px;height:18px;"></i></span><span>Notifications</span></a></li>
-            <li><a asp-page="/Staff/Resources"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Resources</span></a></li>
-            <li><a asp-page="/Staff/Profile"><span class="ims-staff-nav-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span><span>Profile</span></a></li>
-        </ul>
-        <div class="ims-staff-sidebar-footer">BOU Innovation System v1.0</div>
-    </aside>
 
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
-        <!-- Header -->
-        <header class="ims-staff-top-header">
-            <div class="ims-staff-header-left">
-                <h2>Notifications</h2>
-            </div>
-            <div class="ims-staff-header-right">
-                <button class="ims-staff-notification-btn">
-                    <i data-lucide="bell" style="width:20px;height:20px;"></i>
-                    @if (Model.UnreadCount > 0)
-                    {
-                        <span class="ims-staff-badge-dot"></span>
-                    }
-                </button>
-                <div class="ims-staff-user-profile">
-                    <div class="ims-staff-avatar">@User.Identity.Name?.Substring(0, 1)</div>
-                    <span class="ims-staff-user-name">@User.Identity.Name</span>
-                </div>
-                <button class="ims-staff-logout-btn">Log out</button>
-            </div>
-        </header>
-
+      
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
             <div class="ims-staff-card">
@@ -70,16 +34,16 @@
                 {
                     @foreach (var notification in Model.Notifications)
                     {
-                        <div class="ims-staff-notification-item @(notification.IsUnread ? "ims-staff-notification-unread" : "")">
+                        <div class="ims-staff-notification-item @(!notification.IsRead ? "ims-staff-notification-unread" : "")">
                             <div class="ims-staff-notif-icon">
                                 <i data-lucide="@notification.Icon" style="width:18px;height:18px;"></i>
                             </div>
                             <div class="ims-staff-notif-content">
-                                <div class="ims-staff-notif-title">@notification.Title</div>
-                                <div class="ims-staff-notif-desc">@notification.Description</div>
+                                <div class="ims-staff-notif-title">@notification.Subject</div>
+                                <div class="ims-staff-notif-desc">@notification.Message</div>
                                 <div class="ims-staff-notif-time">@notification.TimeAgo</div>
                             </div>
-                            @if (notification.IsUnread)
+                            @if (!notification.IsRead)
                             {
                                 <div class="ims-staff-unread-dot"></div>
                                 <button class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary ims-staff-mark-read-btn" asp-page-handler="MarkRead" asp-route-id="@notification.Id">Mark as read</button>

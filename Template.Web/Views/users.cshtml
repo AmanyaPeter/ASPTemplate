@@ -5,38 +5,10 @@
 }
 
 <body class="ims-staff-dashboard">
-    <!-- Sidebar -->
-    <aside class="ims-staff-sidebar">
-        <div class="ims-staff-sidebar-brand">
-            <div class="ims-staff-brand-logo"><img src="~/boulogo.ico" alt="BOU"></div>
-            <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
-        </div>
-        <ul class="ims-staff-sidebar-nav">
-            <li><a asp-page="/Admin/Dashboard"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
-            <li><a asp-page="/Admin/Users" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span><span>Users</span></a></li>
-            <li><a asp-page="/Admin/ActivityLog"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Activity Log</span></a></li>
-            <li><a asp-page="/Admin/Profile"><span class="ims-staff-nav-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span><span>Profile</span></a></li>
-        </ul>
-        <div class="ims-staff-sidebar-footer">BOU Innovation System v1.0</div>
-    </aside>
-
+    
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
-        <!-- Header -->
-        <header class="ims-staff-top-header">
-            <div class="ims-staff-header-left">
-                <h2>User Management</h2>
-            </div>
-            <div class="ims-staff-header-right">
-                <button class="ims-staff-notification-btn"><i data-lucide="bell" style="width:20px;height:20px;"></i><span class="ims-staff-badge-dot"></span></button>
-                <div class="ims-staff-user-profile">
-                    <div class="ims-staff-avatar">@User.Identity.Name?.Substring(0, 1)</div>
-                    <span class="ims-staff-user-name">@User.Identity.Name</span>
-                </div>
-                <button class="ims-staff-logout-btn">Log out</button>
-            </div>
-        </header>
-
+    
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
             <!-- Toolbar -->

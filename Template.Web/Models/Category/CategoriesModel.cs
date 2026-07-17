@@ -1,0 +1,29 @@
+namespace Template.Web.Models.Category
+{
+    public class CategoriesModel
+    {
+        public string? SearchTerm { get; set; }
+        public string? StatusFilter { get; set; }
+        public List<CategoryItemViewModel> Categories { get; set; } = new();
+        public CategoryFormViewModel Category { get; set; } = new();
+        public int TotalPages { get; set; }
+        public int CurrentPage { get; set; }
+    }
+
+    public class CategoryItemViewModel
+    {
+        public int Id { get; set; }
+        public required string Name { get; set; }
+        public string? Description { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    public class CategoryFormViewModel
+    {
+        public int Id { get; set; }
+        public required string Name { get; set; }
+        public required string Description { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+}
