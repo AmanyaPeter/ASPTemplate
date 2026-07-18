@@ -5,6 +5,7 @@ namespace Template.Data.Entities
 {
     public class NotificationPreference : AuditableEntity
     {
+        public Guid Id { get; set; }
         public Guid UserId { get; set; }
         public ApplicationUser User { get; set; }
 
