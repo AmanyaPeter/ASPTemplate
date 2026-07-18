@@ -9,9 +9,9 @@ namespace Template.Core.Repository.Permissions
 {
     public class AuditLogRepository (ApplicationDbContext _db, ILogger<ApplicationPermissionRepository> _logger) : IAuditLogRepository
     {
-        public async Task<ICollection<Role>> FindAll()
+        public async Task<ICollection<AuditLog>> FindAll()
         {
-            return await _db.AuditLogs.AsNoTracking().OrderByDescending(x => x.TimeStamp).ToListAsync();
+            return await _db.AuditLogs.AsNoTracking().OrderByDescending(x => x.CreatedDate).ToListAsync();
         }
 
     }

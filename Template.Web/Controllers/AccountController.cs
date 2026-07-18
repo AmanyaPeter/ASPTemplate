@@ -228,7 +228,7 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
             {
                 model.Roles.Add(new ApplicationUserRoleViewModel
                 {
-                    RoleId = role.Id,
+                    RoleId = role.Id.ToString(),
                     RoleName = role.Name ?? "(Unnamed Role)",
                     IsSelected = !string.IsNullOrEmpty(role.Name) && userRoleSet.Contains(role.Name)
                 });

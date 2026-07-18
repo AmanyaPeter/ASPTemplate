@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 namespace Template.Core.Repository.ApplicationPermission;
 public class ApplicationPermissionRepository(
     //ApplicationDbContext _db
-    RoleManager<IdentityRole> _roleManager
+    RoleManager<IdentityRole<Guid>> _roleManager
     , UserManager<ApplicationUser> _userManager
     //, ILogger<ApplicationPermissionRepository> _logger
     ) : IApplicationPermissionRepository

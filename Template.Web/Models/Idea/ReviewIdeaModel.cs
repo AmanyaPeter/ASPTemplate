@@ -13,7 +13,7 @@ namespace Template.Web.Models.Idea
     public class IdeaReviewViewModel
     {
         public Guid Id { get; set; }
-        public required string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Submitter { get; set; }
         public string? SubmitterBusinessUnit { get; set; }
         public DateTime SubmissionDate { get; set; }

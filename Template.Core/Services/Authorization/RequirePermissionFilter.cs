@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace Template.Core.Services.Authorization;
 public class RequirePermissionFilter(string _permission
     //, IApplicationPermissionRepository _permissionRepo
-    , RoleManager<IdentityRole> _roleManager
+    , RoleManager<IdentityRole<Guid>> _roleManager
     , UserManager<ApplicationUser> _userManager) : IAsyncAuthorizationFilter
 {
 

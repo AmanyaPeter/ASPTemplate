@@ -60,10 +60,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 //builder.Services.AddAuthorizationBuilder();
 builder.Services.AddAuthorization();
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddApiEndpoints();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+    .AddRoles<IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddApiEndpoints();
 
 
 // Register the LDAP authentication service with the interface
@@ -87,11 +87,11 @@ CoreServicesRegistration.AddCoreServices(builder.Services);
 
 builder.Services.AddBreadcrumbs(Assembly.GetExecutingAssembly(), options =>
 {
-	options.TagName = "nav";
-	options.TagClasses = "";
-	options.OlClasses = "breadcrumb";
-	options.LiClasses = "breadcrumb-item";
-	options.ActiveLiClasses = "breadcrumb-item active";
+    options.TagName = "nav";
+    options.TagClasses = "";
+    options.OlClasses = "breadcrumb";
+    options.LiClasses = "breadcrumb-item";
+    options.ActiveLiClasses = "breadcrumb-item active";
 });
 
 var app = builder.Build();
@@ -147,7 +147,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 //app.UseMiddleware<LastActivityMiddleware>();
-app.MapIdentityApi<IdentityUser>();
+app.MapIdentityApi<ApplicationUser>();
 
 app.MapControllerRoute(
     name: "default",
@@ -156,3 +156,4 @@ app.MapControllerRoute(
 app.MapBlazorHub();
 
 app.Run();
+
