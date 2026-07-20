@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 namespace Template.Core.Repository.ApplicationPermissions;
 public class ApplicationPermissionHandler(
     UserManager<ApplicationUser> _userManager
-    , RoleManager<IdentityRole<Guid>> _roleManager) : AuthorizationHandler<ApplicationPermissionRequirement>
+    , RoleManager<IdentityRole> _roleManager) : AuthorizationHandler<ApplicationPermissionRequirement>
 {
 
     protected override async Task HandleRequirementAsync(

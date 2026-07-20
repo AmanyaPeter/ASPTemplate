@@ -12,8 +12,8 @@ using Template.Data.Configurations;
 namespace Template.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260718190028_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260720095329_InnovationDb")]
+    partial class InnovationDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -639,9 +639,6 @@ namespace Template.Data.Migrations
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CategoryId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -726,8 +723,6 @@ namespace Template.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("CategoryId1");
 
                     b.HasIndex("SubmitterId");
 
@@ -1380,13 +1375,9 @@ namespace Template.Data.Migrations
             modelBuilder.Entity("Template.Data.Entities.InnovationIdea", b =>
                 {
                     b.HasOne("Template.Data.Entities.Category", "Category")
-                        .WithMany()
+                        .WithMany("Ideas")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Template.Data.Entities.Category", null)
-                        .WithMany("Ideas")
-                        .HasForeignKey("CategoryId1");
 
                     b.HasOne("Template.Data.Entities.ApplicationUser", "Submitter")
                         .WithMany("Ideas")

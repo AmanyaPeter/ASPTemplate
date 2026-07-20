@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Template.Data.Configurations;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
        : base(options)
@@ -54,6 +54,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             .OnDelete(DeleteBehavior.NoAction);
     }
 
+    public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Comment> Comments { get; set; }
@@ -70,4 +71,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<TimelineSetting> TimelineSettings { get; set; }
     public DbSet<UserSession> UserSessions { get; set; }
+
+
 }

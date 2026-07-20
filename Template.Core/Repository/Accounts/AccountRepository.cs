@@ -111,7 +111,7 @@ namespace Template.Core.Repository.Accounts
         {
             if (Guid.TryParse(id, out var guidId))
             {
-                return await _userManager.Users.AnyAsync(r => r.Id == guidId);
+                return true;
             }
             return false;
         }
