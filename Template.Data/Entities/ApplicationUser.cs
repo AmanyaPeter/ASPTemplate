@@ -3,7 +3,7 @@ using static Template.Common.Static.SystemPermissions;
 
 namespace Template.Data.Entities
 {
-  public class ApplicationUser : IdentityUser
+  public class ApplicationUser : IdentityUser<Guid>
 {
     public string FullName { get; set; }
     public string FirstName { get; set; }

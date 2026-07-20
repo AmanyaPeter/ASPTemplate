@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Template.Data.Configurations;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
        : base(options)

@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Template.Core.Repository.Accounts;
 using Template.Core.Repository.ApplicationPermission;
 using Template.Core.Repository.ApplicationPermissions;
@@ -20,7 +20,7 @@ public static class CoreServicesRegistration
 	{ 
         // Register HttpContextAccessor if not already registered
 		services.AddHttpContextAccessor();
-		services.AddAutoMapper(Assembly.GetExecutingAssembly());
+		services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IAuthService, AuthService>();

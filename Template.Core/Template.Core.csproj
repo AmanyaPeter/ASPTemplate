@@ -13,8 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Microsoft.Build" Version="17.9.5" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.8.0" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="8.0.0" />
   </ItemGroup>
