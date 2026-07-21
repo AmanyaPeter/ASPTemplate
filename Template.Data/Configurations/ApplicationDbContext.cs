@@ -52,8 +52,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             .WithMany()
             .HasForeignKey(a => a.UploadedById)
             .OnDelete(DeleteBehavior.NoAction);
-    }
-
+        
+         builder.Entity<ApplicationUser>()
+            .HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.SetNull);
+    } 
+    public DbSet<Role> Roles { get; set; }
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Category> Categories { get; set; }

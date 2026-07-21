@@ -5,8 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
       <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
-      <RuntimeIdentifier>win-x64</RuntimeIdentifier> <!-- Optional, needed if self-contained -->
-  </PropertyGroup>
+     </PropertyGroup>
 
   <ItemGroup>
     <None Include="wwwroot\webfont\fonts\tabler-icons-filled.woff2" />

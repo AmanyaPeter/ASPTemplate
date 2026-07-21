@@ -20,6 +20,9 @@ namespace Template.Data.Entities
     public string AgeBracket { get; set; }
     public string Gender { get; set; }
 
+    public int? RoleId { get; set; }
+    public Role? Role { get; set; }
+
     public bool IsActive { get; set; } = true;
     public string? LockReason { get; set; }
 
