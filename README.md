@@ -304,14 +304,14 @@ Optional but recommended:
 ### Step 2: Clone or Open the Project
 
 ```bash
-git clone <repository-url> C:\Users\Ozai\Desktop\ASPTemplate
+git clone https://github.com/AmanyaPeter/ASPTemplate.git
 ```
 
 Or open the existing project folder:
 
 1. Launch **Visual Studio 2022**
 2. Click **File → Open → Project/Solution**
-3. Navigate to `C:\Users\Ozai\Desktop\ASPTemplate\Template.sln`
+3. Navigate to `..\ASPTemplate\Template.sln`
 4. Click **Open**
 
 ### Step 3: Verify Dependencies
