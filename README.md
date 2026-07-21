@@ -1,725 +1,598 @@
-# ASPTemplate — Innovation Management Tracking System (IMTS)
+# Innovation Management Tracking System (IMTS)
 
-A modular, enterprise-grade web application built with **ASP.NET Core 8 (MVC + Blazor Server)** using **Clean Architecture** principles. The system manages innovation ideas, tracking their lifecycle from submission through review, approval, budgeting, and implementation — complete with auditing, role-based access control, Active Directory integration, and reporting.
+IMTS is an ASP.NET Core 8 application for submitting, reviewing, tracking, and reporting innovation ideas. The repository is being repaired from the data layer upward. This document describes the current architecture, the changes made from the former arrangement, and how to run and test each feature without assuming unfinished screens are functional.
 
----
+> **Current status:** the solution builds with zero errors using .NET 8 when MSBuild is run with one worker (`-m:1`). The Data project builds with zero warnings. Core and Web still have nullable/code-quality warnings. Account, role, and audit-log infrastructure exists; most innovation-management screens still require controllers and services.
 
-## Table of Contents
+## Contents
 
-1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-   - [Solution Structure](#solution-structure)
-   - [Layer Dependencies](#layer-dependencies)
-   - [Technology Stack](#technology-stack)
-3. [Detailed Layer Breakdown](#detailed-layer-breakdown)
-   - [Template.Common](#templatecommon)
-   - [Template.Data](#templatedata)
-   - [Template.Core](#templatecore)
-   - [Template.Web](#templateweb)
-4. [Key Features](#key-features)
-5. [Prerequisites](#prerequisites)
-6. [Environment Setup — Visual Studio 2022](#environment-setup--visual-studio-2022)
-7. [Environment Setup — VS Code](#environment-setup--vs-code)
-8. [Running the Application](#running-the-application)
-9. [Database Migrations](#database-migrations)
-10. [Authentication & Authorization](#authentication--authorization)
-11. [Logging](#logging)
-12. [Project Conventions](#project-conventions)
-13. [Troubleshooting](#troubleshooting)
-
----
-
-## Project Overview
-
-This application is an **Innovation Management Tracking System** that allows employees to submit, review, and manage innovation ideas within an organization. It supports:
-
-- Idea submission, drafting, and stage-based lifecycle tracking
-- Category-based classification of ideas
-- Commenting and attachments on ideas
-- Role-based access control (IT Support, Budget Officer, Budget Holder, Budget Admin, etc.)
-- Active Directory / LDAP authentication
-- Comprehensive audit logging
-- Notification and notification preferences
-- Report generation with multiple formats
-- Resource management
-- Survey response collection
-- Timeline and stage history tracking
-
----
+- [Architecture](#architecture)
+- [Request and data flow](#request-and-data-flow)
+- [What changed](#what-changed)
+- [Current feature status](#current-feature-status)
+- [Prerequisites](#prerequisites)
+- [Configuration](#configuration)
+- [Database setup](#database-setup)
+- [Build and run](#build-and-run)
+- [Feature-by-feature testing](#feature-by-feature-testing)
+- [Automated verification](#automated-verification)
+- [Migration workflow](#migration-workflow)
+- [Troubleshooting](#troubleshooting)
+- [Rules for future development](#rules-for-future-development)
 
 ## Architecture
 
-The solution follows **Clean Architecture** (also known as Onion Architecture), which enforces separation of concerns by organizing code into four distinct layers. Dependencies flow **inward**: the outer layers depend on inner layers, never the reverse.
+The solution uses four projects. Dependencies point toward the shared/domain layers:
 
-### Solution Structure
-
-```
-ASPTemplate/
-├── Template.sln                          # Solution file
-│
-├── Template.Common/                       # Innermost layer
-│   ├── AuditColumns/                      # Auditable entity interfaces
-│   ├── enums/                             # Shared enumerations
-│   └── Static/                            # Constants, role names, permissions
-│
-├── Template.Data/                         # Data / Persistence layer
-│   ├── Configurations/                    # EF Core DbContext
-│   ├── Entities/                          # Domain entity classes
-│   ├── Migrations/                        # EF Core migrations
-│   └── DbInitializer.cs                   # Seed data initializer
-│
-├── Template.Core/                         # Business logic layer
-│   ├── Mappings/                          # AutoMapper profiles
-│   ├── Models/                            # DTOs and view models
-│   ├── Repository/                        # Repository implementations
-│   │   ├── Accounts/
-│   │   ├── ApplicationPermissions/
-│   │   ├── Auditable/
-│   │   ├── AuditLogs/
-│   │   ├── Common/                        # Base repository interface
-│   │   ├── Ifs/
-│   │   └── Roles/
-│   ├── Services/                          # Application services
-│   │   ├── AdAuthentication/              # LDAP / AD auth service
-│   │   └── Authorization/                 # Permission-based auth
-│   └── TagHelpers/                        # Custom Razor Tag Helpers
-│
-└── Template.Web/                          # Presentation layer
-    ├── Components/                        # Blazor Server components
-    │   └── Shared/                        # Breadcrumb, Profile, Toast
-    ├── Controllers/                       # MVC controllers
-    ├── Middleware/                        # HTTP pipeline middleware
-    ├── Models/                            # UI-specific models
-    ├── Views/                             # Razor views
-    ├── wwwroot/                           # Static assets (CSS, JS, fonts)
-    ├── Program.cs                         # Application entry point
-    ├── appsettings.json                   # Configuration
-    └── nlog.config                        # NLog logging configuration
+```text
+Template.Web
+    |
+    v
+Template.Core
+    |
+    v
+Template.Data
+    |
+    v
+Template.Common
 ```
 
-### Layer Dependencies
+### `Template.Common`
 
+Contains types shared by all other layers:
+
+- Audit base classes and interfaces
+- Workflow enums such as `IdeaStage` and `IdeaStatus`
+- Notification, report, scheduling, and resource enums
+- Permission and role-name constants
+
+This project must not reference Data, Core, or Web.
+
+### `Template.Data`
+
+Owns persistence and the domain entities:
+
+- `ApplicationDbContext`
+- ASP.NET Identity user storage
+- Innovation ideas, drafts, categories, comments, and attachments
+- Timeline and stage-history records
+- Notifications and preferences
+- Reports, resources, surveys, settings, and sessions
+- EF Core migrations and reference-data seeding
+
+Important design rules:
+
+- ASP.NET Identity is the only role system.
+- Workflow stage and status are enums stored as readable strings.
+- `InnovationIdea.RowVersion` is a SQL Server row-version token.
+- Delete behavior is explicit so business and audit records are not accidentally cascaded.
+- Column limits and unique business keys are configured centrally in `ApplicationDbContext`.
+
+### `Template.Core`
+
+Contains application behavior that can be called by Web:
+
+- Account and role repositories
+- Permission-policy provider and authorization handler
+- Active Directory authentication
+- Audit interceptor
+- Mapping profiles and application/view models shared with Web
+
+Controllers should be thin. Business rules, workflow transitions, and reusable queries belong in Core services.
+
+### `Template.Web`
+
+Contains the presentation and application startup:
+
+- MVC controllers and Razor views
+- Web-only form/view models
+- Middleware and view components
+- CSS, JavaScript, fonts, and images
+- Authentication cookies, routing, logging, Swagger, and dependency injection
+
+The application currently uses MVC controller routing. Existing `asp-page` and `asp-page-handler` markup is legacy/incomplete and will be replaced with `asp-controller` and `asp-action` as each feature receives a controller.
+
+## Request and data flow
+
+The intended flow for a write operation is:
+
+```text
+Browser form
+  -> MVC controller validates the form DTO
+  -> Core application service enforces business rules
+  -> ApplicationDbContext persists the entity
+  -> AuditSaveChangesInterceptor fills audit columns
+  -> Controller redirects to a GET action
+  -> Razor view renders a read model
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Template.Web                          │
-│   (ASP.NET Core MVC + Blazor Server, Controllers,       │
-│    Views, Components, Middleware)                       │
-│                                                         │
-│   Depends on: Template.Core                             │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                    Template.Core                          │
-│   (Business Logic, Services, Repositories, AutoMapper)  │
-│                                                         │
-│   Depends on: Template.Data                             │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                    Template.Data                          │
-│   (EF Core DbContext, Entities, Migrations, Seeding)    │
-│                                                         │
-│   Depends on: Template.Common                           │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                  Template.Common                          │
-│   (Shared Enums, Constants, Auditable Interfaces)       │
-│   No dependencies on other project layers               │
-└─────────────────────────────────────────────────────────┘
-```
 
-### Technology Stack
+Do not bind write actions directly to EF entities. Use a dedicated form model with validation attributes, then map only allowed fields.
 
-| Category                | Technology                                                      |
-|------------------------|-----------------------------------------------------------------|
-| **Runtime**            | .NET 8                                                          |
-| **Web Framework**      | ASP.NET Core MVC + Blazor Server                                |
-| **ORM**                | Entity Framework Core 8 (SQL Server provider)                   |
-| **Database**           | SQL Server (LocalDB for development)                            |
-| **Authentication**     | Cookie Authentication + Active Directory / LDAP                 |
-| **Authorization**      | Custom permission-based policy provider & handler               |
-| **Object Mapping**     | AutoMapper 16                                                   |
-| **Logging**            | NLog (file + database targets)                                  |
-| **API Documentation**  | Swashbuckle / Swagger UI (non-development environments)         |
-| **UI Components**      | Blazor Bootstrap, SmartBreadcrumbs                              |
-| **Data Access**        | Dapper (in addition to EF Core)                                 |
-| **Identity**           | ASP.NET Core Identity with `IdentityUser<Guid>`                 |
+## What changed
 
----
+### Former arrangement versus current arrangement
 
-## Detailed Layer Breakdown
+| Area | Former arrangement | Current arrangement | Reason |
+|---|---|---|---|
+| Roles | Identity roles plus a second integer `Role` entity and `ApplicationUser.RoleId` | Identity roles and `AspNetUserRoles` only | Prevent two role sources from disagreeing |
+| DbContext roles | Custom `DbSet<Role> Roles` hid Identity's inherited `Roles` | Hidden property and custom entity removed | Removes compiler warning and authorization ambiguity |
+| Idea workflow | `CurrentStage` and `CurrentStatus` were unrestricted strings | `IdeaStage` and `IdeaStatus` enums stored as names | Prevents invalid states and keeps database values readable |
+| Timeline stage | Both `StageId` and `IdeaStage Stage` | Only `IdeaStage Stage` | Removes duplicated state |
+| Concurrency | Ordinary `varbinary(max)` called `RowVersion` | Real SQL Server `rowversion` | Detects simultaneous reviewer updates |
+| Entity constraints | Most strings became `nvarchar(max)`; few unique indexes | Explicit lengths and unique keys | Improves validation, indexing, and schema quality |
+| Relationships | Only some relationships had delete behavior | Important relationships are explicitly configured | Prevents cascade-path errors and accidental record loss |
+| Database startup | `EnsureCreatedAsync()` bypassed migration history | `MigrateAsync()` applies versioned migrations | Supports controlled upgrades |
+| Administrator seed | Source contained `admin` / `Admin@123` | Predictable administrator seed removed | Removes a critical credential vulnerability |
+| LDAP login | Password validation returned `true` unconditionally | `PrincipalContext.ValidateCredentials` is called | Restores actual password verification |
+| LDAP settings | Server and directory container hard-coded in `Program.cs` | Values come from configuration | Supports environments without source edits |
+| DbContext DI | Context factory plus two direct registrations | One audited DbContext registration | Avoids registrations overriding one another |
+| Auditing | Interceptor existed but was not attached | Interceptor is attached to the active DbContext | Audit columns are populated consistently |
+| Session | 365-day session with a 15-minute cookie | Both use a 15-minute security window | Avoids stale session state |
+| Error detail | Detailed Blazor errors enabled everywhere | Enabled only in Development | Prevents information leakage |
+| Build dependencies | Core and Web referenced `Microsoft.Build` 17.9.5 | Application-level references removed | Avoids SDK/MSBuild conflicts |
+| Nullable analysis | Disabled in Core | Enabled | Exposes unsafe null handling for gradual repair |
+| Configuration example | README described an untracked file only | `appsettings.example.json` is checked in | Gives new developers a safe starting point |
 
-### Template.Common
+### Corrective migration
 
-The innermost layer with **zero dependencies** on other projects. Contains shared artifacts used across all layers.
+`20260721081558_NormalizeDomainModel` performs the schema transition. It:
 
-| Directory / File            | Description                                                                 |
-|-----------------------------|-----------------------------------------------------------------------------|
-| `enums/`                    | Shared enumerations: `AuditEventType`, `AuditStatus`, `DigestFrequency`, `IdeaStage`, `IdeaStatus`, `NotificationType`, `ReportFormat`, `ReportType`, `ResourceCategory`, `ScheduleFrequency` |
-| `Static/Constants.cs`       | Application-wide constant values                                            |
-| `Static/RoleConstants.cs`   | Role name constants: `IT Support`, `Budget Officer`, `Budget Holder`, `Budget Admin`, `Budget Admin Viewer` |
-| `Static/SystemPermissions.cs` | System permission definitions                                              |
-| `Static/Types.cs`           | Shared type definitions                                                     |
-| `AuditColumns/`             | `IAuditableEntity` interface and `AuditableEntity` base class for automatic audit tracking |
+- Drops the obsolete custom role table and `AspNetUsers.RoleId`
+- Removes the redundant timeline `StageId`
+- Creates a real row-version column
+- Converts enum-backed integer columns into readable enum names
+- Applies string limits and unique indexes
+- Changes the idea submitter relationship to restricted deletion
 
-### Template.Data
+Review and back up a database before applying this migration because role cleanup and the row-version replacement are intentionally destructive.
 
-The persistence layer. Defines domain entities, the EF Core `DbContext`, database migrations, and seed data.
+## Current feature status
 
-| Directory / File                    | Description                                                                 |
-|-------------------------------------|-----------------------------------------------------------------------------|
-| `Configurations/ApplicationDbContext.cs` | Main `DbContext` extending `IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>` with all `DbSet<>` properties |
-| `Entities/ApplicationUser.cs`       | Custom user entity extending `IdentityUser<Guid>` with a `RoleId` FK        |
-| `Entities/Role.cs`                  | Custom role entity (separate from `IdentityRole`) with user navigation      |
-| `Entities/AuditLog.cs`              | Audit log entries                                                          |
-| `Entities/Category.cs`              | Idea categories                                                             |
-| `Entities/Comment.cs`               | Comments on ideas                                                           |
-| `Entities/IdeaAttachment.cs`        | File attachments for ideas                                                  |
-| `Entities/IdeaTimeline.cs`          | Timeline events for ideas                                                   |
-| `Entities/InnovationDraft.cs`       | Draft/saved ideas                                                           |
-| `Entities/InnovationIdea.cs`        | Core innovation idea entity                                                 |
-| `Entities/Notification.cs`          | User notifications                                                          |
-| `Entities/NotificationPreference.cs`| User notification preferences                                               |
-| `Entities/Report.cs`                | Generated reports                                                           |
-| `Entities/Resource.cs`              | Tracked resources                                                           |
-| `Entities/StageHistory.cs`          | History of idea stage transitions                                           |
-| `Entities/SurveyResponse.cs`        | Survey/questionnaire responses                                              |
-| `Entities/SystemSetting.cs`         | Application settings                                                        |
-| `Entities/TimelineSetting.cs`       | Configuration for timeline behavior                                         |
-| `Entities/UserSession.cs`           | Active user session tracking                                                |
-| `Migrations/`                       | EF Core migrations for schema evolution                                     |
-| `DbInitializer.cs`                  | Seeds initial data (roles, admin users, etc.) into the database             |
-
-### Template.Core
-
-The business logic layer. Contains services, repositories, AutoMapper profiles, and custom authorization.
-
-| Directory / File                              | Description                                                                 |
-|-----------------------------------------------|-----------------------------------------------------------------------------|
-| `CoreServicesRegistration.cs`                 | DI registration extension — registers all core services, repositories, AutoMapper, authorization handlers |
-| `Repository/Common/IRepositoryBase.cs`         | Generic repository interface: `FindAll`, `FindById`, `Create`, `Update`, `IsExists`, `Save` |
-| `Repository/Common/RepositoryResult.cs`        | Standardized result wrapper for repository operations                       |
-| `Repository/Common/LoadSyncResult.cs`          | Result model for data sync operations                                       |
-| `Repository/Accounts/`                         | Account-related repository and services (e.g., `IAccountRepository`, `IAuthService`, `AuthService`) |
-| `Repository/ApplicationPermissions/`           | Permission repository, authorization handler, and policy provider          |
-| `Repository/Auditable/`                        | `AuditSaveChangesInterceptor` — EF Core interceptor for automatic audit logging |
-| `Repository/AuditLogs/`                        | Audit log read/query repository                                            |
-| `Repository/Roles/`                            | Role management repository                                                  |
-| `Repository/Ifs/`                              | Integration with external/financial systems (Oracle DB via Dapper)          |
-| `Services/AdAuthentication/`                   | `IAdAuthenticationService` / `AdAuthenticationService` — LDAP authentication against Active Directory |
-| `Services/Authorization/`                      | Custom authorization infrastructure (permission-based policy provider and handler) |
-| `Mappings/`                                    | AutoMapper profiles: `AccountAutoMapperProfile`, `ApplicationRoleAutoMapperProfile`, `AuditLogAutoMapperProfile` |
-| `Models/`                                      | View models / DTOs: Account, AuditLogs, Permissions, Profile, Roles, `ErrorViewModel` |
-| `TagHelpers/`                                  | `PermissionTagHelper` — conditionally renders content based on user permissions; `TestTagHelper` |
-
-### Template.Web
-
-The presentation layer. ASP.NET Core MVC with Blazor Server integration.
-
-| Directory / File                | Description                                                                 |
-|---------------------------------|-----------------------------------------------------------------------------|
-| `Program.cs`                    | Application entry point. Configures services, middleware pipeline, authentication, session, Blazor, Swagger, NLog, breadcrumbs |
-| `appsettings.json`              | Configuration — connection string (`IMTSDb` on LocalDB)                     |
-| `nlog.config`                   | NLog configuration for file and database logging targets                     |
-| `Controllers/`                  | MVC controllers                                                             |
-| `Views/`                        | Razor views (e.g., Shared `_Layoutmain.cshtml`)                             |
-| `Components/Shared/`            | Blazor Server components: `BreadcrumbViewComponent`, `ProfileViewComponent`, `ToastMessages` |
-| `Middleware/`                   | Custom HTTP middleware (e.g., `LastActivityMiddleware`)                     |
-| `Models/`                       | UI-specific view models                                                      |
-| `wwwroot/`                      | Static assets (CSS, JS, fonts, images)                                      |
-| `Properties/`                   | Launch profiles, IIS settings                                               |
-| `.config/`                      | Additional configuration files                                              |
-
-**Key `Program.cs` pipeline order:**
-
-1. NLog logging setup
-2. Controllers with Views + Blazor Server
-3. Cookie authentication (`LoginPath = /Account/Login`)
-4. Distributed memory cache + session (365-day timeout)
-5. EF Core `ApplicationDbContext` (SQL Server)
-6. ASP.NET Core Identity with `IdentityUser<Guid>`
-7. LDAP `AdAuthenticationService` (singleton)
-8. DataServicesRegistration + CoreServicesRegistration
-9. SmartBreadcrumbs
-10. Database seeding via `DbInitializer.SeedAsync`
-11. Middleware: Swagger (non-dev), Exception Handling (non-dev), HSTS, Response Caching, Static Files (7-day cache), HTTPS Redirection, Routing, Session, Authentication, Authorization
-12. MapIdentityApi, MapControllerRoute, MapBlazorHub
-
----
-
-## Key Features
-
-- **Innovation Idea Management** — Full lifecycle: draft → submit → review → approve → implement
-- **Stage-Based Workflow** — Ideas progress through defined stages with history tracking
-- **Role-Based Access Control** — Granular permissions per role (IT Support, Budget Officer, Budget Holder, Budget Admin)
-- **Active Directory Integration** — Authenticate users against corporate LDAP directory
-- **Audit Logging** — Automatic tracking of entity changes via EF Core interceptor
-- **Notifications** — In-app notifications with configurable preferences
-- **Reporting** — Report generation with multiple format options
-- **File Attachments** — Upload and manage attachments on ideas
-- **Category Management** — Classify ideas into categories
-- **Timeline Tracking** — Visual timeline of idea progression
-- **Survey Support** — Collect feedback via survey responses
-- **Blazor Server Dashboard** — Interactive components for enhanced UX
-- **Breadcrumb Navigation** — Smart hierarchical navigation via SmartBreadcrumbs
-- **Comprehensive Logging** — NLog with file and database targets
-
----
+| Feature | Status | Notes |
+|---|---|---|
+| Login/logout | Backend present | Requires Windows-hosted AD connectivity and a pre-provisioned application user |
+| User accounts | Partially implemented | List/create/update/role assignment exist; validation and warning cleanup remain |
+| Identity roles | Implemented | Create/edit/list and permission claims exist |
+| Audit-log list | Read path implemented | Audit coverage must still be extended to every business action |
+| Home/UI kit/privacy | Implemented as static pages | Dashboard data is not connected |
+| Categories | UI prototype | Controller returns no model and has no CRUD service |
+| Idea submission/drafts | UI prototype | No controller, service, or persistence workflow |
+| My Ideas/details | UI prototype | No controller/query implementation |
+| Review workflow | UI prototype | No assignment or transition service |
+| Comments/attachments | Entities and UI only | No secure upload/download or comment actions |
+| Notifications | Entity and UI prototype | No delivery/read-state service |
+| Resources | Entity and UI prototype | No upload/download controller |
+| Reports | Entity and UI prototype | No generation/export service |
+| Dashboards | Static/prototype | View models exist but are not populated |
+| Settings/timelines/surveys | Data entities only | No application or presentation layer |
 
 ## Prerequisites
 
-Ensure the following are installed on your **Windows** machine:
+1. .NET 8 SDK
+2. SQL Server 2019 or newer, SQL Server Express, or LocalDB
+3. EF Core 8 CLI tool
+4. Access to the configured Active Directory domain for login testing
+5. Windows hosting for `System.DirectoryServices.AccountManagement`
 
-| Requirement               | Version / Notes                                                |
-|---------------------------|----------------------------------------------------------------|
-| **Windows OS**            | Windows 10 or Windows 11 (Windows Server also supported)       |
-| **.NET 8 SDK**            | [Download .NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) |
-| **SQL Server**            | LocalDB (installed with Visual Studio) or SQL Server Express/Developer |
-| **Visual Studio 2022**    | (Recommended) Community, Professional, or Enterprise edition   |
-| **OR**                    |                                                                |
-| **VS Code**               | Latest version with C# Dev Kit extension                       |
-
-Optional but recommended:
-- **SQL Server Management Studio (SSMS)** — For database management
-- **Git** — For version control
-
----
-
-## Environment Setup — Visual Studio 2022
-
-### Step 1: Install Visual Studio 2022
-
-1. Download from [visualstudio.microsoft.com](https://visualstudio.microsoft.com/vs/)
-2. Run the installer and select the following workloads:
-   - **ASP.NET and web development**
-   - **.NET desktop development** (optional, if needed)
-   - **Data storage and processing** (includes SQL Server LocalDB)
-3. In the **Individual components** tab, ensure these are selected:
-   - .NET 8 SDK
-   - SQL Server LocalDB
-   - Entity Framework 6 tools (optional)
-4. Complete installation and restart your machine.
-
-### Step 2: Clone or Open the Project
+Check the SDK:
 
 ```bash
-git clone https://github.com/AmanyaPeter/ASPTemplate.git
+dotnet --version
 ```
 
-Or open the existing project folder:
+Install EF tooling if needed:
 
-1. Launch **Visual Studio 2022**
-2. Click **File → Open → Project/Solution**
-3. Navigate to `..\ASPTemplate\Template.sln`
-4. Click **Open**
+```bash
+dotnet tool install --global dotnet-ef --version 8.*
+```
 
-### Step 3: Verify Dependencies
+> LocalDB and the current AD library are Windows-specific. On Linux, use a reachable SQL Server connection. The application can compile on Linux, but AD login cannot be exercised with `PrincipalContext` there.
 
-Once the solution loads:
+## Configuration
 
-1. **Right-click** the solution in **Solution Explorer** → **Restore NuGet Packages**
-2. Wait for package restore to complete (check Output window → "NuGet Package Manager")
+Copy the example file:
 
-### Step 4: Configure the Database Connection
+```bash
+cp Template.Web/appsettings.example.json Template.Web/appsettings.json
+```
 
-Open `Template.Web/appsettings.json`:
+`appsettings.json` is intentionally ignored by Git. Set these values:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=IMTSDb;Trusted_Connection=True;TrustServerCertificate=True"
+    "DefaultConnection": "YOUR SQL SERVER CONNECTION STRING"
   },
-  "Logging": { "LogLevel": { "Default": "Information" } }
+  "Authentication": {
+    "Ldap": {
+      "Server": "YOUR-DOMAIN-CONTROLLER",
+      "Container": "DC=example,DC=org"
+    }
+  }
 }
 ```
 
-This uses **SQL Server LocalDB** which is included with Visual Studio. If you have a different SQL Server instance, update the `Server` value accordingly.
+For deployed environments, prefer environment variables or a secret store:
 
-### Step 5: Apply Database Migrations
-
-**Option A — Using Package Manager Console (PMC):**
-
-1. **Tools → NuGet Package Manager → Package Manager Console**
-2. Set **Default project** to `Template.Data`
-3. Run:
-```powershell
-Update-Database
+```text
+ConnectionStrings__DefaultConnection
+Authentication__Ldap__Server
+Authentication__Ldap__Container
 ```
 
-**Option B — Using .NET CLI (if PMC is unavailable):**
+Never commit passwords, production connection strings, LDAP service credentials, or certificates.
+
+### First administrator
+
+The insecure hard-coded administrator was removed. A database now seeds role names only. Until a dedicated bootstrap command is implemented, an administrator must be provisioned through an approved deployment process using ASP.NET Identity's `UserManager<ApplicationUser>` and assigned the `Admin` role. Do not restore the former `Admin@123` seed.
+
+## Database setup
+
+Back up an existing database before applying the normalization migration.
+
+List migrations:
 
 ```bash
-dotnet ef database update --project Template.Data --startup-project Template.Web
+dotnet ef migrations list \
+  --project Template.Data \
+  --startup-project Template.Web
 ```
 
-This will create the `IMTSDb` database and apply all migrations.
-
-### Step 6: Build and Run
-
-1. Press **Ctrl+Shift+B** to build the solution (or **Build → Build Solution**)
-2. Press **F5** to run with debugging, or **Ctrl+F5** to run without debugging
-3. The application will:
-   - Launch in your default browser
-   - Seed the database with initial roles and data (via `DbInitializer.SeedAsync`)
-   - Redirect to the login page
-
-### Step 7: Set as Startup Project (if needed)
-
-If you encounter a "No startup project configured" error:
-
-1. In **Solution Explorer**, **right-click** `Template.Web`
-2. Select **Set as Startup Project**
-
----
-
-## Environment Setup — VS Code
-
-### Step 1: Install VS Code and Extensions
-
-1. Download VS Code from [code.visualstudio.com](https://code.visualstudio.com/)
-2. Install the following extensions:
-   - **C# Dev Kit** (ms-dotnettools.csdevkit) — includes C#, .NET debugging, project management
-   - **C# Extensions** (jchannon.csharpextensions) — for creating classes, interfaces, etc.
-   - **MSBuild project tools** (tintoy.msbuild-project-tools) — for .csproj editing
-   - **SQL Server (mssql)** — optional, for database management
-   - **NuGet Gallery** — optional, for package management
-
-### Step 2: Install .NET 8 SDK
-
-Download and install from [dotnet.microsoft.com/download/dotnet/8.0](https://dotnet.microsoft.com/download/dotnet/8.0).
-
-Verify installation:
+Apply migrations:
 
 ```bash
-dotnet --version
-# Expected output: 8.0.xxx
+dotnet ef database update \
+  --project Template.Data \
+  --startup-project Template.Web
 ```
 
-### Step 3: Clone or Open the Project
+The application also calls `MigrateAsync()` during startup. Running the command explicitly is preferred in controlled deployments because migration failure is detected before application traffic is switched over.
+
+## Build and run
+
+Restore packages:
 
 ```bash
-git clone <repository-url> C:\Users\Ozai\Desktop\ASPTemplate
+dotnet restore Template.sln
 ```
 
-Or:
+Build the solution:
 
-1. **File → Open Folder** → Select `C:\Users\Ozai\Desktop\ASPTemplate`
-2. When prompted, click **Yes** to trust the authors (if applicable)
-
-### Step 4: Install SQL Server (if not already installed)
-
-If you don't have SQL Server installed:
-
-**Option A — Install LocalDB (recommended for development):**
-
-1. Download [SQL Server Express with LocalDB](https://go.microsoft.com/fwlink/?linkid=866662)
-2. Run the installer and select **LocalDB** installation
-3. Verify LocalDB is running:
 ```bash
-sqllocaldb info
-# Should show "MSSQLLocalDB" in the list
+dotnet build Template.sln -m:1 --no-restore
 ```
 
-**Option B — Use SQL Server Express or Developer Edition** (free from Microsoft).
+`-m:1` is currently required in the audited environment because parallel MSBuild project-reference discovery can fail without reporting an error. This should be investigated in CI rather than silently removed.
 
-### Step 5: Restore NuGet Packages
-
-```bash
-dotnet restore
-```
-
-### Step 6: Apply Database Migrations
+Run the application:
 
 ```bash
-dotnet ef database update --project Template.Data --startup-project Template.Web
-```
-
-If you get a "dotnet-ef not found" error, install the EF Core tools:
-
-```bash
-dotnet tool install --global dotnet-ef
-```
-
-Then retry the `database update` command.
-
-### Step 7: Build and Run
-
-```bash
-dotnet build
 dotnet run --project Template.Web
 ```
 
-The application will be available at:
-- HTTP: `http://localhost:5000` (or another port shown in terminal output)
-- HTTPS: `https://localhost:5001`
-
-### Step 8: Configure VS Code Launch Settings
-
-For a better debugging experience, create a `.vscode/launch.json` file:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch Web",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build",
-      "program": "${workspaceFolder}/Template.Web/bin/Debug/net8.0/Template.Web.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Template.Web",
-      "stopAtEntry": false,
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Template.Web/Views"
-      }
-    }
-  ]
-}
-```
-
-And a `.vscode/tasks.json` file for the build task:
-
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "build",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/Template.Web/Template.Web.csproj",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
-    }
-  ]
-}
-```
-
----
-
-## Running the Application
-
-### Using Visual Studio
-
-1. **Set `Template.Web` as the startup project**
-2. Press **F5** (Debug) or **Ctrl+F5** (Without Debug)
-3. The browser opens automatically to the application URL
-
-### Using VS Code
+Or use hot reload:
 
 ```bash
-# Terminal 1: Run the application
-dotnet run --project Template.Web
-
-# Or with hot reload (for development)
-dotnet watch run --project Template.Web
+dotnet watch --project Template.Web run
 ```
 
-### Using .NET CLI directly
+Development URLs from `launchSettings.json` are:
+
+- `https://localhost:7254`
+- `http://localhost:5104`
+
+Swagger is available at `/swagger` outside Development under the current middleware configuration. Swagger currently documents mapped Identity API endpoints, not the MVC UI.
+
+## Feature-by-feature testing
+
+Use a disposable test database. For every write test, verify both the visible result and the database/audit side effects.
+
+### 1. Startup and migrations
+
+1. Point `DefaultConnection` to an empty test database.
+2. Run `dotnet ef database update`.
+3. Start the Web project.
+4. Confirm tables, including Identity and innovation tables, are created.
+5. Confirm roles `Admin`, `Staff`, and `InnovationTeam` exist.
+6. Confirm there is no custom `Roles` table and no `AspNetUsers.RoleId` column.
+
+Expected: startup completes without creating a predictable administrator.
+
+### 2. Authentication
+
+Prerequisites: a Windows host connected to the AD domain and an application user matching an AD username.
+
+1. Open `/Account/Login`.
+2. Submit the correct username with an incorrect password.
+3. Confirm login is rejected.
+4. Submit valid AD credentials.
+5. Confirm the Identity cookie is issued and the user reaches `/Home/Index`.
+6. Wait longer than the configured idle period and confirm re-authentication is required.
+7. Use logout and confirm the cookie and session are cleared.
+
+Security assertion: an incorrect password must never authenticate. If LDAP is unavailable, login must fail closed.
+
+### 3. Account administration
+
+1. Sign in with `AccountController Index` permission.
+2. Open `/Account` and confirm application users are listed.
+3. With create permission, open `/Account/Create`.
+4. Enter an AD username that does not exist and confirm validation fails.
+5. Enter a valid, unprovisioned AD username and confirm the user is created.
+6. Attempt the same username again and confirm duplicates are rejected.
+7. Update active/end-date fields and confirm changes persist.
+8. Remove the relevant permission and confirm access is denied.
+
+Known limitation: account DTO validation and several nullable paths still need repair.
+
+### 4. Role administration
+
+1. Open `/Role` with role-view permission.
+2. Create a uniquely named test role.
+3. Confirm it appears in `AspNetRoles`.
+4. Try creating the same name and confirm it is rejected.
+5. Edit the role name and confirm normalized Identity fields update.
+6. Open Manage Permissions, select claims, save, and inspect `AspNetRoleClaims`.
+7. Assign the role to a test user from Account Manage Roles.
+8. Confirm only `AspNetUserRoles` is changed; no custom role table should exist.
+
+### 5. Permission enforcement
+
+1. Create one role with a chosen permission and one without it.
+2. Assign each role to separate test users.
+3. Request the protected action as both users.
+4. Confirm only the user with the `Permission` claim succeeds.
+5. Remove the claim and repeat to confirm access is revoked.
+
+### 6. Audit-log list
+
+1. Insert or generate audit entries in the test database.
+2. Open `/AuditLog` as a user with audit-log permission.
+3. Confirm mapped fields render correctly.
+4. Confirm an unauthorized user receives access denied.
+5. Modify an auditable entity through a tracked application operation and confirm `CreatedBy`, `ModifiedBy`, and UTC timestamps are populated.
+
+Known limitation: not every application event currently creates a dedicated `AuditLog` row.
+
+### 7. Static pages
+
+While authenticated, test:
+
+- `/Home/Index`
+- `/Home/Privacy`
+- `/Home/UiKit`
+- `/Home/TestPage`
+
+Expected: pages render, but dashboard values and many buttons are still static.
+
+### 8. Categories
+
+Current expected result: `/Category` is incomplete because its controller does not supply `CategoriesModel`, and create/edit/delete handlers do not exist.
+
+When implemented, test in this order:
+
+1. Empty list
+2. Create with required-name validation
+3. Duplicate-name rejection
+4. Edit
+5. Activate/deactivate
+6. Search and status filters
+7. Pagination
+8. Delete/deactivate rules when ideas reference a category
+9. Authorization and antiforgery rejection
+
+### 9. Idea submission and drafts
+
+Current expected result: views exist but no `IdeaController` handles them.
+
+Required eventual tests:
+
+1. Required-field and length validation
+2. Category selection
+3. Individual/team submission rules
+4. Draft save, reload, and version compatibility
+5. Unique reference-number generation under concurrent submissions
+6. Attachment size, extension, MIME, and path-traversal rejection
+7. Successful submission with `Submitted`/`UnderReview` initial state
+8. Audit, notification, and timeline creation in one transaction
+
+### 10. My Ideas, details, comments, retract, and cancel
+
+Current expected result: screens are prototypes and MVC actions do not exist.
+
+Required eventual tests:
+
+1. Users see only their own ideas
+2. Search/filter/pagination
+3. Details include category, attachments, comments, and timeline
+4. Comment validation and ownership
+5. Internal comments hidden from submitters
+6. Retraction/cancellation allowed only in valid workflow states
+7. Other users cannot access an idea by changing the URL ID
+
+### 11. Review workflow
+
+Current expected result: review UI exists without assignment/transition services.
+
+Required eventual tests:
+
+1. Reviewer assignment authorization
+2. Valid and invalid stage/status transitions
+3. Information-request and decision reasons
+4. Timeline deadlines
+5. `StageHistory` creation
+6. Submitter notification
+7. Row-version conflict between two reviewers
+8. Locked/retracted/deleted idea protections
+
+### 12. Notifications
+
+Current expected result: entity and view prototype only.
+
+Required eventual tests:
+
+1. User isolation
+2. Mark one/all as read
+3. Read timestamp
+4. Preference enforcement
+5. Email retry behavior
+6. Digest frequency and quiet hours
+7. Safe internal links
+
+### 13. Resources
+
+Current expected result: entity and list prototype only.
+
+Required eventual tests:
+
+1. Authorized upload
+2. Enum category selection
+3. File validation and protected storage
+4. Search/filter/pagination
+5. Authorized download and counter increment
+6. Missing-file behavior
+7. Soft deletion and audit entries
+
+### 14. Reports
+
+Current expected result: filters/charts/export buttons have no backend.
+
+Required eventual tests:
+
+1. Inclusive date-range validation
+2. Department/category/status filters
+3. Summary totals match detail rows
+4. PDF and Excel generation
+5. Authorized download
+6. Scheduled frequency
+7. Generated-file cleanup and download count
+8. Large-dataset performance
+
+### 15. Dashboards
+
+Current expected result: dashboard models/views exist but no query service populates them.
+
+Required eventual tests:
+
+1. Role selects the correct dashboard
+2. Counts match database queries
+3. Recent items obey visibility rules
+4. SLA deadlines use UTC consistently
+5. Empty-state rendering
+
+### 16. Settings, timelines, surveys, and sessions
+
+Current expected result: data entities only.
+
+When application layers are added, test CRUD authorization, validation, audit columns, unique keys, session expiry, timeline override approval, and survey JSON schema/version handling.
+
+## Automated verification
+
+No test project is currently checked in. Until tests are added, the minimum verification is:
 
 ```bash
-cd Template.Web
-dotnet run
+dotnet restore Template.sln
+dotnet build Template.sln -m:1 --no-restore
+dotnet test Template.sln -m:1 --no-build
+dotnet ef migrations list --project Template.Data --startup-project Template.Web
 ```
 
-### Accessing Swagger UI
+`dotnet test` currently discovers no tests. Planned test projects should be:
 
-Swagger is only available in **non-development** environments. To access:
-1. Set `ASPNETCORE_ENVIRONMENT=Staging` or `Production`
-2. Navigate to `https://localhost:5001/swagger`
-
-Or modify `Program.cs` to enable Swagger in development as well (remove the `!app.Environment.IsDevelopment()` condition around the Swagger block).
-
----
-
-## Database Migrations
-
-### Adding a New Migration
-
-**Package Manager Console (Visual Studio):**
-```powershell
-Add-Migration MigrationName -Project Template.Data -StartupProject Template.Web
+```text
+tests/
+  Template.Data.IntegrationTests/
+  Template.Core.UnitTests/
+  Template.Web.IntegrationTests/
+  Template.Web.EndToEndTests/
 ```
 
-**.NET CLI:**
-```bash
-dotnet ef migrations add MigrationName --project Template.Data --startup-project Template.Web
-```
+Priority automated scenarios are authentication failure, permission enforcement, workflow transitions, concurrent review updates, upload security, migration from the former schema, and the complete submit-to-decision journey.
 
-### Applying Migrations
+## Migration workflow
 
-**Package Manager Console:**
-```powershell
-Update-Database -Project Template.Data -StartupProject Template.Web
-```
-
-**.NET CLI:**
-```bash
-dotnet ef database update --project Template.Data --startup-project Template.Web
-```
-
-### Removing Last Migration
+After changing an entity or EF configuration:
 
 ```bash
-dotnet ef migrations remove --project Template.Data --startup-project Template.Web
+dotnet ef migrations add MeaningfulMigrationName \
+  --project Template.Data \
+  --startup-project Template.Web
 ```
 
-### Generating SQL Script
+Then:
+
+1. Read both `Up` and `Down` methods.
+2. Look for unintended drops, nullable changes, and enum conversions.
+3. Generate a SQL script.
+4. Test upgrading a copy of the previous schema.
+5. Test rollback where rollback is supported.
+6. Build the complete solution.
+
+Generate a reviewable script:
 
 ```bash
-dotnet ef migrations script --project Template.Data --startup-project Template.Web
+dotnet ef migrations script \
+  --idempotent \
+  --project Template.Data \
+  --startup-project Template.Web \
+  --output artifacts/imts-migration.sql
 ```
 
----
-
-## Authentication & Authorization
-
-### Authentication
-
-The system supports two authentication methods:
-
-1. **Cookie Authentication** (default) — Users log in via `/Account/Login`
-2. **Active Directory / LDAP Authentication** — Integrated via `AdAuthenticationService` (configured in `Program.cs`)
-
-The LDAP service is configured as a singleton in `Program.cs`:
-
-```csharp
-builder.Services.AddSingleton<IAdAuthenticationService>(provider =>
-    new AdAuthenticationService(
-        "SVRHQSDC001",                           // LDAP server
-        "DC=BCNET,DC=BOU,DC=OR,DC=UG",           // LDAP container
-        provider.GetRequiredService<ILogger<AdAuthenticationService>>()
-    ));
-```
-
-### Authorization
-
-The system implements **permission-based authorization**:
-
-- `ApplicationPermissionHandler` — Custom `AuthorizationHandler` that checks user permissions
-- `ApplicationPermissionPolicyProvider` — Custom `IAuthorizationPolicyProvider` that dynamically creates policies
-- `PermissionTagHelper` — Razor Tag Helper to conditionally render UI elements based on permissions
-
-Roles defined in `RoleConstants`:
-- `IT Support`
-- `Budget Officer`
-- `Budget Holder`
-- `Budget Admin`
-- `Budget Admin Viewer`
-
----
-
-## Logging
-
-Logging is configured via **NLog** with the following configuration (`nlog.config`):
-
-- **File target** — Logs written to files with rotation
-- **Database target** — Logs written to the application database
-- ASP.NET Core internal logging is cleared and replaced with NLog
-
-Configuration is set up in `Program.cs`:
-```csharp
-builder.Logging.ClearProviders();
-builder.Host.UseNLog();
-builder.Services.AddLogging();
-```
-
----
-
-## Project Conventions
-
-### Naming Conventions
-
-- **Solution**: `Template.sln`
-- **Projects**: `Template.Common`, `Template.Data`, `Template.Core`, `Template.Web`
-- **Namespaces**: Follow folder structure, e.g., `Template.Core.Repository.Accounts`
-- **Enums**: PascalCase in dedicated `enums/` folder
-- **Interfaces**: Prefix with `I` (e.g., `IRepositoryBase<T, TId>`)
-- **Entities**: PascalCase, singular (e.g., `InnovationIdea`, `AuditLog`, `Category`)
-
-### Coding Standards
-
-- Target framework: `.NET 8`
-- Nullable reference types: **Enabled** (`<Nullable>enable</Nullable>`) in most projects
-- Implicit usings: **Enabled** (`<ImplicitUsings>enable</ImplicitUsings>`)
-- File-scoped namespaces used in most files (e.g., `namespace Template.Data.Configurations;`)
-- Async/await pattern used throughout for I/O operations
-- Repository pattern for data access abstraction
-- AutoMapper for entity-to-DTO mapping
-
-### DI Registration
-
-Each layer exposes a static extension method for registering its services:
-- `DataServicesRegistration.AddDataServices()` — Registers DbContext
-- `CoreServicesRegistration.AddCoreServices()` — Registers repositories, services, AutoMapper, authorization
-
-These are called from `Program.cs`:
-```csharp
-DataServicesRegistration.AddDataServices(builder.Services, builder.Configuration);
-CoreServicesRegistration.AddCoreServices(builder.Services);
-```
-
----
+Never edit the model snapshot without a corresponding migration.
 
 ## Troubleshooting
 
-### Common Issues & Solutions
+### Build fails with no errors
 
-| Issue                                         | Solution                                                                                 |
-|-----------------------------------------------|------------------------------------------------------------------------------------------|
-| **SQL Server LocalDB not found**              | Run `sqllocaldb start MSSQLLocalDB` or reinstall LocalDB via Visual Studio installer     |
-| **"dotnet-ef" command not found**             | Run `dotnet tool install --global dotnet-ef`                                             |
-| **NuGet packages not restored**               | Run `dotnet restore` or use Visual Studio's **Restore NuGet Packages**                   |
-| **Database does not exist / login failed**    | Verify connection string in `appsettings.json`. Ensure SQL Server is running.            |
-| **Port already in use**                       | Change the `applicationUrl` in `Properties/launchSettings.json`                          |
-| **Build errors after cloning**                | Ensure .NET 8 SDK is installed. Run `dotnet restore` then `dotnet build`.                |
-| **Migrations pending error**                  | Run `dotnet ef database update` to apply pending migrations                              |
-| **LDAP authentication fails**                 | Update server name and LDAP container in `Program.cs` to match your AD environment       |
-| **Blazor Server disconnects**                 | Ensure SignalR is configured. Check browser console for connection errors.               |
-| **Permission denied on static files**         | Verify the `StaticFileOptions` in `Program.cs` and that `wwwroot/` contains the files     |
-
-### Useful Commands
+Use the .NET 8 SDK and disable parallel MSBuild:
 
 ```bash
-# Restore all NuGet packages
-dotnet restore
-
-# Build the solution
-dotnet build
-
-# Apply EF Core migrations
-dotnet ef database update --project Template.Data --startup-project Template.Web
-
-# List all EF Core migrations
-dotnet ef migrations list --project Template.Data --startup-project Template.Web
-
-# Run the application
-dotnet run --project Template.Web
-
-# Run with hot reload
-dotnet watch run --project Template.Web
-
-# Clear NuGet cache (if packages are corrupted)
-dotnet nuget locals all --clear
+dotnet build Template.sln -m:1 -v minimal
 ```
 
-### Getting Help
+Confirm `dotnet --version` reports `8.x`.
 
-If you encounter issues not covered here:
-1. Check Visual Studio's **Output** window for detailed error messages
-2. For VS Code, check the **Terminal** and **Problems** panels
-3. Review application logs (NLog file targets)
-4. Verify your .NET SDK version: `dotnet --info`
+### `appsettings.json` is missing
 
----
+```bash
+cp Template.Web/appsettings.example.json Template.Web/appsettings.json
+```
 
-*This README was generated for the ASPTemplate (IMTS) project — an Innovation Management Tracking System built with ASP.NET Core 8.*
+Then replace the example SQL Server and LDAP values.
+
+### LocalDB connection fails on Linux
+
+LocalDB is Windows-only. Use SQL Server/SQL Server Express in a container, VM, or reachable server and change `DefaultConnection`.
+
+### LDAP login fails on Linux
+
+The current `PrincipalContext` implementation is Windows-only. Run the Web application on Windows for AD testing or replace the adapter with a cross-platform LDAP implementation in a separate change.
+
+### Migration warns about data loss
+
+The normalization migration intentionally removes the obsolete custom role schema and replaces invalid row-version bytes. Back up the database, inspect the migration SQL, and test on a restored copy before production.
+
+### Access is always denied
+
+Verify:
+
+1. The user exists in `AspNetUsers`.
+2. The role exists in `AspNetRoles`.
+3. `AspNetUserRoles` contains the assignment.
+4. `AspNetRoleClaims` contains claim type `Permission` with the exact expected value.
+
+## Rules for future development
+
+- Work upward: Common/Data, then Core, then Web.
+- Add short comments explaining **why** security, concurrency, transaction, or relationship behavior is necessary.
+- Do not comment obvious property declarations or restate code in English.
+- Use Identity roles only.
+- Use enums for controlled workflow values.
+- Use form DTOs for writes and read models for display.
+- Validate on both server and client; server validation is authoritative.
+- Put workflow rules in Core services, not Razor views or JavaScript.
+- Use POST plus antiforgery protection for every state change.
+- Store files outside the public web root and validate content, size, and name.
+- Use UTC for persisted timestamps.
+- Add a migration for every schema change and test it against the previous schema.
+- Add tests with each completed feature; do not mark a prototype screen complete merely because it renders.

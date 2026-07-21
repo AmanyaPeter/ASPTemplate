@@ -10,7 +10,7 @@ public class IdeaTimeline : AuditableEntity
     public Guid IdeaId { get; set; }
     public required InnovationIdea Idea { get; set; }
 
-    public int StageId { get; set; }
+    // IdeaStage is a fixed workflow value, so a second numeric StageId was redundant.
     public IdeaStage Stage { get; set; }
 
     public DateTime StartDate { get; set; }

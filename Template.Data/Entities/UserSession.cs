@@ -5,7 +5,7 @@ namespace Template.Data.Entities
         public int Id { get; set; }
 
         public Guid UserId { get; set; }
-        public ApplicationUser User { get; set; }
+        public required ApplicationUser User { get; set; }
 
         public required string SessionId { get; set; }
 

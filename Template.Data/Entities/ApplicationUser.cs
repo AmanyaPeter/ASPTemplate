@@ -1,27 +1,27 @@
 using Microsoft.AspNetCore.Identity;
-using static Template.Common.Static.SystemPermissions;
-
 namespace Template.Data.Entities
 {
-  public class ApplicationUser : IdentityUser<Guid>
+public class ApplicationUser : IdentityUser<Guid>
 {
-    public string FullName { get; set; }
-    public string FirstName { get; set; }
+    // Identity constructs users through new(), so scalar defaults are used here while
+    // EF configuration still marks these columns as required in the database.
+    public string FullName { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
     public string? MiddleName { get; set; }
-    public string LastName { get; set; }
-    public string Title { get; set; }
+    public string LastName { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
     public DateTime? DisableDate { get; set; }
     public DateTime? EndDate { get; set; }
     public bool IsLoggedIn { get; set; }
     public DateTime LastActivity { get; set; }
-    public string BusinessUnit { get; set; }
-    public string JobTitle { get; set; }
-    public string Station { get; set; }
-    public string AgeBracket { get; set; }
-    public string Gender { get; set; }
+    public string BusinessUnit { get; set; } = string.Empty;
+    public string JobTitle { get; set; } = string.Empty;
+    public string Station { get; set; } = string.Empty;
+    public string AgeBracket { get; set; } = string.Empty;
+    public string Gender { get; set; } = string.Empty;
 
-    public int? RoleId { get; set; }
-    public Role? Role { get; set; }
+    // Roles intentionally come only from ASP.NET Identity's AspNetUserRoles table.
+    // Keeping a second RoleId here previously allowed the two role systems to disagree.
 
     public bool IsActive { get; set; } = true;
     public string? LockReason { get; set; }
@@ -35,6 +35,6 @@ namespace Template.Data.Entities
     public DateTime? UpdatedDate { get; set; }
     public Guid? UpdatedBy { get; set; }
 
-  public ICollection<InnovationIdea> Ideas { get; set; } = new List<InnovationIdea>();
+    public ICollection<InnovationIdea> Ideas { get; set; } = new List<InnovationIdea>();
 }
 }

@@ -14,24 +14,23 @@ namespace Template.Core.Services.AdAuthentication
         {
             try
             {
-                //using (var context = new PrincipalContext(ContextType.Domain, _ldapServer, _ldapContainer))
-                //{
-                //    return context.ValidateCredentials(username, password);
-                //}
-                return true;
+                // Never replace this with a development "return true": this method is
+                // the password-verification boundary for every application login.
+                using var context = new PrincipalContext(
+                    ContextType.Domain,
+                    _ldapServer,
+                    _ldapContainer);
+
+                return context.ValidateCredentials(username, password);
             }
             catch (PrincipalServerDownException ex)
             {
-                // Handle connection issues with LDAP server
-                // Log the exception
-                //_logger.LogError(ex, "LDAP server is down or unreachable. Server: {LdapServer}", _ldapServer);
+                _logger.LogError(ex, "LDAP server {LdapServer} is unavailable.", _ldapServer);
                 return false;
             }
             catch (Exception ex)
             {
-                // Handle other exceptions
-                // Log the exception
-                //_logger.LogError(ex, "An unexpected error occurred during LDAP authentication. Username: {Username}", username);
+                _logger.LogError(ex, "LDAP authentication failed unexpectedly for {Username}.", username);
                 return false;
             }
         }
@@ -94,11 +93,17 @@ namespace Template.Core.Services.AdAuthentication
                         {
                             UserName = model.UserName,
                             EndDate = model.EndDate,
-                            FirstName = user.GivenName,
+                            FirstName = user.GivenName ?? string.Empty,
                             MiddleName = user.MiddleName,
-                            LastName = user.Surname,
+                            LastName = user.Surname ?? string.Empty,
                             Email = user.EmailAddress,
-                            Title = model.Title,
+                            Title = model.Title ?? string.Empty,
+                            FullName = model.FullName ?? user.DisplayName ?? model.UserName,
+                            BusinessUnit = model.BusinessUnit ?? string.Empty,
+                            JobTitle = model.JobTitle ?? model.Title ?? string.Empty,
+                            Station = model.Station ?? string.Empty,
+                            AgeBracket = model.AgeBracket ?? string.Empty,
+                            Gender = model.Gender ?? string.Empty,
                         };
 
                         return new AdUserResult

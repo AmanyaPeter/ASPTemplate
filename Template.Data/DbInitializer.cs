@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Template.Data.Configurations;
 using Template.Data.Entities;
@@ -11,11 +12,11 @@ public static class DbInitializer
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
+        // Apply versioned migrations instead of EnsureCreated. EnsureCreated bypasses
+        // migration history and makes later production schema upgrades unreliable.
+        await context.Database.MigrateAsync();
 
         // Seed roles
         string[] roleNames = { "Admin", "Staff", "InnovationTeam" };
@@ -27,36 +28,8 @@ public static class DbInitializer
             }
         }
 
-        // Seed default admin user
-        var adminEmail = "admin@bou.or.ug";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-        if (adminUser == null)
-        {
-            adminUser = new ApplicationUser
-            {
-                UserName = "admin",
-                Email = adminEmail,
-                FullName = "System Administrator",
-                FirstName = "System",
-                LastName = "Administrator",
-                Title = "Administrator",
-                BusinessUnit = "ICT",
-                JobTitle = "System Administrator",
-                Station = "Head Office",
-                AgeBracket = "35-44",
-                Gender = "Male",
-                IsActive = true,
-                EmailConfirmed = true,
-                CreatedDate = DateTime.UtcNow,
-                LastActivity = DateTime.UtcNow
-            };
-
-            var result = await userManager.CreateAsync(adminUser, "Admin@123");
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
-        }
+        // Do not create a predictable administrator password in source code.
+        // The first administrator must be provisioned through the documented,
+        // environment-specific bootstrap command added at the application layer.
     }
 }

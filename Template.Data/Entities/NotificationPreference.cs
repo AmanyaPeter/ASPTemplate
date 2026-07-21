@@ -7,7 +7,7 @@ namespace Template.Data.Entities
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public ApplicationUser User { get; set; }
+        public required ApplicationUser User { get; set; }
 
         // Email Notification Preferences
         public bool IdeaSubmissionConfirmations { get; set; } = true;

@@ -1,4 +1,5 @@
 using Template.Common.AuditColumn;
+using Template.Common.Enums;
 
 namespace Template.Data.Entities
 {
@@ -6,33 +7,35 @@ public class InnovationIdea : AuditableEntity
 {
     public Guid Id { get; set; }
 
-    public string ReferenceNumber { get; set; }
+    public required string ReferenceNumber { get; set; }
 
     // Submission information
-    public string SubmissionType { get; set; }
+    public required string SubmissionType { get; set; }
     public DateTime SubmissionDate { get; set; }
 
     public Guid SubmitterId { get; set; }
-    public ApplicationUser Submitter { get; set; }
+    public required ApplicationUser Submitter { get; set; }
 
     // Idea details
-    public string Title { get; set; }
-    public string SummaryDescription { get; set; }
-    public string ProblemStatement { get; set; }
-    public string ProposedSolution { get; set; }
+    public required string Title { get; set; }
+    public required string SummaryDescription { get; set; }
+    public required string ProblemStatement { get; set; }
+    public required string ProposedSolution { get; set; }
 
     // Classification
     public int? CategoryId { get; set; }
-    public Category Category { get; set; }
+    public Category? Category { get; set; }
 
     // Snapshot information
     public int? SubmitterBusinessUnitId { get; set; }
     public int? SubmitterStationId { get; set; }
-    public string SubmitterAgeBracket { get; set; }
+    public required string SubmitterAgeBracket { get; set; }
 
     // Workflow
-    public string CurrentStage { get; set; }
-    public string CurrentStatus { get; set; }
+    // Enums make invalid workflow values impossible to persist. EF stores their names
+    // (configured in ApplicationDbContext) so existing data remains understandable.
+    public IdeaStage CurrentStage { get; set; } = IdeaStage.Submitted;
+    public IdeaStatus CurrentStatus { get; set; } = IdeaStatus.UnderReview;
 
     // Review
     public Guid? AssignedReviewerId { get; set; }
@@ -46,7 +49,9 @@ public class InnovationIdea : AuditableEntity
     public bool IsRetracted { get; set; }
     public bool IsDeleted { get; set; }
 
-    public byte[] RowVersion { get; set; }
+    // SQL Server updates this token automatically; controllers use it to detect
+    // when two reviewers attempt to update the same idea concurrently.
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
     // Collections
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();

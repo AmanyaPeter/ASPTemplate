@@ -1,4 +1,5 @@
 using Template.Core.Services.AdAuthentication;
+using Template.Core.Repository.Auditable;
 using Template.Data;
 using Template.Data.Configurations;
 using Template.Data.Entities;
@@ -16,71 +17,67 @@ builder.Host.UseNLog();
 builder.Services.AddLogging();
 
 
-builder.Configuration.AddJsonFile("appsettings.json");
-
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddResponseCaching();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 //Configure Blazor
 builder.Services.AddServerSideBlazor()
-    .AddCircuitOptions(options => options.DetailedErrors = true);
+    // Detailed circuit errors may contain sensitive data, so expose them only locally.
+    .AddCircuitOptions(options => options.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddBlazorBootstrap();
-
-builder.Services.AddAuthentication("CookieAuth")
-            .AddCookie("CookieAuth", options =>
-            {
-                options.LoginPath = "/Account/Login";
-                options.LogoutPath = "/Account/Logout";
-                //options.AccessDeniedPath = "/Account/Login";
-            });
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromDays(365);
+    // Keep the server session aligned with the authentication cookie lifetime.
+    options.IdleTimeout = TimeSpan.FromMinutes(15);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
-
-//Add configuration
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-});
-
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
-    options.SlidingExpiration = true;
-});
-
-//builder.Services.AddAuthorizationBuilder();
-builder.Services.AddAuthorization();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
     .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders()
     .AddApiEndpoints();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/LogoutAsync";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.AddAuthorization();
 
 // Register the LDAP authentication service with the interface
-
 builder.Services.AddSingleton<IAdAuthenticationService>(provider =>
     new AdAuthenticationService(
-        "SVRHQSDC001", // server name/ip address 
-        "DC=BCNET,DC=BOU,DC=OR,DC=UG", // LDAP container
+        builder.Configuration["Authentication:Ldap:Server"]
+            ?? throw new InvalidOperationException("Authentication:Ldap:Server is required."),
+        builder.Configuration["Authentication:Ldap:Container"]
+            ?? throw new InvalidOperationException("Authentication:Ldap:Container is required."),
         provider.GetRequiredService<ILogger<AdAuthenticationService>>()
     ));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
 
-//Template.Data Service settings
-DataServicesRegistration.AddDataServices(builder.Services, builder.Configuration);
+// Register one DbContext and attach the auditing interceptor to that exact instance.
+// The previous three registrations could silently override one another.
+builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 //Template.Core Service settings
 CoreServicesRegistration.AddCoreServices(builder.Services);
@@ -162,4 +159,3 @@ app.MapControllerRoute(
 app.MapBlazorHub();
 
 app.Run();
-

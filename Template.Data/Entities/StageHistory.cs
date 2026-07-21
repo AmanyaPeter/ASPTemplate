@@ -1,4 +1,5 @@
 using Template.Common.AuditColumn;
+using Template.Common.Enums;
 
 namespace Template.Data.Entities
 {
@@ -7,18 +8,18 @@ namespace Template.Data.Entities
         public long Id { get; set; }
 
         public Guid IdeaId { get; set; }
-        public InnovationIdea Idea { get; set; }
+        public required InnovationIdea Idea { get; set; }
 
-        public string PreviousStage { get; set; }
+        public IdeaStage PreviousStage { get; set; }
 
-        public string NewStage { get; set; }
+        public IdeaStage NewStage { get; set; }
 
-        public string PreviousStatus { get; set; }
+        public IdeaStatus PreviousStatus { get; set; }
 
-        public string NewStatus { get; set; }
+        public IdeaStatus NewStatus { get; set; }
 
         public Guid ChangedById { get; set; }
-        public ApplicationUser ChangedBy { get; set; }
+        public required ApplicationUser ChangedBy { get; set; }
 
         public string? ChangeReason { get; set; }
 
