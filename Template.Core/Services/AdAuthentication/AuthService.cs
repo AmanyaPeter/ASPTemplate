@@ -3,6 +3,7 @@ using Template.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Template.Core.Services.AdAuthentication;
@@ -12,7 +13,8 @@ public class AuthService(
     , ILogger<AuthService> _logger
     , UserManager<ApplicationUser> _userManager
     , IHttpContextAccessor _httpContextAccessor
-    , SignInManager<ApplicationUser> _signInManager) : IAuthService
+    , SignInManager<ApplicationUser> _signInManager
+    , IHostEnvironment _environment) : IAuthService
 {
     public async Task SignInApplicationUser(ApplicationUser user, bool isPersistent = false)
     {
@@ -50,11 +52,20 @@ public class AuthService(
             return (false, "Wrong username or password.", null);
         }
 
-        // Validate AD credentials
-        if (!_adAuthService.ValidateCredentials(username, password))
+        // Development uses the password stored by ASP.NET Identity so the seeded
+        // local accounts work without access to the organization's LDAP server.
+        // Non-development environments continue to require Active Directory.
+        var credentialsAreValid = _environment.IsDevelopment()
+            ? await _userManager.CheckPasswordAsync(user, password)
+            : _adAuthService.ValidateCredentials(username, password);
+
+        if (!credentialsAreValid)
         {
-            _logger.LogError($"Failed login, Active Directory authentication for username {username}.");
-            return (false, "Failed Active Directory authentication.", null);
+            _logger.LogWarning(
+                "Failed {AuthenticationType} authentication for username {Username}.",
+                _environment.IsDevelopment() ? "local" : "Active Directory",
+                username);
+            return (false, "Wrong username or password.", null);
         }
 
         // Check if user is active
