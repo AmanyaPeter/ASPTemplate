@@ -60,8 +60,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 //builder.Services.AddAuthorizationBuilder();
 builder.Services.AddAuthorization();
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddRoles<IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+    .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddApiEndpoints();
 
@@ -154,5 +154,8 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}/{param1?}");
 
 app.MapBlazorHub();
+
+// Seed roles and default users on startup
+await DbInitializer.SeedAsync(app.Services);
 
 app.Run();
