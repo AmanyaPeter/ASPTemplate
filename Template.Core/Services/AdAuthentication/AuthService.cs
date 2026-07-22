@@ -17,7 +17,7 @@ public class AuthService(
     public async Task SignInApplicationUser(ApplicationUser user, bool isPersistent = false)
     {
         user.IsLoggedIn = true;
-        user.LastActivity = DateTime.Now;
+        user.LastActivity = DateTime.UtcNow;
         _httpContextAccessor.HttpContext.Session.SetString("userName", user.UserName);
 
         await _userManager.UpdateAsync(user);
@@ -78,16 +78,16 @@ public class AuthService(
             return (false, "Account expired.", null);
         }
 
-        //Check it user is already logged in
-        if (user.IsLoggedIn == true)
+        // A browser can be closed without executing the logout action, leaving
+        // IsLoggedIn set in the database. Valid credentials must therefore be
+        // allowed to establish a new session instead of permanently locking the
+        // user out. The flag remains useful as informational login state and is
+        // refreshed by SignInApplicationUser.
+        if (user.IsLoggedIn)
         {
-            if (user.LastActivity < DateTime.UtcNow.AddMinutes(-15))
-            {
-                return (true, "success", user);
-            }
-
-            _logger.LogError($"Attempted login by {username} for already logged in user.");
-            return (false, "You are already logged in using another browser or device.", null);
+            _logger.LogInformation(
+                "User {Username} is replacing an existing or abandoned login session.",
+                username);
         }
 
         return (true, "success", user);
