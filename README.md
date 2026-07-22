@@ -1,7 +1,10 @@
 # ASPTemplate — Innovation Management Tracking System (IMTS)
 
 A modular, enterprise-grade web application built with **ASP.NET Core 8 (MVC + Blazor Server)** using **Clean Architecture** principles. The system manages innovation ideas, tracking their lifecycle from submission through review, approval, budgeting, and implementation — complete with auditing, role-based access control, Active Directory integration, and reporting.
-
+To Run:
+sqllocaldb create MSSQLLocalDB
+sqllocaldb start MSSQLLocalDB
+dotnet run --project Template.Web --no-build --launch-profile http
 ---
 
 ## Table of Contents
