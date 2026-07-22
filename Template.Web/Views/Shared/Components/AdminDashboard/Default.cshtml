@@ -1,14 +1,13 @@
-@page
 @model AdminDashboardModel
 @{
-    ViewData["Title"] = "Admin Dashboard - Innovation Management System";
+    ViewData["Title"] = "IT Administrator Dashboard - Innovation Management Tracking System";
 }
 
 <body class="ims-staff-dashboard">
     <!-- Sidebar -->
     <aside class="ims-staff-sidebar">
         <div class="ims-staff-sidebar-brand">
-            <div class="ims-staff-brand-logo"><img src="~/boulogo.ico" alt="BOU"></div>
+            <div class="ims-staff-brand-logo"><img src="~/img/bou.png" alt="Bank of Uganda"></div>
             <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
         </div>
         <ul class="ims-staff-sidebar-nav">
@@ -33,7 +32,7 @@
                     <div class="ims-staff-avatar">@User.Identity.Name?.Substring(0, 1)</div>
                     <span class="ims-staff-user-name">@User.Identity.Name</span>
                 </div>
-                <button class="ims-staff-logout-btn">Log out</button>
+                <a class="ims-staff-logout-btn" asp-controller="Account" asp-action="Logout">Log out</a>
             </div>
         </header>
 
@@ -106,10 +105,4 @@
         </main>
     </div>
 
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-        </script>
-    }
 </body>
