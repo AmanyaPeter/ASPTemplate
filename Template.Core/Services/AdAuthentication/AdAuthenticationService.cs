@@ -2,6 +2,7 @@
 using Template.Core.Models.Account;
 using Template.Data.Entities;
 using Microsoft.Extensions.Logging;
+using System.Runtime.Versioning;
 
 namespace Template.Core.Services.AdAuthentication
 {
@@ -20,14 +21,14 @@ namespace Template.Core.Services.AdAuthentication
                 //}
                 return true;
             }
-            catch (PrincipalServerDownException ex)
+            catch (PrincipalServerDownException)
             {
                 // Handle connection issues with LDAP server
                 // Log the exception
                 //_logger.LogError(ex, "LDAP server is down or unreachable. Server: {LdapServer}", _ldapServer);
                 return false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Handle other exceptions
                 // Log the exception
@@ -36,6 +37,7 @@ namespace Template.Core.Services.AdAuthentication
             }
         }
 
+        [SupportedOSPlatform("windows")]
         public bool ValidateUserCredentials(string username, string password)
         {
             try
@@ -63,13 +65,13 @@ namespace Template.Core.Services.AdAuthentication
                     }
                 }
             }
-            catch (PrincipalServerDownException ex)
+            catch (PrincipalServerDownException)
             {
                 // Log the exception (uncomment if logging is in place)
                 // _logger.LogError(ex, "LDAP server is down or unreachable. Server: {LdapServer}", _ldapServer);
                 return false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log other unexpected exceptions
                 // _logger.LogError(ex, "An unexpected error occurred during LDAP authentication. Username: {Username}", username);
@@ -77,6 +79,7 @@ namespace Template.Core.Services.AdAuthentication
             }
         }
 
+        [SupportedOSPlatform("windows")]
         public AdUserResult IsExistsOnAd(ApplicationUserViewModel model)
         {
             try

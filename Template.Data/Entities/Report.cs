@@ -34,6 +34,6 @@ namespace Template.Data.Entities
         public DateTime GeneratedAt { get; set; }
 
         public Guid GeneratedById { get; set; }
-        public ApplicationUser GeneratedBy { get; set; }
+        public ApplicationUser GeneratedBy { get; set; } = null!;
     }
 }

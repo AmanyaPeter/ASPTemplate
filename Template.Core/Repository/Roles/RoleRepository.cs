@@ -8,8 +8,7 @@ using System.Security.Claims;
 namespace Template.Core.Repository.Roles;
 
 public class RoleRepository(ApplicationDbContext _db
-    , RoleManager<IdentityRole<Guid>> _roleManager
-    , ILogger<RoleRepository> _logger) : IRoleRepository
+    , RoleManager<IdentityRole<Guid>> _roleManager) : IRoleRepository
 {
 
     //returns all roles

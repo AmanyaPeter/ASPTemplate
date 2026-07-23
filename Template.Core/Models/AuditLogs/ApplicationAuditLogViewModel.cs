@@ -1,4 +1,6 @@
 
+#nullable enable annotations
+
 using Template.Common.Enums;
 
 namespace Template.Core.Models.AuditLogs

@@ -31,7 +31,7 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
         return View(pageViewModel);
     }
 
-    public IActionResult Login(string returnUrl = null)
+    public IActionResult Login(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
         return View();
@@ -39,7 +39,7 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
 
 
     [HttpPost]
-    public async Task<IActionResult> Login(string username, string password, string returnUrl = null)
+    public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
     {
         var result = await _authService.ValidateApplicationUser(username, password);
 
@@ -70,7 +70,7 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
     {
         var model = new ApplicationUserViewModel
         {
-            Id = null
+            Id = string.Empty
         };
 
         return View(model);
@@ -274,7 +274,7 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
 
     [HttpGet]
     [ActionName("Logout")]
-    public async Task<IActionResult> LogoutAsync(string returnUrl = null)
+    public async Task<IActionResult> LogoutAsync(string? returnUrl = null)
     {
         await _authService.SignOutApplicationUser();
         HttpContext.Session.Clear();

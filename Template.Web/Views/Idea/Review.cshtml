@@ -82,7 +82,7 @@
                             }
                         </div>
                         <div class="ims-staff-comment-box">
-                            <div class="ims-staff-comment-box-avatar">@User.Identity.Name?.Substring(0, 1)</div>
+                            <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
                             <textarea class="ims-staff-form-control" rows="2" placeholder="Add a comment..." asp-for="NewComment"></textarea>
                             <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn" asp-page-handler="AddComment">Send</button>
                         </div>

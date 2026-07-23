@@ -7,7 +7,7 @@ public class Notification
     public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
-    public ApplicationUser User { get; set; }
+    public ApplicationUser User { get; set; } = null!;
 
     public Guid? IdeaId { get; set; }
     public InnovationIdea? Idea { get; set; }

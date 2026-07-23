@@ -135,7 +135,7 @@
                                     <td>@idea.Department</td>
                                     <td>@idea.Category</td>
                                     <td>
-                                        <span class="ims-staff-badge ims-staff-badge-@idea.Status.Replace(" ", "-").ToLower()">
+                                        <span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">
                                             @idea.Status
                                         </span>
                                     </td>

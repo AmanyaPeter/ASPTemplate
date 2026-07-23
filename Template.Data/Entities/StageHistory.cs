@@ -7,18 +7,18 @@ namespace Template.Data.Entities
         public long Id { get; set; }
 
         public Guid IdeaId { get; set; }
-        public InnovationIdea Idea { get; set; }
+        public InnovationIdea Idea { get; set; } = null!;
 
-        public string PreviousStage { get; set; }
+        public string PreviousStage { get; set; } = string.Empty;
 
-        public string NewStage { get; set; }
+        public string NewStage { get; set; } = string.Empty;
 
-        public string PreviousStatus { get; set; }
+        public string PreviousStatus { get; set; } = string.Empty;
 
-        public string NewStatus { get; set; }
+        public string NewStatus { get; set; } = string.Empty;
 
         public Guid ChangedById { get; set; }
-        public ApplicationUser ChangedBy { get; set; }
+        public ApplicationUser ChangedBy { get; set; } = null!;
 
         public string? ChangeReason { get; set; }
 

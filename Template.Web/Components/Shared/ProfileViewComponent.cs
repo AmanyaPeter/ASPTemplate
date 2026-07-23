@@ -2,7 +2,7 @@ using System.Text;
 using Template.Core.Repository.Accounts;
 using Microsoft.AspNetCore.Mvc;
 
-public class ProfileViewComponent(IAccountRepository _accountRepo) : ViewComponent
+public class ProfileViewComponent : ViewComponent
 {
     public async Task<IViewComponentResult> InvokeAsync()
     {

@@ -29,8 +29,8 @@
             <div class="ims-staff-header-right">
                 <button class="ims-staff-notification-btn"><i data-lucide="bell" style="width:20px;height:20px;"></i><span class="ims-staff-badge-dot"></span></button>
                 <div class="ims-staff-user-profile">
-                    <div class="ims-staff-avatar">@User.Identity.Name?.Substring(0, 1)</div>
-                    <span class="ims-staff-user-name">@User.Identity.Name</span>
+                    <div class="ims-staff-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
+                    <span class="ims-staff-user-name">@(User.Identity?.Name ?? "User")</span>
                 </div>
                 <a class="ims-staff-logout-btn" asp-controller="Account" asp-action="Logout">Log out</a>
             </div>

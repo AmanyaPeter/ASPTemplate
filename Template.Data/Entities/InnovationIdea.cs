@@ -6,20 +6,20 @@ public class InnovationIdea : AuditableEntity
 {
     public Guid Id { get; set; }
 
-    public string ReferenceNumber { get; set; }
+    public string ReferenceNumber { get; set; } = string.Empty;
 
     // Submission information
-    public string SubmissionType { get; set; }
+    public string SubmissionType { get; set; } = string.Empty;
     public DateTime SubmissionDate { get; set; }
 
     public Guid SubmitterId { get; set; }
-    public ApplicationUser Submitter { get; set; }
+    public ApplicationUser Submitter { get; set; } = null!;
 
     // Idea details
-    public string Title { get; set; }
-    public string SummaryDescription { get; set; }
-    public string ProblemStatement { get; set; }
-    public string ProposedSolution { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string SummaryDescription { get; set; } = string.Empty;
+    public string ProblemStatement { get; set; } = string.Empty;
+    public string ProposedSolution { get; set; } = string.Empty;
     public string? ExpectedBenefits { get; set; }
     public string? KeyEnablers { get; set; }
     public string? ImplementationApproach { get; set; }
@@ -30,16 +30,16 @@ public class InnovationIdea : AuditableEntity
 
     // Classification
     public int? CategoryId { get; set; }
-    public Category Category { get; set; }
+    public Category? Category { get; set; }
 
     // Snapshot information
     public int? SubmitterBusinessUnitId { get; set; }
     public int? SubmitterStationId { get; set; }
-    public string SubmitterAgeBracket { get; set; }
+    public string SubmitterAgeBracket { get; set; } = string.Empty;
 
     // Workflow
-    public string CurrentStage { get; set; }
-    public string CurrentStatus { get; set; }
+    public string CurrentStage { get; set; } = string.Empty;
+    public string CurrentStatus { get; set; } = string.Empty;
 
     // Review
     public Guid? AssignedReviewerId { get; set; }
@@ -53,7 +53,7 @@ public class InnovationIdea : AuditableEntity
     public bool IsRetracted { get; set; }
     public bool IsDeleted { get; set; }
 
-    public byte[] RowVersion { get; set; }
+    public byte[] RowVersion { get; set; } = [];
 
     // Collections
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();

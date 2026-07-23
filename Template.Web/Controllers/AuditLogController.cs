@@ -7,7 +7,7 @@ using SmartBreadcrumbs.Attributes;
 
 namespace Template.Web.Controllers
 {
-    public class AuditLogController(IMapper _mapper, IAuditLogRepository _auditLogRepo, ILogger<AuditLogController> _logger) : Controller
+    public class AuditLogController(IMapper _mapper, IAuditLogRepository _auditLogRepo) : Controller
     {
         [Breadcrumb("Audit Logs", FromAction = nameof(Index), FromController = typeof(HomeController))]
         [RequirePermission(SystemPermissions.AuditLog.ViewAuditLogs)]

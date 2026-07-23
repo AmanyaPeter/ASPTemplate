@@ -59,7 +59,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             .HasForeignKey(u => u.RoleId)
             .OnDelete(DeleteBehavior.SetNull);
     } 
-    public DbSet<Role> Roles { get; set; }
+    public new DbSet<Role> Roles { get; set; }
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Category> Categories { get; set; }
