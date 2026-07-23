@@ -1,0 +1,8 @@
+@{ ViewData["Title"] = "System Settings"; }
+<div class="prototype-heading"><div><h1>System settings</h1><p>Review the core administration areas for the innovation system.</p></div></div>
+<div class="prototype-grid">
+    <a class="prototype-card prototype-settings-card" asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i><strong>User accounts</strong><span>Create users and manage account status.</span></a>
+    <a class="prototype-card prototype-settings-card" asp-controller="Role" asp-action="Index"><i class="ti ti-shield-lock"></i><strong>Roles & permissions</strong><span>Control access to system features.</span></a>
+    <a class="prototype-card prototype-settings-card" asp-controller="Category" asp-action="Index"><i class="ti ti-category"></i><strong>Idea categories</strong><span>Maintain innovation classification options.</span></a>
+    <a class="prototype-card prototype-settings-card" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i><strong>Audit log</strong><span>Review security and administrative activity.</span></a>
+</div>

@@ -15,6 +15,7 @@
 <div class="prototype-heading">
     <div><h1>Welcome back</h1><p>Here is the latest activity across the innovation programme.</p></div>
     @if (staff != null) { <a class="prototype-button orange" asp-controller="Idea" asp-action="Submit"><i class="ti ti-plus"></i> Submit new idea</a> }
+    else if (admin != null) { <a class="prototype-button orange" asp-controller="Account" asp-action="Create"><i class="ti ti-user-plus"></i> Create user</a> }
     else { <a class="prototype-button orange" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i> View reports</a> }
 </div>
 <div class="prototype-grid">
@@ -23,7 +24,7 @@
 <section class="prototype-card prototype-section">
     @if (staff != null)
     {
-        <div class="prototype-section-title"><h2>Recent submissions</h2><a asp-controller="Idea" asp-action="MyIdeas">View all</a></div>
+        <div class="prototype-section-title"><h2>Recent submissions</h2><a asp-controller="Idea" asp-action="MyIdeas"><i class="ti ti-list-check"></i> View all</a></div>
         <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Idea</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>
         @if (staff.RecentSubmissions.Count == 0) { <tr><td colspan="4">No ideas submitted yet. Your next idea can start here.</td></tr> }
         @foreach (var item in staff.RecentSubmissions) { <tr><td>@item.Title</td><td>@(item.Category ?? "Uncategorised")</td><td><span class="prototype-badge">@item.Status</span></td><td>@item.Date.ToString("dd MMM yyyy")</td></tr> }
@@ -31,7 +32,7 @@
     }
     else if (team != null)
     {
-        <div class="prototype-section-title"><h2>Latest innovation ideas</h2><a asp-controller="Idea" asp-action="AllIdeas">Open pipeline</a></div>
+        <div class="prototype-section-title"><h2>Latest innovation ideas</h2><a asp-controller="Idea" asp-action="AllIdeas"><i class="ti ti-route"></i> Open pipeline</a></div>
         <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Idea</th><th>Submitted by</th><th>Status</th><th>Date</th></tr></thead><tbody>
         @if (team.RecentIdeas.Count == 0) { <tr><td colspan="4">No innovation ideas are currently in the pipeline.</td></tr> }
         @foreach (var item in team.RecentIdeas) { <tr><td>@item.Title</td><td>@item.Submitter</td><td><span class="prototype-badge">@item.Status</span></td><td>@item.Date.ToString("dd MMM yyyy")</td></tr> }
@@ -39,7 +40,7 @@
     }
     else if (admin != null)
     {
-        <div class="prototype-section-title"><h2>Recently created users</h2><a asp-controller="Account" asp-action="Index">Manage accounts</a></div>
+        <div class="prototype-section-title"><h2>Recently created users</h2><a asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i> Manage accounts</a></div>
         <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Name</th><th>Email</th><th>Last activity</th><th>State</th></tr></thead><tbody>
         @foreach (var item in admin.RecentUsers) { <tr><td>@item.Name</td><td>@item.Email</td><td>@item.LastLogin.ToString("dd MMM yyyy")</td><td><span class="prototype-badge @(item.IsOnline ? "success" : "")">@(item.IsOnline ? "Online" : "Offline")</span></td></tr> }
         </tbody></table></div>

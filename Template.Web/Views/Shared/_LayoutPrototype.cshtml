@@ -10,7 +10,7 @@
         "Home" => "layout-dashboard", "Idea" => "bulb", "Notification" => "bell",
         "Resource" => "books", "Report" => "chart-bar", "Category" => "category",
         "Account" => "users", "Role" => "shield-lock", "AuditLog" => "history",
-        "Profile" => "user-circle", _ => "building-bank"
+        "Profile" => "user-circle", "Settings" => "settings", _ => "building-bank"
     };
 }
 <!doctype html>
@@ -32,7 +32,6 @@
             <span><strong>Innovation</strong><small>Management System</small></span>
         </a>
         <nav class="prototype-nav">
-            <span class="prototype-nav-label">Workspace</span>
             <a class="@Active("Home")" asp-controller="Home" asp-action="Index"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
             @if (!isAdmin && !isTeam)
             {
@@ -51,9 +50,13 @@
             {
                 <span class="prototype-nav-label">Administration</span>
                 <a class="@Active("Account")" asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i>User accounts</a>
+                <a asp-controller="Account" asp-action="Create"><i class="ti ti-user-plus"></i>Create user</a>
                 <a class="@Active("Role")" asp-controller="Role" asp-action="Index"><i class="ti ti-shield-lock"></i>Roles & permissions</a>
                 <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i>Audit log</a>
+                <a class="@Active("Settings")" asp-controller="Settings" asp-action="Index"><i class="ti ti-settings"></i>System settings</a>
             }
+            <span class="prototype-nav-label">Help</span>
+            <a class="@Active("Settings")" asp-controller="Settings" asp-action="Support"><i class="ti ti-help-circle"></i>Help & support</a>
         </nav>
         <div class="prototype-sidebar-foot">
             <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@(isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff")</small></span></a>
@@ -67,7 +70,7 @@
             <div><small>Bank of Uganda</small><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
             <div class="prototype-top-actions">
                 <a class="prototype-icon-button" asp-controller="Notification" asp-action="Index" aria-label="Notifications"><i class="ti ti-bell"></i></a>
-                <span class="prototype-avatar">@displayName.Substring(0, 1).ToUpperInvariant()</span>
+                <a class="prototype-avatar" asp-controller="Profile" asp-action="Index" aria-label="Open profile" title="Profile">@displayName.Substring(0, 1).ToUpperInvariant()</a>
             </div>
         </header>
         <main class="prototype-content">
