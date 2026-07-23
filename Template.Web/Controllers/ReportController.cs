@@ -61,9 +61,9 @@ public class ReportController(ApplicationDbContext db) : Controller
                 UnderReview = all.Count(i => i.CurrentStatus == "Under Review"),
                 Declined = all.Count(i => i.CurrentStatus == "Declined")
             },
-            CategoryChartLabels = byCategory.Select(g => (string?)g.Key).ToList(),
+            CategoryChartLabels = byCategory.Select(g => g.Key).ToList(),
             CategoryChartData = byCategory.Select(g => g.Count()).ToList(),
-            TrendChartLabels = byMonth.Select(g => (string?)g.Key.ToString("MMM yyyy")).ToList(),
+            TrendChartLabels = byMonth.Select(g => g.Key.ToString("MMM yyyy")).ToList(),
             TrendChartData = byMonth.Select(g => g.Count()).ToList(),
             CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(all.Count / (double)PageSize))
         });

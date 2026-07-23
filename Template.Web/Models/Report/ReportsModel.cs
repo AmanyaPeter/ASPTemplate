@@ -5,11 +5,11 @@ namespace Template.Web.Models.Report
         public ReportFilterViewModel Filters { get; set; } = new();
         public ReportSummaryViewModel ReportSummary { get; set; } = new();
         public List<ReportIdeaItemViewModel> ReportIdeas { get; set; } = new();
-        public List<string?> Departments { get; set; } = new();
-        public List<string?> Categories { get; set; } = new();
-        public List<string?> CategoryChartLabels { get; set; } = new();
+        public List<string> Departments { get; set; } = new();
+        public List<string> Categories { get; set; } = new();
+        public List<string> CategoryChartLabels { get; set; } = new();
         public List<int> CategoryChartData { get; set; } = new();
-        public List<string?> TrendChartLabels { get; set; } = new();
+        public List<string> TrendChartLabels { get; set; } = new();
         public List<int> TrendChartData { get; set; } = new();
         public int TotalPages { get; set; }
         public int CurrentPage { get; set; }
