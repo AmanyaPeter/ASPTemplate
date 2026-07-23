@@ -1,9 +1,22 @@
 @model NotificationsModel
 @{
-    ViewData["Title"] = "Notifications - Innovation Management System";
+    ViewData["Title"] = "Notifications";
 }
 
-<body class="ims-staff-dashboard">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div>
+        <h2 class="mb-1">Notifications</h2>
+        <div class="text-muted">@Model.UnreadCount unread notification(s)</div>
+    </div>
+    @if (Model.UnreadCount > 0)
+    {
+        <form asp-controller="Notification" asp-action="MarkAllRead" method="post">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="ti ti-checks me-1"></i>Mark all as read
+            </button>
+        </form>
+    }
+</div>
 
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
@@ -82,13 +95,23 @@
                     </div>
                 }
             </div>
-        </main>
+        }
     </div>
-
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-        </script>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer d-flex justify-content-center">
+            <ul class="pagination mb-0">
+                @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+                {
+                    <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : string.Empty)">
+                        <a asp-controller="Notification" asp-action="Index" asp-route-filter="@Model.Filter" asp-route-page="@pageNumber" class="page-link">@pageNumber</a>
+                    </li>
+                }
+            </ul>
+        </div>
     }
+<<<<<<< HEAD
 </body>
+=======
+</div>
+>>>>>>> dev

@@ -3,7 +3,6 @@
     ViewData["Title"] = "Submit Idea - Innovation Management System";
 }
 
-<body class="ims-staff-dashboard">
    
 
     <!-- Main Content -->
@@ -40,8 +39,7 @@
 
             <!-- Form Card -->
             <div class="ims-staff-card">
-                <form method="post" asp-controller="Idea" asp-action="Submit" enctype="multipart/form-data" id="ims-staff-submit-form">
-                    <input type="hidden" asp-for="Id" />
+                <form asp-controller="Idea" asp-action="Submit" method="post" enctype="multipart/form-data" id="ims-staff-submit-form">
                     <!-- Step 1: Innovator Information -->
                     <div class="ims-staff-form-page ims-staff-form-page-active" id="ims-staff-step1">
                         <h3 class="ims-staff-form-page-title">Innovator Details</h3>
@@ -456,5 +454,9 @@
             // Initialize
             toggleSubmissionType();
         </script>
+<<<<<<< HEAD
     }
 </body>
+=======
+    }
+>>>>>>> dev

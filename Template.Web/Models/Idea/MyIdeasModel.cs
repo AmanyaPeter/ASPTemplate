@@ -18,5 +18,6 @@ namespace Template.Web.Models.Idea
         public string? Stage { get; set; }
         public string? Status { get; set; }
         public DateTime SubmissionDate { get; set; }
+        public bool IsRetracted { get; set; }
     }
 }

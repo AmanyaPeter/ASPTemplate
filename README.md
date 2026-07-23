@@ -1,217 +1,75 @@
-# ASPTemplate — Innovation Management Tracking System (IMTS)
+﻿# Innovation Management Tracking System (IMTS)
 
-A modular, enterprise-grade web application built with **ASP.NET Core 8 (MVC + Blazor Server)** using **Clean Architecture** principles. The system manages innovation ideas, tracking their lifecycle from submission through review, approval, budgeting, and implementation — complete with auditing, role-based access control, Active Directory integration, and reporting.
+## System overview
 
----
+IMTS is an ASP.NET Core 8 web application for Bank of Uganda's innovation-management process. It replaces manual idea records and communication with a central workflow from idea submission through selection, concept development, experimentation or research, deployment, and closure.
 
-## Table of Contents
+The system is based on the *Innovation Management System Requirements* SRS and supports three primary users:
 
-1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-   - [Solution Structure](#solution-structure)
-   - [Layer Dependencies](#layer-dependencies)
-   - [Technology Stack](#technology-stack)
-3. [Detailed Layer Breakdown](#detailed-layer-breakdown)
-   - [Template.Common](#templatecommon)
-   - [Template.Data](#templatedata)
-   - [Template.Core](#templatecore)
-   - [Template.Web](#templateweb)
-4. [Key Features](#key-features)
-5. [Prerequisites](#prerequisites)
-6. [Environment Setup — Visual Studio 2022](#environment-setup--visual-studio-2022)
-7. [Environment Setup — VS Code](#environment-setup--vs-code)
-8. [Running the Application](#running-the-application)
-9. [Database Migrations](#database-migrations)
-10. [Authentication & Authorization](#authentication--authorization)
-11. [Logging](#logging)
-12. [Project Conventions](#project-conventions)
-13. [Troubleshooting](#troubleshooting)
+- **Staff** submit individual or team ideas, add attachments, view progress, receive notifications, comment, and retract or cancel their own submissions.
+- **Innovation Team** view and filter submitted ideas, review details and attachments, manage stages and statuses, communicate with submitters, and monitor stage deadlines.
+- **IT Administrator** manages user accounts, roles, account status, and audit activity.
 
----
+The application uses role-based personal dashboards, SQL Server persistence, ASP.NET Core Identity, audit records, notifications, reports, and downloadable resources. It is intended for on-premises deployment on Windows Server, IIS, and Microsoft SQL Server.
 
-## Project Overview
+## Folder structure
 
-This application is an **Innovation Management Tracking System** that allows employees to submit, review, and manage innovation ideas within an organization. It supports:
-
-- Idea submission, drafting, and stage-based lifecycle tracking
-- Category-based classification of ideas
-- Commenting and attachments on ideas
-- Role-based access control (IT Support, Budget Officer, Budget Holder, Budget Admin, etc.)
-- Active Directory / LDAP authentication
-- Comprehensive audit logging
-- Notification and notification preferences
-- Report generation with multiple formats
-- Resource management
-- Survey response collection
-- Timeline and stage history tracking
-
----
-
-## Architecture
-
-The solution follows **Clean Architecture** (also known as Onion Architecture), which enforces separation of concerns by organizing code into four distinct layers. Dependencies flow **inward**: the outer layers depend on inner layers, never the reverse.
-
-### Solution Structure
-
-```
+```text
 ASPTemplate/
-├── Template.sln                          # Solution file
-│
-├── Template.Common/                       # Innermost layer
-│   ├── AuditColumns/                      # Auditable entity interfaces
-│   ├── enums/                             # Shared enumerations
-│   └── Static/                            # Constants, role names, permissions
-│
-├── Template.Data/                         # Data / Persistence layer
-│   ├── Configurations/                    # EF Core DbContext
-│   ├── Entities/                          # Domain entity classes
-│   ├── Migrations/                        # EF Core migrations
-│   └── DbInitializer.cs                   # Seed data initializer
-│
-├── Template.Core/                         # Business logic layer
-│   ├── Mappings/                          # AutoMapper profiles
-│   ├── Models/                            # DTOs and view models
-│   ├── Repository/                        # Repository implementations
-│   │   ├── Accounts/
-│   │   ├── ApplicationPermissions/
-│   │   ├── Auditable/
-│   │   ├── AuditLogs/
-│   │   ├── Common/                        # Base repository interface
-│   │   ├── Ifs/
-│   │   └── Roles/
-│   ├── Services/                          # Application services
-│   │   ├── AdAuthentication/              # LDAP / AD auth service
-│   │   └── Authorization/                 # Permission-based auth
-│   └── TagHelpers/                        # Custom Razor Tag Helpers
-│
-└── Template.Web/                          # Presentation layer
-    ├── Components/                        # Blazor Server components
-    │   └── Shared/                        # Breadcrumb, Profile, Toast
-    ├── Controllers/                       # MVC controllers
-    ├── Middleware/                        # HTTP pipeline middleware
-    ├── Models/                            # UI-specific models
-    ├── Views/                             # Razor views
-    ├── wwwroot/                           # Static assets (CSS, JS, fonts)
-    ├── Program.cs                         # Application entry point
-    ├── appsettings.json                   # Configuration
-    └── nlog.config                        # NLog logging configuration
+|-- Template.sln          Solution file
+|-- Template.Common/      Shared enums, role names, constants, and audit base classes
+|-- Template.Data/        EF Core entities, DbContext, migrations, and seed data
+|-- Template.Core/        Business models, repositories, services, and authorization
+|-- Template.Web/         MVC controllers, Razor views, static files, and application startup
+|-- design-reference/     UI and design reference material
+|-- Innovation Management System Requirements.pdf
+`-- README.md
 ```
 
-### Layer Dependencies
+Dependencies flow from `Template.Web` to `Template.Core`, then `Template.Data` and `Template.Common`.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Template.Web                          │
-│   (ASP.NET Core MVC + Blazor Server, Controllers,       │
-│    Views, Components, Middleware)                       │
-│                                                         │
-│   Depends on: Template.Core                             │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                    Template.Core                          │
-│   (Business Logic, Services, Repositories, AutoMapper)  │
-│                                                         │
-│   Depends on: Template.Data                             │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                    Template.Data                          │
-│   (EF Core DbContext, Entities, Migrations, Seeding)    │
-│                                                         │
-│   Depends on: Template.Common                           │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│                  Template.Common                          │
-│   (Shared Enums, Constants, Auditable Interfaces)       │
-│   No dependencies on other project layers               │
-└─────────────────────────────────────────────────────────┘
-```
+## Run offline with Visual Studio
 
-### Technology Stack
+### Prerequisites
 
-| Category                | Technology                                                      |
-|------------------------|-----------------------------------------------------------------|
-| **Runtime**            | .NET 8                                                          |
-| **Web Framework**      | ASP.NET Core MVC + Blazor Server                                |
-| **ORM**                | Entity Framework Core 8 (SQL Server provider)                   |
-| **Database**           | SQL Server (LocalDB for development)                            |
-| **Authentication**     | Cookie Authentication + Active Directory / LDAP                 |
-| **Authorization**      | Custom permission-based policy provider & handler               |
-| **Object Mapping**     | AutoMapper 16                                                   |
-| **Logging**            | NLog (file + database targets)                                  |
-| **API Documentation**  | Swashbuckle / Swagger UI (non-development environments)         |
-| **UI Components**      | Blazor Bootstrap, SmartBreadcrumbs                              |
-| **Data Access**        | Dapper (in addition to EF Core)                                 |
-| **Identity**           | ASP.NET Core Identity with `IdentityUser<Guid>`                 |
+- Visual Studio 2022 with the **ASP.NET and web development** workload
+- .NET 8 SDK
+- SQL Server Express LocalDB, normally installed through Visual Studio
+- NuGet packages restored at least once while internet access is available
 
----
+### Start the application
 
-## Detailed Layer Breakdown
+1. Open `Template.sln` in Visual Studio.
+2. Right-click `Template.Web` and select **Set as Startup Project**.
+3. Start LocalDB from a terminal or Package Manager Console:
 
-### Template.Common
+   ```powershell
+   sqllocaldb start MSSQLLocalDB
+   ```
 
-The innermost layer with **zero dependencies** on other projects. Contains shared artifacts used across all layers.
+4. Restore packages if they are not already cached:
 
-| Directory / File            | Description                                                                 |
-|-----------------------------|-----------------------------------------------------------------------------|
-| `enums/`                    | Shared enumerations: `AuditEventType`, `AuditStatus`, `DigestFrequency`, `IdeaStage`, `IdeaStatus`, `NotificationType`, `ReportFormat`, `ReportType`, `ResourceCategory`, `ScheduleFrequency` |
-| `Static/Constants.cs`       | Application-wide constant values                                            |
-| `Static/RoleConstants.cs`   | Role name constants: `IT Support`, `Budget Officer`, `Budget Holder`, `Budget Admin`, `Budget Admin Viewer` |
-| `Static/SystemPermissions.cs` | System permission definitions                                              |
-| `Static/Types.cs`           | Shared type definitions                                                     |
-| `AuditColumns/`             | `IAuditableEntity` interface and `AuditableEntity` base class for automatic audit tracking |
+   ```powershell
+   dotnet restore
+   ```
 
-### Template.Data
+5. Build the solution with **Build > Build Solution** or `Ctrl+Shift+B`.
+6. Select the `https` launch profile and press `F5`, or press `Ctrl+F5` without debugging.
 
-The persistence layer. Defines domain entities, the EF Core `DbContext`, database migrations, and seed data.
+The application uses the `InnovationManagementDb` LocalDB database configured in `Template.Web/appsettings.json`. On startup it automatically applies EF Core migrations and seeds the roles, development users, categories, and sample dashboard data. No manual `Update-Database` command is normally required.
 
-| Directory / File                    | Description                                                                 |
-|-------------------------------------|-----------------------------------------------------------------------------|
-| `Configurations/ApplicationDbContext.cs` | Main `DbContext` extending `IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>` with all `DbSet<>` properties |
-| `Entities/ApplicationUser.cs`       | Custom user entity extending `IdentityUser<Guid>` with a `RoleId` FK        |
-| `Entities/Role.cs`                  | Custom role entity (separate from `IdentityRole`) with user navigation      |
-| `Entities/AuditLog.cs`              | Audit log entries                                                          |
-| `Entities/Category.cs`              | Idea categories                                                             |
-| `Entities/Comment.cs`               | Comments on ideas                                                           |
-| `Entities/IdeaAttachment.cs`        | File attachments for ideas                                                  |
-| `Entities/IdeaTimeline.cs`          | Timeline events for ideas                                                   |
-| `Entities/InnovationDraft.cs`       | Draft/saved ideas                                                           |
-| `Entities/InnovationIdea.cs`        | Core innovation idea entity                                                 |
-| `Entities/Notification.cs`          | User notifications                                                          |
-| `Entities/NotificationPreference.cs`| User notification preferences                                               |
-| `Entities/Report.cs`                | Generated reports                                                           |
-| `Entities/Resource.cs`              | Tracked resources                                                           |
-| `Entities/StageHistory.cs`          | History of idea stage transitions                                           |
-| `Entities/SurveyResponse.cs`        | Survey/questionnaire responses                                              |
-| `Entities/SystemSetting.cs`         | Application settings                                                        |
-| `Entities/TimelineSetting.cs`       | Configuration for timeline behavior                                         |
-| `Entities/UserSession.cs`           | Active user session tracking                                                |
-| `Migrations/`                       | EF Core migrations for schema evolution                                     |
-| `DbInitializer.cs`                  | Seeds initial data (roles, admin users, etc.) into the database             |
+The default development addresses are:
 
-### Template.Core
+- `https://localhost:7254`
+- `http://localhost:5104`
 
-The business logic layer. Contains services, repositories, AutoMapper profiles, and custom authorization.
+Development accounts use the seeded password `Admin@123`:
 
-| Directory / File                              | Description                                                                 |
-|-----------------------------------------------|-----------------------------------------------------------------------------|
-| `CoreServicesRegistration.cs`                 | DI registration extension — registers all core services, repositories, AutoMapper, authorization handlers |
-| `Repository/Common/IRepositoryBase.cs`         | Generic repository interface: `FindAll`, `FindById`, `Create`, `Update`, `IsExists`, `Save` |
-| `Repository/Common/RepositoryResult.cs`        | Standardized result wrapper for repository operations                       |
-| `Repository/Common/LoadSyncResult.cs`          | Result model for data sync operations                                       |
-| `Repository/Accounts/`                         | Account-related repository and services (e.g., `IAccountRepository`, `IAuthService`, `AuthService`) |
-| `Repository/ApplicationPermissions/`           | Permission repository, authorization handler, and policy provider          |
-| `Repository/Auditable/`                        | `AuditSaveChangesInterceptor` — EF Core interceptor for automatic audit logging |
-| `Repository/AuditLogs/`                        | Audit log read/query repository                                            |
-| `Repository/Roles/`                            | Role management repository                                                  |
-| `Repository/Ifs/`                              | Integration with external/financial systems (Oracle DB via Dapper)          |
-| `Services/AdAuthentication/`                   | `IAdAuthenticationService` / `AdAuthenticationService` — LDAP authentication against Active Directory |
-| `Services/Authorization/`                      | Custom authorization infrastructure (permission-based policy provider and handler) |
-| `Mappings/`                                    | AutoMapper profiles: `AccountAutoMapperProfile`, `ApplicationRoleAutoMapperProfile`, `AuditLogAutoMapperProfile` |
-| `Models/`                                      | View models / DTOs: Account, AuditLogs, Permissions, Profile, Roles, `ErrorViewModel` |
-| `TagHelpers/`                                  | `PermissionTagHelper` — conditionally renders content based on user permissions; `TestTagHelper` |
+| Role | Username |
+|---|---|
+| IT Administrator | `admin` |
+| Staff | `staff` |
+| Innovation Team | `innovation` |
 
 ### Template.Web
 
@@ -729,3 +587,4 @@ If you encounter issues not covered here:
 ---
 
 *This README was generated for the ASPTemplate (IMTS) project — an Innovation Management Tracking System built with ASP.NET Core 8.*
+For fully offline use, ensure the .NET SDK, LocalDB, and required NuGet packages are installed or cached before disconnecting from the network.

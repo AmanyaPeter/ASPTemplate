@@ -3,7 +3,6 @@
     ViewData["Title"] = "Submitted Ideas - Innovation Management System";
 }
 
-<body class="ims-staff-dashboard">
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
        
@@ -11,7 +10,7 @@
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
             <!-- Filters Bar -->
-            <div class="ims-staff-filters-bar">
+            <form asp-controller="Idea" asp-action="AllIdeas" method="get" class="ims-staff-filters-bar">
                 <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search by title or submitter..." asp-for="SearchTerm">
                 <select class="ims-staff-form-control" asp-for="StatusFilter">
                     <option value="">All Statuses</option>
@@ -39,9 +38,9 @@
                     <option value="Legal">Legal</option>
                 </select>
                 <input type="date" class="ims-staff-form-control" asp-for="DateFrom" style="min-width:auto;">
-                <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" asp-page-handler="ApplyFilters">Apply</button>
-                <button class="ims-staff-btn ims-staff-btn-secondary ims-staff-btn-sm" asp-page-handler="ClearFilters">Clear</button>
-            </div>
+                <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" type="submit">Apply</button>
+                <a asp-controller="Idea" asp-action="AllIdeas" class="ims-staff-btn ims-staff-btn-secondary ims-staff-btn-sm">Clear</a>
+            </form>
 
             <!-- Ideas Table -->
             <div class="ims-staff-card ims-staff-table-card">
@@ -79,7 +78,11 @@
                                     </td>
                                     <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
                                     <td>
+<<<<<<< HEAD
                                         <a asp-controller="Idea" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
+=======
+                                        <a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
+>>>>>>> dev
                                             @(idea.NeedsReview ? "Review" : "View Review")
                                         </a>
                                     </td>
@@ -116,5 +119,9 @@
         <script>
             lucide.createIcons();
         </script>
+<<<<<<< HEAD
     }
 </body>
+=======
+    }
+>>>>>>> dev

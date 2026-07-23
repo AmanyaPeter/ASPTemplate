@@ -1,48 +1,211 @@
-@model object
+@model DashboardPageViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    var staff = Model as StaffDashboardModel;
-    var team = Model as InnovationDashboardModel;
-    var admin = Model as AdminDashboardModel;
-    var stats = staff != null
-        ? new[] { ("Total ideas", staff.TotalIdeas, "bulb"), ("Under review", staff.UnderReview, "search"), ("Approved", staff.Approved, "circle-check"), ("Completed", staff.Completed, "flag-check") }
-        : team != null
-            ? new[] { ("Total ideas", team.Stats.TotalIdeas, "bulb"), ("Pending review", team.Stats.PendingReviews, "clipboard-check"), ("Concept stage", team.Stats.ConceptDevelopment, "flask"), ("Deployment", team.Stats.Deployment, "rocket") }
-            : admin != null
-                ? new[] { ("Total users", admin.Stats.TotalUsers, "users"), ("Active users", admin.Stats.ActiveUsers, "user-check"), ("Locked accounts", admin.Stats.LockedAccounts, "lock"), ("7-day activities", admin.Stats.RecentActivities, "activity") }
-                : Array.Empty<(string, int, string)>();
 }
-<div class="prototype-heading">
-    <div><h1>Welcome back</h1><p>Here is the latest activity across the innovation programme.</p></div>
-    @if (staff != null) { <a class="prototype-button orange" asp-controller="Idea" asp-action="Submit"><i class="ti ti-plus"></i> Submit new idea</a> }
-    else if (admin != null) { <a class="prototype-button orange" asp-controller="Account" asp-action="Create"><i class="ti ti-user-plus"></i> Create user</a> }
-    else { <a class="prototype-button orange" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i> View reports</a> }
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div>
+        <h2 class="mb-1">Innovation Management Dashboard</h2>
+        <div class="text-muted">Welcome, @User.Identity?.Name</div>
+    </div>
 </div>
-<div class="prototype-grid">
-    @foreach (var item in stats) { <div class="prototype-card prototype-stat"><span class="prototype-stat-icon"><i class="ti ti-@item.Item3"></i></span><small>@item.Item1</small><strong>@item.Item2</strong></div> }
-</div>
-<section class="prototype-card prototype-section">
-    @if (staff != null)
-    {
-        <div class="prototype-section-title"><h2>Recent submissions</h2><a asp-controller="Idea" asp-action="MyIdeas"><i class="ti ti-list-check"></i> View all</a></div>
-        <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Idea</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>
-        @if (staff.RecentSubmissions.Count == 0) { <tr><td colspan="4">No ideas submitted yet. Your next idea can start here.</td></tr> }
-        @foreach (var item in staff.RecentSubmissions) { <tr><td>@item.Title</td><td>@(item.Category ?? "Uncategorised")</td><td><span class="prototype-badge">@item.Status</span></td><td>@item.Date.ToString("dd MMM yyyy")</td></tr> }
-        </tbody></table></div>
-    }
-    else if (team != null)
-    {
-        <div class="prototype-section-title"><h2>Latest innovation ideas</h2><a asp-controller="Idea" asp-action="AllIdeas"><i class="ti ti-route"></i> Open pipeline</a></div>
-        <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Idea</th><th>Submitted by</th><th>Status</th><th>Date</th></tr></thead><tbody>
-        @if (team.RecentIdeas.Count == 0) { <tr><td colspan="4">No innovation ideas are currently in the pipeline.</td></tr> }
-        @foreach (var item in team.RecentIdeas) { <tr><td>@item.Title</td><td>@item.Submitter</td><td><span class="prototype-badge">@item.Status</span></td><td>@item.Date.ToString("dd MMM yyyy")</td></tr> }
-        </tbody></table></div>
-    }
-    else if (admin != null)
-    {
-        <div class="prototype-section-title"><h2>Recently created users</h2><a asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i> Manage accounts</a></div>
-        <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Name</th><th>Email</th><th>Last activity</th><th>State</th></tr></thead><tbody>
-        @foreach (var item in admin.RecentUsers) { <tr><td>@item.Name</td><td>@item.Email</td><td>@item.LastLogin.ToString("dd MMM yyyy")</td><td><span class="prototype-badge @(item.IsOnline ? "success" : "")">@(item.IsOnline ? "Online" : "Offline")</span></td></tr> }
-        </tbody></table></div>
-    }
-</section>
+
+@if (User.IsInRole(RoleConstants.ItAdmin))
+{
+    <div class="row row-cards mb-4">
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Total users</div><div class="h1 mb-0">@Model.ItAdmin.TotalUsers</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Active users</div><div class="h1 text-success mb-0">@Model.ItAdmin.ActiveUsers</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Locked accounts</div><div class="h1 text-warning mb-0">@Model.ItAdmin.LockedAccounts</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Disabled accounts</div><div class="h1 text-danger mb-0">@Model.ItAdmin.DisabledAccounts</div></div></div></div>
+    </div>
+
+    <div class="row row-cards">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header"><h3 class="card-title">Recently created users</h3></div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead><tr><th>User</th><th>Status</th><th>Last access</th></tr></thead>
+                        <tbody>
+                        @if (Model.ItAdmin.RecentUsers.Count == 0)
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-4">No users found.</td></tr>
+                        }
+                        @foreach (var user in Model.ItAdmin.RecentUsers)
+                        {
+                            <tr>
+                                <td><div class="fw-semibold">@user.Name</div><div class="text-muted small">@user.Email</div></td>
+                                <td>
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="badge bg-warning-lt">Locked</span>
+                                    }
+                                    else if (!user.IsActive)
+                                    {
+                                        <span class="badge bg-danger-lt">Disabled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success-lt">Active</span>
+                                    }
+                                </td>
+                                <td>@(user.LastAccessTime?.ToString("dd MMM yyyy HH:mm") ?? "Never")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer"><a asp-controller="Account" asp-action="Index" class="btn btn-primary"><i class="ti ti-users me-1"></i>Manage users</a></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header"><h3 class="card-title">Recent audit activity</h3></div>
+                <div class="list-group list-group-flush">
+                    @if (Model.ItAdmin.RecentAuditActivity.Count == 0)
+                    {
+                        <div class="text-center text-muted py-4">No audit activity found.</div>
+                    }
+                    @foreach (var activity in Model.ItAdmin.RecentAuditActivity)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between gap-2">
+                                <div><div class="fw-semibold">@activity.EventType</div><div class="small text-muted">@activity.Username - @activity.OperationPerformed</div></div>
+                                <span class="badge @(activity.Status == AuditStatus.Success ? "bg-success-lt" : "bg-danger-lt")">@activity.Status</span>
+                            </div>
+                            <div class="small text-muted mt-1">@activity.CreatedDate.ToString("dd MMM yyyy HH:mm")</div>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer"><a asp-controller="AuditLog" asp-action="Index" class="btn btn-outline-primary"><i class="ti ti-list me-1"></i>View audit logs</a></div>
+            </div>
+        </div>
+    </div>
+}
+else if (User.IsInRole(RoleConstants.InnovationTeam))
+{
+    <div class="row row-cards mb-4">
+        <div class="col-sm-6 col-xl"><div class="card"><div class="card-body"><div class="text-muted">Active ideas</div><div class="h1 mb-0">@Model.InnovationTeam.TotalActiveIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl"><div class="card"><div class="card-body"><div class="text-muted">Pending review</div><div class="h1 text-warning mb-0">@Model.InnovationTeam.PendingReviewIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl"><div class="card"><div class="card-body"><div class="text-muted">Concept development</div><div class="h1 text-info mb-0">@Model.InnovationTeam.ConceptDevelopmentIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl"><div class="card"><div class="card-body"><div class="text-muted">Experimentation</div><div class="h1 text-primary mb-0">@Model.InnovationTeam.ExperimentationIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl"><div class="card"><div class="card-body"><div class="text-muted">Deployment</div><div class="h1 text-success mb-0">@Model.InnovationTeam.DeploymentIdeas</div></div></div></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title">Review queue</h3></div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead><tr><th>Idea</th><th>Submitter</th><th>Category</th><th>Stage / status</th><th>Submitted</th></tr></thead>
+                <tbody>
+                @if (Model.InnovationTeam.ReviewQueue.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">The review queue is empty.</td></tr>
+                }
+                @foreach (var idea in Model.InnovationTeam.ReviewQueue)
+                {
+                    <tr>
+                        <td><div class="fw-semibold"><a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id">@idea.ReferenceNumber</a></div><div class="text-muted small">@idea.Title</div></td>
+                        <td><div>@idea.SubmitterName</div><div class="text-muted small">@idea.SubmitterDepartment</div></td>
+                        <td>@idea.Category</td>
+                        <td><span class="badge bg-blue-lt">@idea.Stage</span> <span class="badge bg-secondary-lt">@idea.Status</span></td>
+                        <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">Upcoming and overdue stage deadlines</h3></div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead><tr><th>Idea</th><th>Stage</th><th>Deadline</th><th>State</th></tr></thead>
+                <tbody>
+                @if (Model.InnovationTeam.StageDeadlines.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-center text-muted py-4">No active stage deadlines.</td></tr>
+                }
+                @foreach (var deadline in Model.InnovationTeam.StageDeadlines)
+                {
+                    <tr>
+                        <td><div class="fw-semibold">@deadline.ReferenceNumber</div><div class="text-muted small">@deadline.IdeaTitle</div></td>
+                        <td>@deadline.Stage</td>
+                        <td>@deadline.DeadlineDate.ToString("dd MMM yyyy")</td>
+                        <td><span class="badge @(deadline.IsOverdue ? "bg-danger-lt" : "bg-success-lt")">@(deadline.IsOverdue ? "Overdue" : "Upcoming")</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if (User.IsInRole(RoleConstants.Staff))
+{
+    <div class="d-flex justify-content-end mb-3">
+        <a asp-controller="Idea" asp-action="Submit" class="btn btn-primary"><i class="ti ti-plus me-1"></i>Submit New Idea</a>
+    </div>
+    <div class="row row-cards mb-4">
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">My submitted ideas</div><div class="h1 mb-0">@Model.Staff.TotalIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Under review</div><div class="h1 text-warning mb-0">@Model.Staff.IdeasUnderReview</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Approved</div><div class="h1 text-success mb-0">@Model.Staff.ApprovedIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Completed / closed</div><div class="h1 text-primary mb-0">@Model.Staff.CompletedIdeas</div></div></div></div>
+    </div>
+
+    <div class="row row-cards">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header"><h3 class="card-title">My recent ideas</h3></div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead><tr><th>Idea</th><th>Category</th><th>Stage / status</th><th>Submitted</th></tr></thead>
+                        <tbody>
+                        @if (Model.Staff.RecentIdeas.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-4">You have not submitted any ideas.</td></tr>
+                        }
+                        @foreach (var idea in Model.Staff.RecentIdeas)
+                        {
+                            <tr class="@(idea.IsRetracted ? "text-muted" : string.Empty)">
+                                <td><div class="fw-semibold"><a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id">@idea.ReferenceNumber</a></div><div class="small">@idea.Title</div>@if (idea.IsRetracted) { <span class="badge bg-danger-lt mt-1">Retracted</span> }</td>
+                                <td>@idea.Category</td>
+                                <td><span class="badge bg-blue-lt">@idea.Stage</span> <span class="badge bg-secondary-lt">@idea.Status</span></td>
+                                <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header"><h3 class="card-title">My notifications</h3></div>
+                <div class="list-group list-group-flush">
+                    @if (Model.Staff.RecentNotifications.Count == 0)
+                    {
+                        <div class="text-center text-muted py-4">No notifications.</div>
+                    }
+                    @foreach (var notification in Model.Staff.RecentNotifications)
+                    {
+                        <div class="list-group-item @(notification.IsRead ? string.Empty : "bg-blue-lt")">
+                            <div class="fw-semibold">@notification.Subject</div>
+                            <div class="small text-muted">@notification.Message</div>
+                            <div class="small text-muted mt-1">@notification.CreatedDate.ToString("dd MMM yyyy HH:mm")</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning" role="alert">
+        <div class="d-flex">
+            <div><i class="ti ti-alert-triangle me-2"></i></div>
+            <div><strong>Dashboard role missing.</strong><div>Your account is authenticated but has not been assigned the Admin, InnovationTeam, or Staff dashboard role.</div></div>
+        </div>
+    </div>
+}

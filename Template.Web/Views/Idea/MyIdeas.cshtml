@@ -2,8 +2,15 @@
 @{
     ViewData["Title"] = "My Ideas - Innovation Management System";
 }
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
 
-<body class="ims-staff-dashboard">
 
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
@@ -12,7 +19,7 @@
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
             <!-- Filters Bar -->
-            <div class="ims-staff-filters-bar">
+            <form asp-controller="Idea" asp-action="MyIdeas" method="get" class="ims-staff-filters-bar">
                 <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search ideas..." asp-for="SearchTerm">
                 <select class="ims-staff-form-control" asp-for="StatusFilter">
                     <option value="">All Statuses</option>
@@ -29,8 +36,8 @@
                     <option value="Technology">Technology</option>
                     <option value="Product Innovation">Product Innovation</option>
                 </select>
-                <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" asp-page-handler="ApplyFilters">Apply</button>
-            </div>
+                <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" type="submit">Apply</button>
+            </form>
 
             <!-- Ideas Table -->
             <div class="ims-staff-card ims-staff-table-card">
@@ -58,12 +65,18 @@
                                     <td>
                                         <div class="ims-staff-actions">
                                             <a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">View</a>
-                                            <a asp-controller="Idea" asp-action="Submit" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Edit</a>
-                                            <form method="post" asp-controller="Idea" asp-action="Retract" asp-route-id="@idea.Id" style="display:inline">
-                                                <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary" onclick="return confirm('Retract this idea?')">Retract</button>
-                                            </form>
-                                            <button class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary" onclick="retractIdea(@idea.Id)">Retract</button>
-                                            <button class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-danger" onclick="cancelIdea(@idea.Id)">Cancel</button>
+                                            @if (!idea.IsRetracted)
+                                            {
+                                                <form asp-controller="IdeaStaffActions" asp-action="Retract" asp-route-id="@idea.Id" method="post" class="d-inline">
+                                                    <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Retract</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-controller="IdeaStaffActions" asp-action="Cancel" asp-route-id="@idea.Id" method="post" class="d-inline">
+                                                    <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-danger">Cancel</button>
+                                                </form>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -111,5 +124,9 @@
                 }
             }
         </script>
+<<<<<<< HEAD
     }
 </body>
+=======
+    }
+>>>>>>> dev

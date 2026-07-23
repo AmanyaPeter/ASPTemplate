@@ -9,37 +9,59 @@ using Template.Web.Models.Notification;
 namespace Template.Web.Controllers;
 
 [Authorize]
-public class NotificationController(ApplicationDbContext db) : Controller
+public class NotificationController(ApplicationDbContext context) : Controller
 {
-    private const int PageSize = 15;
-
-    [HttpGet]
     public async Task<IActionResult> Index(string filter = "all", int page = 1)
     {
-        var userId = UserId();
-        if (userId == null) return Challenge();
-        page = Math.Max(page, 1);
-        var query = db.Notifications.AsNoTracking().Where(n => n.UserId == userId);
-        if (filter == "unread") query = query.Where(n => !n.IsRead);
-        if (filter == "read") query = query.Where(n => n.IsRead);
-        var count = await query.CountAsync();
-        var items = await query.OrderByDescending(n => n.CreatedDate)
-            .Skip((page - 1) * PageSize).Take(PageSize)
-            .Select(n => new NotificationItemViewModel
-            {
-                Id = n.Id, Subject = n.Subject, Message = n.Message,
-                IsRead = n.IsRead, Icon = IconFor(n.Type), TimeAgo = RelativeTime(n.CreatedDate)
-            }).ToListAsync();
-        return View(new NotificationsModel
+        if (!TryGetCurrentUserId(out var userId))
         {
-            Filter = filter, Notifications = items,
-            UnreadCount = await db.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead),
-            CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize))
-        });
+            return Forbid();
+        }
+
+        const int pageSize = 10;
+        var query = context.Notifications
+            .AsNoTracking()
+            .Where(notification => notification.UserId == userId);
+
+        query = filter switch
+        {
+            "read" => query.Where(notification => notification.IsRead),
+            "unread" => query.Where(notification => !notification.IsRead),
+            _ => query
+        };
+
+        var count = await query.CountAsync();
+        var model = new NotificationsModel
+        {
+            Filter = filter,
+            CurrentPage = Math.Max(page, 1),
+            TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)pageSize)),
+            UnreadCount = await context.Notifications
+                .AsNoTracking()
+                .CountAsync(notification =>
+                    notification.UserId == userId && !notification.IsRead),
+            Notifications = await query
+                .OrderByDescending(notification => notification.CreatedDate)
+                .Skip((Math.Max(page, 1) - 1) * pageSize)
+                .Take(pageSize)
+                .Select(notification => new NotificationItemViewModel
+                {
+                    Id = notification.Id,
+                    Subject = notification.Subject,
+                    Message = notification.Message,
+                    Icon = notification.Type.ToString(),
+                    TimeAgo = notification.CreatedDate.ToString("dd MMM yyyy HH:mm"),
+                    IsRead = notification.IsRead
+                })
+                .ToListAsync()
+        };
+
+        return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+<<<<<<< HEAD
     public async Task<IActionResult> MarkRead(Guid id, string filter = "all")
     {
         var notification = await db.Notifications.SingleOrDefaultAsync(n => n.Id == id && n.UserId == UserId());
@@ -48,10 +70,31 @@ public class NotificationController(ApplicationDbContext db) : Controller
         notification.ReadAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return RedirectToAction(nameof(Index), new { filter });
+=======
+    public async Task<IActionResult> MarkRead(Guid id)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Forbid();
+        }
+
+        var notification = await context.Notifications.FirstOrDefaultAsync(item =>
+            item.Id == id && item.UserId == userId);
+        if (notification == null)
+        {
+            return NotFound();
+        }
+
+        notification.IsRead = true;
+        notification.ReadAt = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+>>>>>>> dev
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+<<<<<<< HEAD
     public async Task<IActionResult> MarkAllRead(string filter = "all")
     {
         var notifications = await db.Notifications.Where(n => n.UserId == UserId() && !n.IsRead).ToListAsync();
@@ -80,4 +123,28 @@ public class NotificationController(ApplicationDbContext db) : Controller
         if (span.TotalDays < 1) return $"{(int)span.TotalHours}h ago";
         return $"{(int)span.TotalDays}d ago";
     }
+=======
+    public async Task<IActionResult> MarkAllRead()
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Forbid();
+        }
+
+        var notifications = await context.Notifications
+            .Where(item => item.UserId == userId && !item.IsRead)
+            .ToListAsync();
+        foreach (var notification in notifications)
+        {
+            notification.IsRead = true;
+            notification.ReadAt = DateTime.UtcNow;
+        }
+
+        await context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    private bool TryGetCurrentUserId(out Guid userId) =>
+        Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+>>>>>>> dev
 }

@@ -1,10 +1,15 @@
 @model ReviewIdeaModel
 @{
-    ViewData["Title"] = "Review Idea - Innovation Management System";
+    ViewData["Title"] = "Review Idea";
 }
 
-<body class="ims-staff-dashboard">
-   
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <a asp-controller="Idea" asp-action="AllIdeas" class="text-muted">&larr; Back to review queue</a>
+        <h2 class="mt-2 mb-1">@Model.Idea.Title</h2>
+        <div class="text-muted">Submitted by @Model.Idea.Submitter, @Model.Idea.SubmitterBusinessUnit on @Model.Idea.SubmissionDate.ToString("dd MMM yyyy")</div>
+    </div>
+</div>
 
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
@@ -14,6 +19,7 @@
             <div class="ims-staff-back-link">
                 <a asp-controller="Idea" asp-action="AllIdeas" class="ims-staff-back-link-anchor">&larr; Back to Submitted Ideas</a>
             </div>
+        </div>
 
             <!-- Review Grid -->
             <div class="ims-staff-review-grid">
@@ -172,20 +178,82 @@
                     </div>
                 </div>
             </div>
-        </main>
+            <div class="card-footer">
+                <form asp-controller="IdeaWorkflow" asp-action="AddComment" asp-route-id="@Model.Idea.Id" method="post">
+                    <div class="input-group">
+                        <textarea name="newComment" class="form-control" rows="2" required placeholder="Add a comment for the submitter"></textarea>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Review controls</h3></div>
+            <div class="card-body">
+                <form asp-controller="IdeaWorkflow" asp-action="SaveReview" asp-route-id="@Model.Idea.Id" method="post">
+                    <div class="mb-3">
+                        <label asp-for="Review.Status" class="form-label">Status</label>
+                        <select asp-for="Review.Status" asp-items="Html.GetEnumSelectList<IdeaStatus>()" class="form-select"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Review.Stage" class="form-label">Stage</label>
+                        <select asp-for="Review.Stage" asp-items="Html.GetEnumSelectList<IdeaStage>()" class="form-select"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Review.TimelineDate" class="form-label">Stage deadline</label>
+                        <input asp-for="Review.TimelineDate" type="date" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Review.AssignedReviewerId" class="form-label">Assigned reviewer</label>
+                        <select asp-for="Review.AssignedReviewerId" class="form-select">
+                            <option value="">Unassigned</option>
+                            @foreach (var reviewer in Model.Reviewers)
+                            {
+                                <option value="@reviewer.Id">@reviewer.FullName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Review.Notes" class="form-label">Reason / notes</label>
+                        <textarea asp-for="Review.Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save review and notify submitter</button>
+                </form>
+            </div>
+        </div>
 
-            function notifySubmitter() {
-                if (confirm('Send notification to the idea submitter?')) {
-                    alert('Notification sent successfully!');
-                    // window.location.href = `/Innovation/ReviewIdea?handler=NotifySubmitter&id=${@Model.Idea.Id}`;
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Workflow</h3></div>
+            <div class="list-group list-group-flush">
+                @foreach (var step in Model.WorkflowSteps)
+                {
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>@step.Name</span>
+                        @if (step.IsComplete)
+                        {
+                            <span class="badge bg-success-lt">Complete</span>
+                        }
+                        else if (step.IsPending)
+                        {
+                            <span class="badge bg-warning-lt">Current</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary-lt">Not started</span>
+                        }
+                    </div>
                 }
+<<<<<<< HEAD
             }
         </script>
     }
 </body>
+=======
+            </div>
+        </div>
+    </div>
+</div>
+>>>>>>> dev
