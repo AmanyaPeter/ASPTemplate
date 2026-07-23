@@ -11,8 +11,13 @@ using Template.Web.Models.Idea;
 namespace Template.Web.Controllers;
 
 [Authorize]
-public class IdeaController(ApplicationDbContext context) : Controller
+public class IdeaController(
+    ApplicationDbContext context,
+    IWebHostEnvironment environment) : Controller
 {
+    private const long MaximumAttachmentSize = 10 * 1024 * 1024;
+    private static readonly HashSet<string> AllowedAttachmentExtensions =
+        new(StringComparer.OrdinalIgnoreCase) { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png" };
     [Authorize(Roles = RoleConstants.Staff)]
     [HttpGet]
     public async Task<IActionResult> Submit()
@@ -55,6 +60,22 @@ public class IdeaController(ApplicationDbContext context) : Controller
             string.IsNullOrWhiteSpace(model.Idea.ProposedSolution))
         {
             ModelState.AddModelError(string.Empty, "Complete all required idea fields.");
+            return View(model);
+        }
+
+        var attachments = model.Attachments?.Where(file => file.Length > 0).ToList() ?? [];
+        foreach (var attachment in attachments)
+        {
+            var extension = Path.GetExtension(attachment.FileName);
+            if (!AllowedAttachmentExtensions.Contains(extension) || attachment.Length > MaximumAttachmentSize)
+            {
+                ModelState.AddModelError(nameof(model.Attachments),
+                    $"{Path.GetFileName(attachment.FileName)} must be a PDF, Word, Excel, or PNG file no larger than 10 MB.");
+            }
+        }
+
+        if (!ModelState.IsValid)
+        {
             return View(model);
         }
 
@@ -109,7 +130,37 @@ public class IdeaController(ApplicationDbContext context) : Controller
             CreatedDate = DateTime.UtcNow
         });
 
-        await context.SaveChangesAsync();
+        var uploadRoot = Path.Combine(environment.ContentRootPath, "App_Data", "IdeaAttachments", idea.Id.ToString("N"));
+        var storedFiles = new List<string>();
+        try
+        {
+            if (attachments.Count > 0) Directory.CreateDirectory(uploadRoot);
+            foreach (var attachment in attachments)
+            {
+                var extension = Path.GetExtension(attachment.FileName);
+                var storedFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+                var storedPath = Path.Combine(uploadRoot, storedFileName);
+                await using var stream = System.IO.File.Create(storedPath);
+                await attachment.CopyToAsync(stream);
+                storedFiles.Add(storedPath);
+                context.IdeaAttachments.Add(new IdeaAttachment
+                {
+                    Id = Guid.NewGuid(), IdeaId = idea.Id, Idea = idea,
+                    FileName = Path.GetFileName(attachment.FileName),
+                    FilePath = Path.Combine(idea.Id.ToString("N"), storedFileName),
+                    FileSize = attachment.Length, FileType = extension.TrimStart('.').ToUpperInvariant(),
+                    MimeType = string.IsNullOrWhiteSpace(attachment.ContentType) ? "application/octet-stream" : attachment.ContentType,
+                    UploadedById = user.Id, UploadedBy = user, CreatedDate = DateTime.UtcNow, CreatedBy = user.Id.ToString()
+                });
+            }
+            await context.SaveChangesAsync();
+        }
+        catch
+        {
+            foreach (var storedFile in storedFiles)
+                if (System.IO.File.Exists(storedFile)) System.IO.File.Delete(storedFile);
+            throw;
+        }
         TempData["SuccessMessage"] = $"Idea {idea.ReferenceNumber} submitted successfully.";
         return RedirectToAction(nameof(MyIdeas));
     }
@@ -168,7 +219,8 @@ public class IdeaController(ApplicationDbContext context) : Controller
                     CategoryName = idea.Category != null ? idea.Category.Name : "Uncategorized",
                     Stage = idea.CurrentStage,
                     Status = idea.IsRetracted ? "Retracted" : idea.CurrentStatus,
-                    SubmissionDate = idea.SubmissionDate
+                    SubmissionDate = idea.SubmissionDate,
+                    IsRetracted = idea.IsRetracted
                 })
                 .ToListAsync()
         };
@@ -275,6 +327,7 @@ public class IdeaController(ApplicationDbContext context) : Controller
                     Status = item.IsRetracted ? "Retracted" : item.CurrentStatus,
                     Attachments = item.Attachments.Select(file => new AttachmentViewModel
                     {
+                        Id = file.Id,
                         FileName = file.FileName,
                         FilePath = file.FilePath,
                         Icon = "paperclip"
@@ -286,6 +339,17 @@ public class IdeaController(ApplicationDbContext context) : Controller
                     {
                         StageName = entry.Stage.ToString(),
                         Date = entry.StartDate
+                    }).ToList(),
+                Comments = item.Comments
+                    .Where(comment => !comment.IsDeleted && !comment.IsInternal)
+                    .OrderBy(comment => comment.CreatedDate)
+                    .Select(comment => new CommentDetailViewModel
+                    {
+                        Avatar = comment.User.FullName.Substring(0, 1),
+                        Author = comment.User.FullName,
+                        Role = "Participant",
+                        TimeAgo = comment.CreatedDate.ToString("dd MMM yyyy HH:mm"),
+                        Text = comment.CommentText
                     }).ToList()
             })
             .FirstOrDefaultAsync();

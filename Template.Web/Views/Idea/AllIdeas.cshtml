@@ -78,7 +78,7 @@
                                     </td>
                                     <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
                                     <td>
-                                        <a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
+                                        <a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
                                             @(idea.NeedsReview ? "Review" : "View Review")
                                         </a>
                                     </td>

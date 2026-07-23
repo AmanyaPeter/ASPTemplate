@@ -24,6 +24,7 @@ namespace Template.Web.Models.Idea
 
     public class AttachmentViewModel
     {
+        public Guid Id { get; set; }
         public string? FileName { get; set; }
         public string? FilePath { get; set; }
         public string? Icon { get; set; }

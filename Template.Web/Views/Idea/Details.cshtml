@@ -8,6 +8,14 @@
     <div class="ims-staff-main-wrapper">
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="alert alert-success">@successMessage</div>
+            }
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
             <!-- Back Button -->
             <div class="ims-staff-back-link">
                 <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
@@ -53,7 +61,7 @@
                                 {
                                     <span class="ims-staff-attachment-item">
                                         <i data-lucide="@attachment.Icon" style="width:14px;height:14px;vertical-align:middle;"></i>
-                                        @attachment.FileName
+                                        <a asp-controller="IdeaStaffActions" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">@attachment.FileName</a>
                                     </span>
                                 }
                             </div>
@@ -78,11 +86,15 @@
                                 </div>
                             }
                         </div>
-                        <div class="ims-staff-comment-box">
-                            <div class="ims-staff-comment-box-avatar">@User.Identity.Name?.Substring(0, 1)</div>
-                            <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." asp-for="NewComment"></textarea>
-                            <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
-                        </div>
+                        <form asp-controller="IdeaStaffActions"
+                              asp-action="AddComment"
+                              asp-route-id="@Model.Idea.Id"
+                              method="post"
+                              class="ims-staff-comment-box">
+                            <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
+                            <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." name="newComment"></textarea>
+                            <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
+                        </form>
                     </div>
                 </div>
 
