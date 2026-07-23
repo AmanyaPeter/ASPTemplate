@@ -20,6 +20,7 @@ builder.Configuration.AddJsonFile("appsettings.json");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddResponseCaching();
 
 //Configure Blazor
 builder.Services.AddServerSideBlazor()
@@ -156,6 +157,18 @@ app.MapControllerRoute(
 app.MapBlazorHub();
 
 // Seed roles and default users on startup
-await DbInitializer.SeedAsync(app.Services);
+try
+{
+    await DbInitializer.SeedAsync(app.Services);
+    if (app.Environment.IsDevelopment())
+    {
+        await DashboardSeedData.SeedAsync(app.Services);
+    }
+}
+catch (Exception ex)
+{
+    app.Logger.LogCritical(ex, "Database migration or seeding failed.");
+    throw;
+}
 
 app.Run();

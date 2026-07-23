@@ -1,10 +1,8 @@
-@page
 @model IdeaDetailsModel
 @{
     ViewData["Title"] = "Idea Details - Innovation Management System";
 }
 
-<body class="ims-staff-dashboard">
        
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
@@ -12,7 +10,7 @@
         <main class="ims-staff-main-content">
             <!-- Back Button -->
             <div class="ims-staff-back-link">
-                <a asp-page="/Staff/MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
+                <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
             </div>
 
             <!-- Detail Grid -->
@@ -131,5 +129,4 @@
             lucide.createIcons();
         </script>
     }
-</body>
 </html>
