@@ -1,69 +1,419 @@
-@model object
 @{
-    ViewData["Title"] = "Dashboard";
-    var staff = Model as StaffDashboardModel;
-    var team = Model as InnovationDashboardModel;
-    var admin = Model as AdminDashboardModel;
+    ViewData["Title"] = "Home Page";
 }
-<div class="prototype-heading">
-    <div>
-        <h1>Welcome back</h1>
-        <p>Here is the latest activity across the innovation programme.</p>
+@if (!User.IsInRole(RoleConstants.ItSupport))
+{
+    <div class="alert alert-light mb-4" role="alert">
+        <h4 class="alert-heading d-flex align-items-center mb-3">
+            <i class="ti ti-clock-exclamation me-2"></i>
+            Important Deadlines
+        </h4>
+        <div class="deadline-item">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <i class="ti ti-building text-danger me-2"></i>
+                    <span><strong>Capital Budget</strong></span>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold text-danger">30-Jun-2025</div>
+                    <small class="text-muted">21 days remaining</small>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div class="deadline-item">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <i class="ti ti-calculator text-warning me-2"></i>
+                    <span><strong>Operational Budget</strong></span>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold text-warning">31-Jul-2025</div>
+                    <small class="text-muted">52 days remaining</small>
+                </div>
+            </div>
+        </div>
     </div>
-    @if (staff != null)
-    {
-        <a class="prototype-button orange" asp-controller="Idea" asp-action="Submit"><i class="ti ti-plus"></i> Submit new idea</a>
-    }
-    else
-    {
-        <a class="prototype-button orange" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i> View reports</a>
-    }
-</div>
+}
 
-@if (staff != null)
+@if (User.IsInRole(RoleConstants.BudgetOfficer) || User.IsInRole(RoleConstants.BudgetHolder))
 {
-    <div class="prototype-grid">
-        <div class="prototype-card prototype-stat"><small>Total ideas</small><strong>@staff.TotalIdeas</strong></div>
-        <div class="prototype-card prototype-stat"><small>Under review</small><strong>@staff.UnderReview</strong></div>
-        <div class="prototype-card prototype-stat"><small>Approved</small><strong>@staff.Approved</strong></div>
-        <div class="prototype-card prototype-stat"><small>Completed</small><strong>@staff.Completed</strong></div>
+    <div class="row g-4 mb-4">
+        <!-- Improved Budget Status Card -->
+        <div class="col-lg-7">
+            <div class="card border-0 card-borderless">
+                <div class="card-body">
+                    <div class="card-title">
+                        <h4 class=" d-flex align-items-center mb-3">
+                            <i class="ti ti-clipboard-check me-2"></i>
+                            My Budget Status
+                        </h4>
+                    </div>
+                    <div class="budget-item not-submitted">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="budget-title">
+                                <i class="ti ti-circle-x text-danger"></i>
+                                Recurrent Budget | 2024/2025
+                            </div>
+                            <span class="badge bg-danger">Not Submitted</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted d-flex align-items-center">
+                                <i class="ti ti-clock me-1"></i>
+                                Created: 2 days ago
+                            </small>
+                            <button class="btn btn-outline-danger btn-sm btn-custom">
+                                <i class="ti ti-eye me-1"></i>View Details
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="budget-item returned">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="budget-title">
+                                <i class="ti ti-arrow-back text-warning"></i>
+                                Capital Budget | 2024/2025
+                            </div>
+                            <span class="badge bg-warning">Returned</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted d-flex align-items-center">
+                                <i class="ti ti-clock me-1"></i>
+                                Received: 5 days ago
+                            </small>
+                            <button class="btn btn-outline-warning btn-sm btn-custom">
+                                <i class="ti ti-eye me-1"></i>View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 ">
+                <div class="card-body">
+                    <div class="card-title">
+                        <div class=" d-flex align-items-center mb-3">
+                            <div class="h3 position-relative">
+                                <i class="ti ti-bell me-2 text-primary"></i>Notifications
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    4
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-alert-triangle text-warning me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-warning fw-semibold">Capital Budget Returned</small>
+                                <div class="small">Capital Budget returned for your review.</div>
+                                <small class="text-muted">5 day ago</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-check text-success me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-success fw-semibold">Approved</small>
+                                <div class="small">Budget was approved.</div>
+                                <small class="text-muted">2 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-clock text-secondary me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-secondary fw-semibold">Reminder</small>
+                                <div class="small">21 days lefts to budget deadline. After this you will request formal approval for extension.</div>
+                                <small class="text-muted">21 days remaing</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <button class="btn btn-outline-primary btn-custom">
+                            <i class="ti ti-arrow-right me-2"></i>View All Notifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <section class="prototype-card prototype-section">
-        <div class="prototype-section-title"><h2>Recent submissions</h2><a asp-controller="Idea" asp-action="MyIdeas">View all</a></div>
-        <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Idea</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>
-        @if (staff.RecentSubmissions.Count == 0) { <tr><td colspan="4">No ideas submitted yet. Your next idea can start here.</td></tr> }
-        @foreach (var item in staff.RecentSubmissions) { <tr><td>@item.Title</td><td>@(item.Category ?? "Uncategorised")</td><td><span class="prototype-badge">@item.Status</span></td><td>@item.Date.ToString("dd MMM yyyy")</td></tr> }
-        </tbody></table></div>
-    </section>
+
 }
-else if (team != null)
+@if (User.IsInRole(RoleConstants.BudgetAdmin) || User.IsInRole(RoleConstants.BudgetAdminViewer))
 {
-    <div class="prototype-grid">
-        <div class="prototype-card prototype-stat"><small>Total ideas</small><strong>@team.Stats.TotalIdeas</strong></div>
-        <div class="prototype-card prototype-stat"><small>Pending review</small><strong>@team.Stats.PendingReviews</strong></div>
-        <div class="prototype-card prototype-stat"><small>Concept development</small><strong>@team.Stats.ConceptDevelopment</strong></div>
-        <div class="prototype-card prototype-stat"><small>Deployment</small><strong>@team.Stats.Deployment</strong></div>
+    <div class="row g-4 mb-4">
+        <!-- Total Budgets - Info blue gradient -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover h-100 border-0 text-white" style="background: linear-gradient(135deg, #0dcaf0 0%, #74c0fc 100%); box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number h2 fw-bold mb-1">62</div>
+                        <div class="stat-label opacity-75">Total Budgets</div>
+                    </div>
+                    <div>
+                        <i class="ti ti-building opacity-50" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budgets Submitted - Enhanced green gradient -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover h-100 border-0 text-white" style="background: linear-gradient(135deg, #198754 0%, #51cf66 100%); box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number h2 fw-bold mb-1">50</div>
+                        <div class="stat-label opacity-75">Budgets Submitted Proposed</div>
+                    </div>
+                    <div>
+                        <i class="ti ti-file-check opacity-50" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- In Negotiation - Strong orange gradient -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover h-100 border-0 text-white" style="background: linear-gradient(135deg, #198754 0%, #51cf66 100%); box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number h2 fw-bold mb-1">8</div>
+                        <div class="stat-label opacity-75">Negotiated</div>
+                    </div>
+                    <div>
+                        <i class="ti ti-file-check opacity-50" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Returned - Bold red gradient -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-hover h-100 border-0 text-white" style="background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-number h2 fw-bold mb-1">8</div>
+                        <div class="stat-label opacity-75">Pending Alignment</div>
+                    </div>
+                    <div>
+                        <i class="ti ti-arrow-back opacity-50" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <section class="prototype-card prototype-section">
-        <div class="prototype-section-title"><h2>Latest innovation ideas</h2><a asp-controller="Idea" asp-action="AllIdeas">Open pipeline</a></div>
-        <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Idea</th><th>Submitted by</th><th>Status</th><th>Date</th></tr></thead><tbody>
-        @if (team.RecentIdeas.Count == 0) { <tr><td colspan="4">No innovation ideas are currently in the pipeline.</td></tr> }
-        @foreach (var item in team.RecentIdeas) { <tr><td>@item.Title</td><td>@item.Submitter</td><td><span class="prototype-badge">@item.Status</span></td><td>@item.Date.ToString("dd MMM yyyy")</td></tr> }
-        </tbody></table></div>
-    </section>
+
 }
-else if (admin != null)
+@if (User.IsInRole(RoleConstants.BudgetAdmin))
 {
-    <div class="prototype-grid">
-        <div class="prototype-card prototype-stat"><small>Total users</small><strong>@admin.Stats.TotalUsers</strong></div>
-        <div class="prototype-card prototype-stat"><small>Active users</small><strong>@admin.Stats.ActiveUsers</strong></div>
-        <div class="prototype-card prototype-stat"><small>Locked accounts</small><strong>@admin.Stats.LockedAccounts</strong></div>
-        <div class="prototype-card prototype-stat"><small>7-day activities</small><strong>@admin.Stats.RecentActivities</strong></div>
+
+    <div class="row g-4 mb-4">
+        <!-- Improved Budget Status Card -->
+        <div class="col-lg-7">
+            <div class="card border-0 card-borderless">
+                <div class="card-body">
+                    <div class="card-title">
+                        <h4 class=" d-flex align-items-center mb-3">
+                            <i class="ti ti-clipboard-check me-2"></i>
+                            Submitted Proposed Budgets
+                        </h4>
+                    </div>
+                    <div class="budget-item submitted ">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="budget-title">
+                                <i class="ti ti-circle-x text-danger"></i>
+                                BAUD - Recurrent Budget | 2024/2025
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm btn-custom">
+                                <i class="ti ti-eye me-1"></i>View Details
+                            </button>
+                        </div>
+                        <small class="text-muted ">
+                            <i class="ti ti-clock me-1"></i>
+                            Created: 2 days ago
+                        </small>
+                    </div>
+
+                    <div class="budget-item submitted ">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="budget-title">
+                                <i class="ti ti-circle-x text-danger"></i>
+                                ITO - Recurrent Budget | 2024/2025
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm btn-custom">
+                                <i class="ti ti-eye me-1"></i>View Details
+                            </button>
+                        </div>
+                        <small class="text-muted ">
+                            <i class="ti ti-clock me-1"></i>
+                            Created: 2 days ago
+                        </small>
+                    </div>
+                    <div class="budget-item submitted ">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="budget-title">
+                                <i class="ti ti-circle-x text-danger"></i>
+                                National Payments - Recurrent Budget | 2024/2025
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm btn-custom">
+                                <i class="ti ti-eye me-1"></i>View Details
+                            </button>
+                        </div>
+                        <small class="text-muted ">
+                            <i class="ti ti-clock me-1"></i>
+                            Created: 2 days ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 ">
+                <div class="card-body">
+                    <div class="card-title">
+                        <div class=" d-flex align-items-center mb-3">
+                            <div class="h3 position-relative">
+                                <i class="ti ti-bell me-2 text-primary"></i>Notifications
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    10
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-alert-triangle text-warning me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-warning fw-semibold">Recurrent Budgets Submitted</small>
+                                <div class="small">20% the recurrent budgets have been submitted.</div>
+                                <small class="text-muted">a day ago</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-check text-success me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-success fw-semibold">Approved</small>
+                                <div class="small">100% of Capital Budgets have been submitted.</div>
+                                <small class="text-muted">2 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-item">
+                        <div class="d-flex align-items-start">
+                            <i class="ti ti-clock text-secondary me-2 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <small class="text-secondary fw-semibold">Reminder</small>
+                                <div class="small">21 days lefts to budget deadline.</div>
+                                <small class="text-muted">21 days remaing</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <button class="btn btn-outline-primary btn-custom">
+                            <i class="ti ti-arrow-right me-2"></i>View All Notifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <section class="prototype-card prototype-section">
-        <div class="prototype-section-title"><h2>Recently created users</h2><a asp-controller="Account" asp-action="Index">Manage accounts</a></div>
-        <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Name</th><th>Email</th><th>Last activity</th><th>State</th></tr></thead><tbody>
-        @foreach (var item in admin.RecentUsers) { <tr><td>@item.Name</td><td>@item.Email</td><td>@item.LastLogin.ToString("dd MMM yyyy")</td><td><span class="prototype-badge @(item.IsOnline ? "success" : "")">@(item.IsOnline ? "Online" : "Offline")</span></td></tr> }
-        </tbody></table></div>
-    </section>
+}
+
+@if (User.IsInRole(RoleConstants.ItSupport))
+{
+    <div class="row g-4">
+        <!-- User Management -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="ti ti-users text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <h3 class="card-title mb-0 fw-semibold">User Management</h3>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <p class="text-muted mb-3">
+                        Create new user accounts, modify existing accounts, and manage user permissions across the system. These accounts have to assist on Active Directory.
+                    </p>
+                    <div class="d-grid">
+                        <button class="btn btn-primary">
+                            <i class="ti ti-plus me-2"></i>
+                            Create User
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Organization Management -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="ti ti-building-community text-success" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <h3 class="card-title mb-0 fw-semibold">Cost Center Management</h3>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <p class="text-muted mb-3">
+                        Assign users to Cost Centers (department), and control department access permissions. This will enable the user to budget or manage the department assigned.
+                    </p>
+                    <div class="d-grid">
+                        <button class="btn btn-success">
+                            <i class="ti ti-user-plus me-2"></i>
+                            Add User to Organization
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Management -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="ti ti-shield-lock text-warning" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <h3 class="card-title mb-0 fw-semibold">Role Management</h3>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+                    <p class="text-muted mb-3">
+                        Create and define user roles, assign specific permissions and access levels, and manage role-based security across the system.
+                    </p>
+                    <div class="d-grid">
+                        <button class="btn btn-warning">
+                            <i class="ti ti-plus me-2"></i>
+                            Create Role
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 }

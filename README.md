@@ -348,6 +348,12 @@ Update-Database
 ```
 
 **Option B — Using .NET CLI (if PMC is unavailable):**
+```powershell
+To Run:
+sqllocaldb create MSSQLLocalDB
+sqllocaldb start MSSQLLocalDB
+dotnet run --project Template.Web --no-build --launch-profile http
+```
 
 ```bash
 dotnet ef database update --project Template.Data --startup-project Template.Web
