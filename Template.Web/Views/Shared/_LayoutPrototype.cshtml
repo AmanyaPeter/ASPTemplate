@@ -1,0 +1,85 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var isAdmin = User.IsInRole("Admin");
+    var isTeam = User.IsInRole("InnovationTeam");
+    string Active(string name) => controller.Equals(name, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    var displayName = User.Identity?.Name ?? "User";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - BOU Innovation</title>
+    <link rel="stylesheet" href="~/css/tabler.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/webfont/tabler-icons.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/prototype.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="prototype-shell">
+    <div class="prototype-overlay" data-sidebar-close></div>
+    <aside class="prototype-sidebar" id="prototype-sidebar">
+        <a class="prototype-brand" asp-controller="Home" asp-action="Index">
+            <span class="prototype-brand-mark">BOU</span>
+            <span><strong>Innovation</strong><small>Management System</small></span>
+        </a>
+        <nav class="prototype-nav">
+            <span class="prototype-nav-label">Workspace</span>
+            <a class="@Active("Home")" asp-controller="Home" asp-action="Index"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+            @if (!isAdmin && !isTeam)
+            {
+                <a class="@Active("Idea")" asp-controller="Idea" asp-action="Submit"><i class="ti ti-bulb"></i>Submit an idea</a>
+                <a class="@Active("Idea")" asp-controller="Idea" asp-action="MyIdeas"><i class="ti ti-list-check"></i>My ideas</a>
+            }
+            @if (isAdmin || isTeam)
+            {
+                <a class="@Active("Idea")" asp-controller="Idea" asp-action="AllIdeas"><i class="ti ti-bulb-filled"></i>Idea pipeline</a>
+                <a class="@Active("Category")" asp-controller="Category" asp-action="Index"><i class="ti ti-category"></i>Categories</a>
+                <a class="@Active("Report")" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i>Reports</a>
+            }
+            <a class="@Active("Resource")" asp-controller="Resource" asp-action="Index"><i class="ti ti-books"></i>Resources</a>
+            <a class="@Active("Notification")" asp-controller="Notification" asp-action="Index"><i class="ti ti-bell"></i>Notifications</a>
+            @if (isAdmin)
+            {
+                <span class="prototype-nav-label">Administration</span>
+                <a class="@Active("Account")" asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i>User accounts</a>
+                <a class="@Active("Role")" asp-controller="Role" asp-action="Index"><i class="ti ti-shield-lock"></i>Roles & permissions</a>
+                <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i>Audit log</a>
+            }
+            <span class="prototype-nav-label">Help & demo</span>
+            <a class="@Active("Prototype")" asp-controller="Prototype" asp-action="Index"><i class="ti ti-components"></i>Prototype test pages</a>
+        </nav>
+        <div class="prototype-sidebar-foot">
+            <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@(isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff")</small></span></a>
+            <a asp-controller="Account" asp-action="LogoutAsync"><i class="ti ti-logout"></i></a>
+        </div>
+    </aside>
+    <div class="prototype-page">
+        <header class="prototype-topbar">
+            <button class="prototype-icon-button prototype-menu" type="button" data-sidebar-open aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+            <div><small>Bank of Uganda</small><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
+            <div class="prototype-top-actions">
+                <a class="prototype-icon-button" asp-controller="Notification" asp-action="Index" aria-label="Notifications"><i class="ti ti-bell"></i></a>
+                <span class="prototype-avatar">@displayName.Substring(0, 1).ToUpperInvariant()</span>
+            </div>
+        </header>
+        <main class="prototype-content">
+            @if (TempData["SuccessMessage"] is string success)
+            {
+                <div class="prototype-alert success" role="alert"><i class="ti ti-circle-check"></i><span>@success</span><button type="button" data-alert-close>&times;</button></div>
+            }
+            @if (TempData["ErrorMessage"] is string error)
+            {
+                <div class="prototype-alert danger" role="alert"><i class="ti ti-alert-circle"></i><span>@error</span><button type="button" data-alert-close>&times;</button></div>
+            }
+            @RenderBody()
+        </main>
+        <footer class="prototype-footer">BOU Innovation Management System · Working prototype</footer>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/tabler.min.js" asp-append-version="true"></script>
+    <script src="~/js/prototype.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

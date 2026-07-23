@@ -1,0 +1,29 @@
+@model Template.Web.Models.Prototype.PrototypePageViewModel
+@{ ViewData["Title"] = "Prototype test pages"; }
+<div class="prototype-heading">
+    <div><h1>Interface test page</h1><p>A supervisor-ready reference for the approved UI Kit colours and reusable components.</p></div>
+    <a class="prototype-button" asp-action="Forms"><i class="ti ti-forms"></i> Test forms</a>
+</div>
+<section class="prototype-card">
+    <div class="prototype-section-title"><h2>UI Kit colour benchmark</h2><span class="prototype-badge success">Applied globally</span></div>
+    <div class="prototype-palette">
+        <div class="prototype-swatch" style="background:#2e0014">Dark maroon</div>
+        <div class="prototype-swatch" style="background:#7c2230">Burgundy</div>
+        <div class="prototype-swatch" style="background:#b31b34">Crimson</div>
+        <div class="prototype-swatch light" style="background:#f79100">Amber</div>
+        <div class="prototype-swatch light" style="background:#e3b04b">Gold</div>
+    </div>
+</section>
+<div class="prototype-grid prototype-section">
+    <div class="prototype-card prototype-stat"><small>Submitted ideas</small><strong>128</strong><span class="prototype-badge success">+12% this month</span></div>
+    <div class="prototype-card prototype-stat"><small>Pending review</small><strong>24</strong><span class="prototype-badge">Action required</span></div>
+    <div class="prototype-card prototype-stat"><small>Approved</small><strong>63</strong><span class="prototype-badge success">On target</span></div>
+    <div class="prototype-card prototype-stat"><small>Overdue</small><strong>3</strong><span class="prototype-badge danger">SLA attention</span></div>
+</div>
+<section class="prototype-card prototype-section">
+    <div class="prototype-section-title"><h2>Workflow status sample</h2><span>@Model.CompletionPercent% complete</span></div>
+    <div class="progress mb-4"><div class="progress-bar" style="width:@(Model.CompletionPercent)%;background:#b31b34"></div></div>
+    <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Stage</th><th>State</th><th>Example action</th></tr></thead><tbody>
+    @foreach (var stage in Model.Stages) { <tr><td><strong>@stage.Name</strong></td><td><span class="prototype-badge @(stage.IsReached ? "success" : "")">@stage.State</span></td><td><button class="prototype-button secondary" type="button" onclick="alert('@stage.Name component is working')">Test</button></td></tr> }
+    </tbody></table></div>
+</section>

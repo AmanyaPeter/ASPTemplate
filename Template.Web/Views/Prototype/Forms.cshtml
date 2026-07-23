@@ -1,0 +1,23 @@
+@model Template.Web.Models.Prototype.PrototypePageViewModel
+@{ ViewData["Title"] = "Form test page"; }
+<div class="prototype-heading">
+    <div><h1>Form and JavaScript test</h1><p>Use this non-persistent page to demonstrate validation controls and responsive behaviour.</p></div>
+    <a class="prototype-button secondary" asp-action="Index"><i class="ti ti-arrow-left"></i> Components</a>
+</div>
+<form class="prototype-card" id="prototype-demo-form">
+    <div class="prototype-form-grid">
+        <div><label for="demo-title">Idea title</label><input id="demo-title" required maxlength="100" placeholder="e.g. Digital visitor management" /></div>
+        <div><label for="demo-category">Category</label><select id="demo-category" required><option value="">Select a category</option><option>Process improvement</option><option>Digital transformation</option><option>Customer experience</option></select></div>
+        <div class="full"><label for="demo-description">Description</label><textarea id="demo-description" required rows="5" minlength="20" placeholder="Describe the problem and proposed innovation…"></textarea><small id="demo-count">0 characters</small></div>
+        <div><label for="demo-impact">Expected impact</label><select id="demo-impact"><option>Low</option><option>Medium</option><option>High</option></select></div>
+        <div><label for="demo-file">Supporting document</label><input id="demo-file" type="file" accept=".pdf,.doc,.docx,.xlsx" /></div>
+        <div class="full"><button class="prototype-button" type="submit"><i class="ti ti-check"></i> Validate prototype form</button></div>
+    </div>
+</form>
+<div class="prototype-alert success prototype-section" id="demo-result" hidden><i class="ti ti-circle-check"></i><span>All controls passed browser validation. No data was saved on this test page.</span><button type="button" data-alert-close>&times;</button></div>
+@section Scripts {
+<script>
+document.getElementById("demo-description").addEventListener("input", e => document.getElementById("demo-count").textContent = `${e.target.value.length} characters`);
+document.getElementById("prototype-demo-form").addEventListener("submit", e => { e.preventDefault(); document.getElementById("demo-result").hidden = false; });
+</script>
+}
