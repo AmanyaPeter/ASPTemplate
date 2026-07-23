@@ -193,7 +193,8 @@ public static class DbInitializer
             ("Business Model", "New approaches to delivering the Bank's mandate"),
             ("Policy/Governance", "Policies, governance structures and institutional frameworks"),
             ("Technology/System", "Technology-driven ideas and digital solutions"),
-            ("Sustainability", "Environmental, social impact and financial inclusion innovations")
+            ("Sustainability", "Environmental, social impact and financial inclusion innovations"),
+            ("Organisational/Institutional", "Internal innovations that enhance agility, capacity and collaboration")
         };
         var existing = await context.Categories.Select(c => c.Name).ToListAsync();
         foreach (var item in defaults.Where(d => !existing.Contains(d.Item1)))

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using Template.Common.Enums;
 using Template.Data.Configurations;
 using Template.Data.Entities;
@@ -56,8 +57,14 @@ public class IdeaController(
                 SummaryDescription = idea.SummaryDescription,
                 ProblemStatement = idea.ProblemStatement,
                 ProposedSolution = idea.ProposedSolution,
-                Category = idea.Category?.Name
+                Category = idea.Category?.Name,
+                ExpectedBenefits = idea.ExpectedBenefits,
+                KeyEnablers = idea.KeyEnablers,
+                ImplementationApproach = idea.ImplementationApproach,
+                ImpactIndicators = idea.ImpactIndicators,
+                StrategicObjective = idea.StrategicObjective
             };
+            model.Innovator.TeamMemberNames = idea.TeamMemberNames;
         }
 
         return View(model);
@@ -109,6 +116,17 @@ public class IdeaController(
         idea.SummaryDescription = model.Idea.SummaryDescription!.Trim();
         idea.ProblemStatement = model.Idea.ProblemStatement!.Trim();
         idea.ProposedSolution = model.Idea.ProposedSolution!.Trim();
+        idea.ExpectedBenefits = model.Idea.ExpectedBenefits?.Trim();
+        idea.KeyEnablers = model.Idea.KeyEnablers?.Trim();
+        idea.ImplementationApproach = model.Idea.ImplementationApproach?.Trim();
+        idea.ImpactIndicators = model.Idea.ImpactIndicators?.Trim();
+        idea.StrategicObjective = model.Idea.StrategicObjective?.Trim();
+        idea.TeamMemberNames = model.SubmissionType == "team" ? model.Innovator.TeamMemberNames?.Trim() : null;
+        idea.TeamCompositionJson = model.SubmissionType == "team"
+            ? JsonSerializer.Serialize(Request.Form
+                .Where(x => x.Key.StartsWith("Team", StringComparison.OrdinalIgnoreCase) && x.Key != "Innovator.TeamMemberNames")
+                .ToDictionary(x => x.Key, x => x.Value.ToString()))
+            : null;
         idea.CategoryId = category.Id;
         idea.Category = category;
         idea.SubmitterAgeBracket = user.AgeBracket;

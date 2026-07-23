@@ -272,6 +272,8 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet]
+    [ActionName("Logout")]
     public async Task<IActionResult> LogoutAsync(string returnUrl = null)
     {
         await _authService.SignOutApplicationUser();

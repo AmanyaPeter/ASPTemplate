@@ -5,6 +5,13 @@
     var isTeam = User.IsInRole("InnovationTeam");
     string Active(string name) => controller.Equals(name, StringComparison.OrdinalIgnoreCase) ? "active" : "";
     var displayName = User.Identity?.Name ?? "User";
+    var pageIcon = controller switch
+    {
+        "Home" => "layout-dashboard", "Idea" => "bulb", "Notification" => "bell",
+        "Resource" => "books", "Report" => "chart-bar", "Category" => "category",
+        "Account" => "users", "Role" => "shield-lock", "AuditLog" => "history",
+        "Profile" => "user-circle", _ => "building-bank"
+    };
 }
 <!doctype html>
 <html lang="en">
@@ -21,7 +28,7 @@
     <div class="prototype-overlay" data-sidebar-close></div>
     <aside class="prototype-sidebar" id="prototype-sidebar">
         <a class="prototype-brand" asp-controller="Home" asp-action="Index">
-            <span class="prototype-brand-mark">BOU</span>
+            <span class="prototype-brand-mark"><img src="~/img/bou.png" alt="Bank of Uganda" /></span>
             <span><strong>Innovation</strong><small>Management System</small></span>
         </a>
         <nav class="prototype-nav">
@@ -47,17 +54,16 @@
                 <a class="@Active("Role")" asp-controller="Role" asp-action="Index"><i class="ti ti-shield-lock"></i>Roles & permissions</a>
                 <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i>Audit log</a>
             }
-            <span class="prototype-nav-label">Help & demo</span>
-            <a class="@Active("Prototype")" asp-controller="Prototype" asp-action="Index"><i class="ti ti-components"></i>Prototype test pages</a>
         </nav>
         <div class="prototype-sidebar-foot">
             <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@(isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff")</small></span></a>
-            <a asp-controller="Account" asp-action="LogoutAsync"><i class="ti ti-logout"></i></a>
+            <a asp-controller="Account" asp-action="Logout" title="Sign out and return to login" aria-label="Sign out"><i class="ti ti-logout"></i></a>
         </div>
     </aside>
     <div class="prototype-page">
         <header class="prototype-topbar">
             <button class="prototype-icon-button prototype-menu" type="button" data-sidebar-open aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+            <span class="prototype-page-icon"><i class="ti ti-@pageIcon"></i></span>
             <div><small>Bank of Uganda</small><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
             <div class="prototype-top-actions">
                 <a class="prototype-icon-button" asp-controller="Notification" asp-action="Index" aria-label="Notifications"><i class="ti ti-bell"></i></a>

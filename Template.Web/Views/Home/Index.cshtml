@@ -5,12 +5,12 @@
     var team = Model as InnovationDashboardModel;
     var admin = Model as AdminDashboardModel;
     var stats = staff != null
-        ? new[] { ("Total ideas", staff.TotalIdeas), ("Under review", staff.UnderReview), ("Approved", staff.Approved), ("Completed", staff.Completed) }
+        ? new[] { ("Total ideas", staff.TotalIdeas, "bulb"), ("Under review", staff.UnderReview, "search"), ("Approved", staff.Approved, "circle-check"), ("Completed", staff.Completed, "flag-check") }
         : team != null
-            ? new[] { ("Total ideas", team.Stats.TotalIdeas), ("Pending review", team.Stats.PendingReviews), ("Concept stage", team.Stats.ConceptDevelopment), ("Deployment", team.Stats.Deployment) }
+            ? new[] { ("Total ideas", team.Stats.TotalIdeas, "bulb"), ("Pending review", team.Stats.PendingReviews, "clipboard-check"), ("Concept stage", team.Stats.ConceptDevelopment, "flask"), ("Deployment", team.Stats.Deployment, "rocket") }
             : admin != null
-                ? new[] { ("Total users", admin.Stats.TotalUsers), ("Active users", admin.Stats.ActiveUsers), ("Locked accounts", admin.Stats.LockedAccounts), ("7-day activities", admin.Stats.RecentActivities) }
-                : Array.Empty<(string, int)>();
+                ? new[] { ("Total users", admin.Stats.TotalUsers, "users"), ("Active users", admin.Stats.ActiveUsers, "user-check"), ("Locked accounts", admin.Stats.LockedAccounts, "lock"), ("7-day activities", admin.Stats.RecentActivities, "activity") }
+                : Array.Empty<(string, int, string)>();
 }
 <div class="prototype-heading">
     <div><h1>Welcome back</h1><p>Here is the latest activity across the innovation programme.</p></div>
@@ -18,7 +18,7 @@
     else { <a class="prototype-button orange" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i> View reports</a> }
 </div>
 <div class="prototype-grid">
-    @foreach (var item in stats) { <div class="prototype-card prototype-stat"><small>@item.Item1</small><strong>@item.Item2</strong></div> }
+    @foreach (var item in stats) { <div class="prototype-card prototype-stat"><span class="prototype-stat-icon"><i class="ti ti-@item.Item3"></i></span><small>@item.Item1</small><strong>@item.Item2</strong></div> }
 </div>
 <section class="prototype-card prototype-section">
     @if (staff != null)

@@ -21,6 +21,8 @@ namespace Template.Web.Models.Idea
         public string? Age { get; set; }
         public string? Gender { get; set; }
         public string? Rank { get; set; }
+        [StringLength(2000)]
+        public string? TeamMemberNames { get; set; }
     }
 
     public class IdeaFormViewModel
@@ -33,10 +35,15 @@ namespace Template.Web.Models.Idea
         public string? ProblemStatement { get; set; }
         [Required, StringLength(4000)]
         public string? ProposedSolution { get; set; }
+        [Required, StringLength(4000)]
         public string? ExpectedBenefits { get; set; }
+        [Required, StringLength(4000)]
         public string? KeyEnablers { get; set; }
+        [Required, StringLength(4000)]
         public string? ImplementationApproach { get; set; }
+        [Required, StringLength(4000)]
         public string? ImpactIndicators { get; set; }
+        [Required, StringLength(1000)]
         public string? StrategicObjective { get; set; }
         [Required]
         public string? Category { get; set; }

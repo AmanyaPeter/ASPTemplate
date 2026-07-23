@@ -11,6 +11,10 @@
 
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
+            <div class="submission-intro">
+                <span class="submission-intro-icon"><i class="ti ti-bulb"></i></span>
+                <div><h1>Idea Submission Form</h1><p>Complete the four stages below. Fields marked <strong>*</strong> are required.</p></div>
+            </div>
             <!-- Stepper -->
             <div class="ims-staff-stepper">
                 <div class="ims-staff-stepper-step ims-staff-stepper-active" data-step="1">
@@ -115,39 +119,32 @@
                                 </div>
                             </div>
                             <div class="ims-staff-form-group">
-                                <label>Age *</label>
-                                <div class="ims-staff-radio-group-vertical" id="ims-staff-age-group">
-                                    @foreach (var age in new[] { "18-24", "25-34", "35-44", "45-54", "55+" })
-                                    {
-                                        <label><input type="radio" name="Innovator.Age" value="@age" asp-for="Innovator.Age"> @age</label>
-                                    }
-                                </div>
+                                <label for="InnovatorAge">What is your age bracket? *</label>
+                                <select id="InnovatorAge" class="ims-staff-form-control" asp-for="Innovator.Age">
+                                    <option value="">Select your answer</option>
+                                    <option>18 - 24</option><option>25 - 34</option><option>35 - 44</option>
+                                    <option>45 - 54</option><option>55 and above</option>
+                                </select>
                                 <span asp-validation-for="Innovator.Age" class="ims-staff-validation-feedback"></span>
                             </div>
                             <div class="ims-staff-form-row">
                                 <div class="ims-staff-form-group">
-                                    <label>Gender *</label>
-                                    <div class="ims-staff-radio-group-vertical">
-                                        <label><input type="radio" name="Innovator.Gender" value="Male" asp-for="Innovator.Gender"> Male</label>
-                                        <label><input type="radio" name="Innovator.Gender" value="Female" asp-for="Innovator.Gender"> Female</label>
-                                    </div>
+                                    <label for="InnovatorGender">What is your gender? *</label>
+                                    <select id="InnovatorGender" class="ims-staff-form-control" asp-for="Innovator.Gender">
+                                        <option value="">Select your answer</option><option>Male</option><option>Female</option>
+                                    </select>
                                     <span asp-validation-for="Innovator.Gender" class="ims-staff-validation-feedback"></span>
                                 </div>
                                 <div class="ims-staff-form-group">
-                                    <label>Job Category / Rank *</label>
-                                    <div class="ims-staff-radio-group-vertical">
-                                        @foreach (var rank in new[] { 
-                                            "Executive Management", 
-                                            "Senior Management", 
-                                            "Middle Management", 
-                                            "Operational Management", 
-                                            "Administrative Assistant", 
-                                            "Clerical Staff" 
-                                        })
-                                        {
-                                            <label><input type="radio" name="Innovator.Rank" value="@rank" asp-for="Innovator.Rank"> @rank</label>
-                                        }
-                                    </div>
+                                    <label for="InnovatorRank">Indicate your job title / rank. *</label>
+                                    <select id="InnovatorRank" class="ims-staff-form-control" asp-for="Innovator.Rank">
+                                        <option value="">Select your answer</option>
+                                        <option>Executive Management (Governor, Deputy Governor, Executive Directors)</option>
+                                        <option>Senior Management (Directors and Deputy Directors)</option>
+                                        <option>Middle Management (Team Leaders, SPBOs, and PBOs)</option>
+                                        <option>Operational Management (SBOs, SBOIIs, BOIs, BOIIs)</option>
+                                        <option>Administrative Assistant</option><option>Clerical Staff</option>
+                                    </select>
                                     <span asp-validation-for="Innovator.Rank" class="ims-staff-validation-feedback"></span>
                                 </div>
                             </div>
@@ -156,6 +153,24 @@
                         <!-- Team Section -->
                         <div id="ims-staff-team-section" class="ims-staff-section-toggle">
                             <p class="ims-staff-helper-text">Provide the composition of members contributing to this innovation idea.</p>
+                            <div class="ims-staff-form-group">
+                                <label for="TeamMemberNames">Please share the full names of your other team members. *</label>
+                                <textarea id="TeamMemberNames" class="ims-staff-form-control" rows="3" asp-for="Innovator.TeamMemberNames" placeholder="Enter each team member's full name"></textarea>
+                                <span asp-validation-for="Innovator.TeamMemberNames" class="ims-staff-validation-feedback"></span>
+                            </div>
+
+                            <div class="ims-staff-matrix-scroll">
+                            <table class="ims-staff-matrix-table">
+                                <caption>To which Business Unit(s) are you attached?<small>Please select the number of staff under each applicable Business Unit.</small></caption>
+                                <thead><tr><th>Business Unit</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr></thead>
+                                <tbody>
+                                @foreach (var unit in new[] { "Accounts", "Agricultural Credit Facility & Other Credit Schemes", "Administrative Services", "Banking", "Bank Resolution", "Board Affairs", "Commercial Banking", "Communications & Public Relations", "Currency", "Financial Markets", "Financial Stability", "Human Resources", "Information Technology", "Internal Audit", "Legal Services", "National Payments Systems", "Research", "Supervision" })
+                                {
+                                    <tr><td>@unit</td>@for (var i = 1; i <= 7; i++) { <td><input type="radio" name="TeamBusinessUnit_@unit.Replace(" ", "_").Replace("&", "and")" value="@i" class="ims-staff-matrix-radio" aria-label="@unit: @i member(s)" /></td> }</tr>
+                                }
+                                </tbody>
+                            </table>
+                            </div>
 
                             <!-- 1. Team Members by Rank -->
                             <table class="ims-staff-matrix-table">
@@ -285,8 +300,8 @@
                         <div class="ims-staff-form-actions ims-staff-form-actions-between">
                             <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="prevStep(2)">Back</button>
                             <div>
-                                <button type="button" class="ims-staff-btn ims-staff-btn-secondary ims-staff-save-draft-btn" onclick="saveDraft()">Save Draft</button>
-                                <button type="button" class="ims-staff-btn ims-staff-btn-primary" onclick="nextStep(2)">Next</button>
+                                <button type="button" class="ims-staff-btn ims-staff-btn-secondary ims-staff-save-draft-btn" onclick="saveDraft()"><i class="ti ti-device-floppy"></i> Save Draft</button>
+                                <button type="button" class="ims-staff-btn ims-staff-btn-primary" onclick="validateStep(2)">Next <i class="ti ti-arrow-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -327,13 +342,14 @@
                                 <label><input type="radio" name="Idea.Category" value="Technology/System" asp-for="Idea.Category"> <strong>Technology / System</strong> — Application or introduction of new technologies, digital solutions, STEM innovations, or system capabilities.</label>
                                 <label><input type="radio" name="Idea.Category" value="Sustainability" asp-for="Idea.Category"> <strong>Sustainability</strong> — Innovations that promote environmental sustainability, social impact, financial inclusion, or strengthen public trust.</label>
                             </div>
+                                <label class="ims-staff-category-option"><input type="radio" name="Idea.Category" value="Organisational/Institutional" asp-for="Idea.Category"> <strong>Organisational / Institutional</strong> — Internal innovations that enhance agility, capacity, and collaboration within the central bank.</label>
                             <span asp-validation-for="Idea.Category" class="ims-staff-validation-feedback"></span>
                         </div>
                         <div class="ims-staff-form-actions ims-staff-form-actions-between">
                             <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="prevStep(3)">Back</button>
                             <div>
-                                <button type="button" class="ims-staff-btn ims-staff-btn-secondary ims-staff-save-draft-btn" onclick="saveDraft()">Save Draft</button>
-                                <button type="button" class="ims-staff-btn ims-staff-btn-primary" onclick="nextStep(3)">Next</button>
+                                <button type="button" class="ims-staff-btn ims-staff-btn-secondary ims-staff-save-draft-btn" onclick="saveDraft()"><i class="ti ti-device-floppy"></i> Save Draft</button>
+                                <button type="button" class="ims-staff-btn ims-staff-btn-primary" onclick="validateStep(3)">Next <i class="ti ti-arrow-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -369,7 +385,7 @@
                             <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="prevStep(4)">Back</button>
                             <div>
                                 <button type="button" class="ims-staff-btn ims-staff-btn-secondary ims-staff-save-draft-btn" onclick="saveDraft()">Save Draft</button>
-                                <button type="submit" class="ims-staff-btn ims-staff-btn-success ims-staff-submit-idea-btn">Submit Idea</button>
+                                <button type="submit" class="ims-staff-btn ims-staff-btn-success ims-staff-submit-idea-btn"><i class="ti ti-send"></i> Submit Idea</button>
                             </div>
                         </div>
                     </div>
@@ -379,16 +395,17 @@
     </div>
 
     @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
         <script>
-            lucide.createIcons();
-
             let currentStep = 1;
 
             function toggleSubmissionType() {
                 const isTeam = document.querySelector('input[name="submissionType"]:checked').value === 'team';
                 document.getElementById('ims-staff-individual-section').style.display = isTeam ? 'none' : 'block';
                 document.getElementById('ims-staff-team-section').style.display = isTeam ? 'block' : 'none';
+                document.getElementById('TeamMemberNames').required = isTeam;
+                ['BusinessUnit','DutyStation','InnovatorAge','InnovatorGender','InnovatorRank'].forEach(id => {
+                    document.getElementById(id).required = !isTeam;
+                });
             }
 
             function goToStep(step) {
@@ -413,7 +430,14 @@
             }
 
             function validateStep(step) {
-                // Simple validation - you can expand this
+                const page = document.getElementById(`ims-staff-step${step}`);
+                page.querySelectorAll('[data-val-required]').forEach(field => field.required = true);
+                const firstInvalid = [...page.querySelectorAll('input,select,textarea')].find(field => !field.checkValidity());
+                if (firstInvalid) {
+                    firstInvalid.reportValidity();
+                    firstInvalid.focus();
+                    return;
+                }
                 goToStep(step + 1);
             }
 

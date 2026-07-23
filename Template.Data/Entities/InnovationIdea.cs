@@ -20,6 +20,13 @@ public class InnovationIdea : AuditableEntity
     public string SummaryDescription { get; set; }
     public string ProblemStatement { get; set; }
     public string ProposedSolution { get; set; }
+    public string? ExpectedBenefits { get; set; }
+    public string? KeyEnablers { get; set; }
+    public string? ImplementationApproach { get; set; }
+    public string? ImpactIndicators { get; set; }
+    public string? StrategicObjective { get; set; }
+    public string? TeamMemberNames { get; set; }
+    public string? TeamCompositionJson { get; set; }
 
     // Classification
     public int? CategoryId { get; set; }
