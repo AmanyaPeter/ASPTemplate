@@ -20,6 +20,8 @@ builder.Configuration.AddJsonFile("appsettings.json");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 //Configure Blazor
 builder.Services.AddServerSideBlazor()

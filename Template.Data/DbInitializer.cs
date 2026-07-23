@@ -186,15 +186,18 @@ public static class DbInitializer
 
     private static async Task SeedCategoriesAsync(ApplicationDbContext context)
     {
-        if (await context.Categories.AnyAsync())
+        var defaults = new[]
         {
-            return;
-        }
-
-        context.Categories.AddRange(
-            new Category { Name = "Process Improvement", Description = "Workflow and operational improvements", IsActive = true },
-            new Category { Name = "Digital Innovation", Description = "Technology-driven ideas and solutions", IsActive = true },
-            new Category { Name = "Customer Experience", Description = "Ideas that improve stakeholder experience", IsActive = true });
+            ("Product/Service", "New or significantly improved products or services"),
+            ("Process", "Workflow and operational improvements"),
+            ("Business Model", "New approaches to delivering the Bank's mandate"),
+            ("Policy/Governance", "Policies, governance structures and institutional frameworks"),
+            ("Technology/System", "Technology-driven ideas and digital solutions"),
+            ("Sustainability", "Environmental, social impact and financial inclusion innovations")
+        };
+        var existing = await context.Categories.Select(c => c.Name).ToListAsync();
+        foreach (var item in defaults.Where(d => !existing.Contains(d.Item1)))
+            context.Categories.Add(new Category { Name = item.Item1, Description = item.Item2, IsActive = true });
 
         await context.SaveChangesAsync();
     }

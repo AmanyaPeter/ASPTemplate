@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Template.Web.Models.Category
 {
     public class CategoriesModel
@@ -22,7 +24,9 @@ namespace Template.Web.Models.Category
     public class CategoryFormViewModel
     {
         public int Id { get; set; }
+        [Required, StringLength(150)]
         public string Name { get; set; } = string.Empty;
+        [StringLength(1000)]
         public string Description { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
     }

@@ -12,10 +12,10 @@
             <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
         </div>
         <ul class="ims-staff-sidebar-nav">
-            <li><a asp-page="/Admin/Dashboard" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
-            <li><a asp-page="/Admin/Users"><span class="ims-staff-nav-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span><span>Users</span></a></li>
-            <li><a asp-page="/Admin/ActivityLog"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Activity Log</span></a></li>
-            <li><a asp-page="/Admin/Profile"><span class="ims-staff-nav-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span><span>Profile</span></a></li>
+            <li><a asp-controller="Home" asp-action="Index" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
+            <li><a asp-controller="Account" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span><span>Users</span></a></li>
+            <li><a asp-controller="AuditLog" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Activity Log</span></a></li>
+            <li><a asp-controller="Profile" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span><span>Profile</span></a></li>
         </ul>
         <div class="ims-staff-sidebar-footer">BOU Innovation System v1.0</div>
     </aside>
@@ -73,7 +73,7 @@
             <div class="ims-staff-card ims-staff-table-card">
                 <div class="ims-staff-section-header">
                     <h3>Recent Login Activity</h3>
-                    <a asp-page="/Admin/ActivityLog" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">View All</a>
+                    <a asp-controller="AuditLog" asp-action="Index" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">View All</a>
                 </div>
                 <div class="ims-staff-table-container">
                     <table class="ims-staff-data-table">

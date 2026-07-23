@@ -11,12 +11,12 @@
             <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
         </div>
         <ul class="ims-staff-sidebar-nav">
-            <li><a asp-page="/Staff/Dashboard" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
-            <li><a asp-page="/Staff/SubmitIdea"><span class="ims-staff-nav-icon"><i data-lucide="plus" style="width:18px;height:18px;"></i></span><span>Submit Idea</span></a></li>
-            <li><a asp-page="/Staff/MyIdeas"><span class="ims-staff-nav-icon"><i data-lucide="list" style="width:18px;height:18px;"></i></span><span>My Ideas</span></a></li>
-            <li><a asp-page="/Staff/Notifications"><span class="ims-staff-nav-icon"><i data-lucide="mail" style="width:18px;height:18px;"></i></span><span>Notifications</span></a></li>
-            <li><a asp-page="/Staff/Resources"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Resources</span></a></li>
-            <li><a asp-page="/Staff/Profile"><span class="ims-staff-nav-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span><span>Profile</span></a></li>
+            <li><a asp-controller="Home" asp-action="Index" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
+            <li><a asp-controller="Idea" asp-action="Submit"><span class="ims-staff-nav-icon"><i data-lucide="plus" style="width:18px;height:18px;"></i></span><span>Submit Idea</span></a></li>
+            <li><a asp-controller="Idea" asp-action="MyIdeas"><span class="ims-staff-nav-icon"><i data-lucide="list" style="width:18px;height:18px;"></i></span><span>My Ideas</span></a></li>
+            <li><a asp-controller="Notification" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="mail" style="width:18px;height:18px;"></i></span><span>Notifications</span></a></li>
+            <li><a asp-controller="Resource" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Resources</span></a></li>
+            <li><a asp-controller="Profile" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span><span>Profile</span></a></li>
         </ul>
         <div class="ims-staff-sidebar-footer">BOU Innovation System v1.0</div>
     </aside>

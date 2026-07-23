@@ -1,4 +1,3 @@
-@page
 @model ReviewIdeaModel
 @{
     ViewData["Title"] = "Review Idea - Innovation Management System";
@@ -13,7 +12,7 @@
         <main class="ims-staff-main-content">
             <!-- Back Link -->
             <div class="ims-staff-back-link">
-                <a asp-page="/Innovation/SubmittedIdeas" class="ims-staff-back-link-anchor">&larr; Back to Submitted Ideas</a>
+                <a asp-controller="Idea" asp-action="AllIdeas" class="ims-staff-back-link-anchor">&larr; Back to Submitted Ideas</a>
             </div>
 
             <!-- Review Grid -->
@@ -49,10 +48,10 @@
                             <div class="ims-staff-attachment-list">
                                 @foreach (var attachment in Model.Idea.Attachments)
                                 {
-                                    <span class="ims-staff-attachment-item">
+                                    <a class="ims-staff-attachment-item" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">
                                         <i data-lucide="@attachment.Icon" style="width:14px;height:14px;vertical-align:middle;"></i> 
                                         @attachment.FileName
-                                    </span>
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -97,7 +96,7 @@
                         <div class="ims-staff-section-header">
                             <h3>Review Controls</h3>
                         </div>
-                        <form method="post" asp-page-handler="SaveReview">
+                        <form method="post" asp-controller="Idea" asp-action="Review">
                             <input type="hidden" asp-for="Idea.Id" />
                             <div class="ims-staff-form-group">
                                 <label>Change Status</label>

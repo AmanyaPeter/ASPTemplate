@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="h3 mb-3">My Profile</h1>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">User name</dt>
+                <dd class="col-sm-9">@User.Identity?.Name</dd>
+                <dt class="col-sm-3">Signed in</dt>
+                <dd class="col-sm-9">@(User.Identity?.IsAuthenticated == true ? "Yes" : "No")</dd>
+                <dt class="col-sm-3">Role</dt>
+                <dd class="col-sm-9">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("InnovationTeam") ? "Innovation Team" : "Staff")</dd>
+            </dl>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Back to dashboard</a>
+        </div>
+    </div>
+</div>

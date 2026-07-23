@@ -24,6 +24,7 @@ namespace Template.Web.Models.Idea
 
     public class AttachmentViewModel
     {
+        public Guid Id { get; set; }
         public string? FileName { get; set; }
         public string? FilePath { get; set; }
         public string? Icon { get; set; }
@@ -36,6 +37,7 @@ namespace Template.Web.Models.Idea
         public string? Role { get; set; }
         public string? TimeAgo { get; set; }
         public string? Text { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class TimelineEntryViewModel

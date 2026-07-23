@@ -1,8 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Template.Web.Models.Idea
 {
     public class SubmitIdeaModel
     {
+        public Guid? Id { get; set; }
         public InnovatorViewModel Innovator { get; set; } = new();
+        [Required]
         public string SubmissionType { get; set; } = "individual";
         public IdeaFormViewModel Idea { get; set; } = new();
         public List<IFormFile>? Attachments { get; set; }
@@ -21,15 +25,20 @@ namespace Template.Web.Models.Idea
 
     public class IdeaFormViewModel
     {
+        [Required, StringLength(200)]
         public string? Title { get; set; }
+        [Required, StringLength(2000)]
         public string? SummaryDescription { get; set; }
+        [Required, StringLength(4000)]
         public string? ProblemStatement { get; set; }
+        [Required, StringLength(4000)]
         public string? ProposedSolution { get; set; }
         public string? ExpectedBenefits { get; set; }
         public string? KeyEnablers { get; set; }
         public string? ImplementationApproach { get; set; }
         public string? ImpactIndicators { get; set; }
         public string? StrategicObjective { get; set; }
+        [Required]
         public string? Category { get; set; }
     }
 }

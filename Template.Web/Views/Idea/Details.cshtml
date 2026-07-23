@@ -1,4 +1,3 @@
-@page
 @model IdeaDetailsModel
 @{
     ViewData["Title"] = "Idea Details - Innovation Management System";
@@ -12,7 +11,7 @@
         <main class="ims-staff-main-content">
             <!-- Back Button -->
             <div class="ims-staff-back-link">
-                <a asp-page="/Staff/MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
+                <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
             </div>
 
             <!-- Detail Grid -->
@@ -53,10 +52,10 @@
                             <div class="ims-staff-attachment-list">
                                 @foreach (var attachment in Model.Idea.Attachments)
                                 {
-                                    <span class="ims-staff-attachment-item">
+                                    <a class="ims-staff-attachment-item" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">
                                         <i data-lucide="@attachment.Icon" style="width:14px;height:14px;vertical-align:middle;"></i>
                                         @attachment.FileName
-                                    </span>
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -80,11 +79,11 @@
                                 </div>
                             }
                         </div>
-                        <div class="ims-staff-comment-box">
+                        <form method="post" asp-action="AddComment" asp-route-id="@Model.Idea.Id" class="ims-staff-comment-box">
                             <div class="ims-staff-comment-box-avatar">@User.Identity.Name?.Substring(0, 1)</div>
-                            <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." asp-for="NewComment"></textarea>
-                            <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
-                        </div>
+                            <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." name="newComment" asp-for="NewComment"></textarea>
+                            <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
+                        </form>
                     </div>
                 </div>
 

@@ -12,12 +12,12 @@
             <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
         </div>
         <ul class="ims-staff-sidebar-nav">
-            <li><a asp-page="/Innovation/Dashboard" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
-            <li><a asp-page="/Innovation/SubmittedIdeas"><span class="ims-staff-nav-icon"><i data-lucide="list" style="width:18px;height:18px;"></i></span><span>Submitted Ideas</span></a></li>
-            <li><a asp-page="/Innovation/Categories"><span class="ims-staff-nav-icon"><i data-lucide="folder-tree" style="width:18px;height:18px;"></i></span><span>Categories</span></a></li>
-            <li><a asp-page="/Staff/Resources"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Resources</span></a></li>
-            <li><a asp-page="/Innovation/Reports"><span class="ims-staff-nav-icon"><i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i></span><span>Reports</span></a></li>
-            <li><a asp-page="/Innovation/Permissions"><span class="ims-staff-nav-icon"><i data-lucide="shield" style="width:18px;height:18px;"></i></span><span>Permissions</span></a></li>
+            <li><a asp-controller="Home" asp-action="Index" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
+            <li><a asp-controller="Idea" asp-action="AllIdeas"><span class="ims-staff-nav-icon"><i data-lucide="list" style="width:18px;height:18px;"></i></span><span>Submitted Ideas</span></a></li>
+            <li><a asp-controller="Category" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="folder-tree" style="width:18px;height:18px;"></i></span><span>Categories</span></a></li>
+            <li><a asp-controller="Resource" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Resources</span></a></li>
+            <li><a asp-controller="Report" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i></span><span>Reports</span></a></li>
+            <li><a asp-controller="Role" asp-action="Index"><span class="ims-staff-nav-icon"><i data-lucide="shield" style="width:18px;height:18px;"></i></span><span>Permissions</span></a></li>
         </ul>
         <div class="ims-staff-sidebar-footer">BOU Innovation System v1.0</div>
     </aside>
@@ -82,7 +82,7 @@
                 <div class="ims-staff-card ims-staff-table-card">
                     <div class="ims-staff-section-header">
                         <h3>Recent Submissions</h3>
-                        <a asp-page="/Innovation/SubmittedIdeas" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">View All</a>
+                        <a asp-controller="Idea" asp-action="AllIdeas" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">View All</a>
                     </div>
                     <div class="ims-staff-table-container">
                         <table class="ims-staff-data-table">

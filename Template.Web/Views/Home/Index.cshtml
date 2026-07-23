@@ -1,5 +1,24 @@
+<<<<<<< Updated upstream
 ﻿@{
     ViewData["Title"] = "Home Page";
+=======
+@using Template.Web.Models.Shared
+@model object
+@{
+    Layout = null;
+
+    var dashboardView = "~/Views/Shared/Components/StaffDashboard/Default.cshtml";
+    object dashboardModel = Model;
+
+    if (User.IsInRole("Admin"))
+    {
+        dashboardView = "~/Views/Shared/Components/AdminDashboard/Default.cshtml";
+    }
+    else if (User.IsInRole("InnovationTeam"))
+    {
+        dashboardView = "~/Views/Shared/Components/InnovationTeamDashboard/Default.cshtml";
+    }
+>>>>>>> Stashed changes
 }
 @if (!User.IsInRole(RoleConstants.ItSupport))
 {

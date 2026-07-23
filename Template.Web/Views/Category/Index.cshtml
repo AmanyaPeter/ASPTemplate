@@ -1,4 +1,3 @@
-@page
 @model CategoriesModel
 @{
     ViewData["Title"] = "Categories - Innovation Management System";
@@ -84,7 +83,7 @@
                                     </td>
                                     <td>
                                         <div class="ims-staff-actions">
-                                            <button class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary" onclick="editCategory(@category.Id)">Edit</button>
+                                            <button type="button" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary" onclick='editCategory(@category.Id, @Html.Raw(Json.Serialize(category.Name)), @Html.Raw(Json.Serialize(category.Description)), @Json.Serialize(category.IsActive))'>Edit</button>
                                             <button class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-danger" onclick="deleteCategory(@category.Id, '@category.Name')">Delete</button>
                                         </div>
                                     </td>
@@ -100,15 +99,15 @@
                     <div class="ims-staff-pagination">
                         @if (Model.CurrentPage > 1)
                         {
-                            <a asp-page="/Admin/Categories" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
+                            <a asp-controller="Category" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
                         }
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
-                            <a asp-page="/Admin/Categories" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
+                            <a asp-controller="Category" asp-action="Index" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
                         }
                         @if (Model.CurrentPage < Model.TotalPages)
                         {
-                            <a asp-page="/Admin/Categories" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
+                            <a asp-controller="Category" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
                         }
                     </div>
                 }
@@ -124,7 +123,7 @@
                 <h3 id="categoryModalTitle">Add New Category</h3>
                 <button class="ims-staff-modal-close" onclick="closeCategoryModal()">&times;</button>
             </div>
-            <form method="post" asp-page-handler="SaveCategory">
+            <form method="post" asp-controller="Category" asp-action="Save">
                 <input type="hidden" asp-for="Category.Id" id="categoryId">
                 <div class="ims-staff-modal-body">
                     <div class="ims-staff-form-group">
@@ -166,7 +165,10 @@
             </div>
             <div class="ims-staff-modal-footer">
                 <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <button type="button" class="ims-staff-btn ims-staff-btn-danger" id="confirmDeleteBtn">Delete</button>
+                <form method="post" asp-controller="Category" asp-action="Delete">
+                    <input type="hidden" name="id" id="deleteCategoryId" />
+                    <button type="submit" class="ims-staff-btn ims-staff-btn-danger">Delete</button>
+                </form>
             </div>
         </div>
     </div>
@@ -189,14 +191,20 @@
                 document.body.style.overflow = 'hidden';
             }
 
-            function editCategory(id) {
-                // Fetch category data via AJAX or load from model
-                // For now, redirect to edit handler
-                window.location.href = `/Admin/Categories?handler=Edit&id=${id}`;
+            function editCategory(id, name, description, isActive) {
+                document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+                document.getElementById('categoryId').value = id;
+                document.getElementById('CategoryName').value = name;
+                document.getElementById('CategoryDescription').value = description || '';
+                document.getElementById('CategoryIsActive').checked = isActive;
+                document.getElementById('categorySaveBtn').textContent = 'Update Category';
+                document.getElementById('categoryModal').style.display = 'block';
+                document.body.style.overflow = 'hidden';
             }
 
             function deleteCategory(id, name) {
                 deleteId = id;
+                document.getElementById('deleteCategoryId').value = id;
                 document.getElementById('deleteCategoryName').textContent = name;
                 document.getElementById('deleteModal').style.display = 'block';
                 document.body.style.overflow = 'hidden';
@@ -212,13 +220,6 @@
                 document.body.style.overflow = 'auto';
                 deleteId = null;
             }
-
-            // Confirm delete
-            document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
-                if (deleteId) {
-                    window.location.href = `/Admin/Categories?handler=Delete&id=${deleteId}`;
-                }
-            });
 
             // Close modals on ESC key
             document.addEventListener('keydown', function(e) {
