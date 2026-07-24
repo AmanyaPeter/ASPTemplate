@@ -1121,3 +1121,144 @@ textarea.ims-staff-form-control {
         font-size: 11px;
     }
 }
+/* --- Shared MVC layout integration --- */
+.body-wrapper .ims-staff-main-wrapper {
+    margin-left: 0;
+    min-height: auto;
+    display: block;
+}
+.body-wrapper .ims-staff-main-content {
+    padding: 0;
+}
+.ims-staff-page {
+    color: #1a2a3a;
+}
+.ims-staff-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.ims-staff-page-eyebrow {
+    margin: 0 0 4px;
+    color: #9b6a24;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.ims-staff-page-title {
+    margin: 0;
+    color: #5a0c08;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700;
+    line-height: 1.2;
+}
+.ims-staff-page-description {
+    max-width: 720px;
+    margin: 6px 0 0;
+    color: #68717d;
+    font-size: 14px;
+}
+.ims-staff-page .card,
+.ims-staff-page.ims-staff-card,
+.ims-staff-page .ims-staff-card {
+    border: 1px solid #eadfda;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(90, 12, 8, .06);
+}
+.ims-staff-page .card-header {
+    min-height: 56px;
+    border-bottom-color: #eee4df;
+    background: #fffaf6;
+}
+.ims-staff-page .card-title {
+    color: #5a0c08;
+    font-weight: 700;
+}
+.ims-staff-page .btn-primary,
+.ims-staff-page .ims-staff-btn-primary {
+    border-color: #5a0c08;
+    background: #5a0c08;
+    color: #fff;
+}
+.ims-staff-page .btn-primary:hover,
+.ims-staff-page .ims-staff-btn-primary:hover {
+    border-color: #380001;
+    background: #380001;
+}
+.ims-staff-page .btn-outline-primary {
+    border-color: #5a0c08;
+    color: #5a0c08;
+}
+.ims-staff-page .btn-outline-primary:hover {
+    background: #5a0c08;
+    color: #fff;
+}
+.ims-staff-page .ims-staff-form-control:focus {
+    border-color: #dd9024;
+    box-shadow: 0 0 0 3px rgba(221, 144, 36, .16);
+}
+.ims-staff-page .ims-staff-badge-underreview,
+.ims-staff-page .ims-staff-badge-under-review { background: #dd9024; color: #241500; }
+.ims-staff-page .ims-staff-badge-conceptdevelopment { background: #efe0fb; color: #6d2998; }
+.ims-staff-page .ims-staff-badge-pendinginformation { background: #fff0c2; color: #785900; }
+.ims-staff-page .ims-staff-badge-retracted { background: #fde8e7; color: #a51d18; }
+.ims-staff-page .ims-staff-badge-approved { background: #dff3e7; color: #176b3a; }
+.ims-staff-page .ims-staff-badge-closed { background: #e8eaed; color: #4b5563; }
+.ims-staff-dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.ims-staff-dashboard-card {
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+    border: 1px solid #eadfda;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 18px rgba(90, 12, 8, .06);
+}
+.ims-staff-dashboard-card::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: #dd9024;
+    content: "";
+}
+.ims-staff-dashboard-card .text-muted { font-size: 13px; }
+.ims-staff-dashboard-card .h1 { color: #5a0c08 !important; }
+.ims-staff-notification-list { overflow: hidden; padding: 0; }
+.ims-staff-notification-list .ims-staff-notification-item { padding: 18px 20px; }
+.ims-staff-notification-list .ims-staff-notification-unread { margin: 0; border-radius: 0; }
+.ims-staff-empty-state { border: 1px dashed #dfd0c8; }
+
+@media (max-width: 992px) {
+    .ims-staff-dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 576px) {
+    .ims-staff-page-header { align-items: stretch; flex-direction: column; }
+    .ims-staff-page-header .ims-staff-btn { justify-content: center; width: 100%; }
+    .ims-staff-dashboard-cards { grid-template-columns: 1fr; }
+}
+
+/* --- Category management --- */
+.ims-category-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+.ims-category-editor {
+    position: sticky;
+    top: 88px;
+}
+.ims-category-active { background: #dff3e7; color: #176b3a; }
+.ims-category-inactive { background: #e8eaed; color: #4b5563; }
+@media (max-width: 992px) {
+    .ims-category-layout { grid-template-columns: 1fr; }
+    .ims-category-editor { position: static; }
+}

@@ -9,7 +9,14 @@
     <div class="ims-staff-main-wrapper">
 
         <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
+        <main class="ims-staff-main-content ims-staff-page">
+            <div class="ims-staff-page-header">
+                <div>
+                    <p class="ims-staff-page-eyebrow">Staff workspace</p>
+                    <h1 class="ims-staff-page-title">Submit an Innovation Idea</h1>
+                    <p class="ims-staff-page-description">Capture the opportunity, proposed solution, strategic alignment, and expected impact.</p>
+                </div>
+            </div>
             <!-- Stepper -->
             <div class="ims-staff-stepper">
                 <div class="ims-staff-stepper-step ims-staff-stepper-active" data-step="1">
@@ -318,12 +325,12 @@
                             <label>Innovation Category *</label>
                             <p class="ims-staff-field-hint">Select the category that best describes your innovation.</p>
                             <div class="ims-staff-radio-group-vertical">
-                                <label><input type="radio" name="Idea.Category" value="Product/Service" asp-for="Idea.Category"> <strong>Product / Service</strong> — New or significantly improved products or services that enhance value delivered to stakeholders.</label>
-                                <label><input type="radio" name="Idea.Category" value="Process" asp-for="Idea.Category"> <strong>Process</strong> — Improved workflows or operational methods that increase efficiency, effectiveness, transparency, or resilience.</label>
-                                <label><input type="radio" name="Idea.Category" value="Business Model" asp-for="Idea.Category"> <strong>Business Model</strong> — New approaches to delivering the Bank's mandate, including partnerships, service delivery models, or value creation mechanisms.</label>
-                                <label><input type="radio" name="Idea.Category" value="Policy/Governance" asp-for="Idea.Category"> <strong>Policy / Governance</strong> — Innovations involving policies, governance structures, regulations, decision-making processes, or institutional frameworks.</label>
-                                <label><input type="radio" name="Idea.Category" value="Technology/System" asp-for="Idea.Category"> <strong>Technology / System</strong> — Application or introduction of new technologies, digital solutions, STEM innovations, or system capabilities.</label>
-                                <label><input type="radio" name="Idea.Category" value="Sustainability" asp-for="Idea.Category"> <strong>Sustainability</strong> — Innovations that promote environmental sustainability, social impact, financial inclusion, or strengthen public trust.</label>
+                                <label><input type="radio" name="Idea.Category" value="Product/Service" asp-for="Idea.Category"> <strong>Product / Service</strong> â€” New or significantly improved products or services that enhance value delivered to stakeholders.</label>
+                                <label><input type="radio" name="Idea.Category" value="Process" asp-for="Idea.Category"> <strong>Process</strong> â€” Improved workflows or operational methods that increase efficiency, effectiveness, transparency, or resilience.</label>
+                                <label><input type="radio" name="Idea.Category" value="Business Model" asp-for="Idea.Category"> <strong>Business Model</strong> â€” New approaches to delivering the Bank's mandate, including partnerships, service delivery models, or value creation mechanisms.</label>
+                                <label><input type="radio" name="Idea.Category" value="Policy/Governance" asp-for="Idea.Category"> <strong>Policy / Governance</strong> â€” Innovations involving policies, governance structures, regulations, decision-making processes, or institutional frameworks.</label>
+                                <label><input type="radio" name="Idea.Category" value="Technology/System" asp-for="Idea.Category"> <strong>Technology / System</strong> â€” Application or introduction of new technologies, digital solutions, STEM innovations, or system capabilities.</label>
+                                <label><input type="radio" name="Idea.Category" value="Sustainability" asp-for="Idea.Category"> <strong>Sustainability</strong> â€” Innovations that promote environmental sustainability, social impact, financial inclusion, or strengthen public trust.</label>
                             </div>
                             <span asp-validation-for="Idea.Category" class="ims-staff-validation-feedback"></span>
                         </div>

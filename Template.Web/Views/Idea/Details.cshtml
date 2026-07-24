@@ -7,7 +7,7 @@
     <!-- Main Content -->
     <div class="ims-staff-main-wrapper">
         <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
+        <main class="ims-staff-main-content ims-staff-page">
             @if (TempData["SuccessMessage"] is string successMessage)
             {
                 <div class="alert alert-success">@successMessage</div>
@@ -16,6 +16,14 @@
             {
                 <div class="alert alert-danger">@errorMessage</div>
             }
+            <div class="ims-staff-page-header">
+                <div>
+                    <p class="ims-staff-page-eyebrow">Idea record</p>
+                    <h1 class="ims-staff-page-title">Idea Details</h1>
+                    <p class="ims-staff-page-description">Review your submission, attachments, conversation, and progress.</p>
+                </div>
+            </div>
+
             <!-- Back Button -->
             <div class="ims-staff-back-link">
                 <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>

@@ -4,6 +4,7 @@ using Template.Core.Repository.ApplicationPermission;
 using Template.Core.Repository.ApplicationPermissions;
 using Template.Core.Repository.Auditable;
 using Template.Core.Repository.AuditLogs;
+using Template.Core.Repository.Categories;
 using Template.Core.Repository.Dashboard;
 using Template.Core.Repository.Permissions;
 using Template.Core.Repository.Roles;
@@ -30,6 +31,7 @@ public static class CoreServicesRegistration
         services.AddSingleton<IAuthorizationPolicyProvider, ApplicationPermissionPolicyProvider>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
 
         return services;
     }
@@ -50,4 +52,3 @@ public static class CoreServicesRegistration
 		});
 	}
 }
-

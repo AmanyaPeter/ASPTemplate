@@ -1,4 +1,4 @@
-﻿@using Template.Common.Static
+@using Template.Common.Static
 @using Microsoft.AspNetCore.Http
 
 <!DOCTYPE html>
@@ -10,6 +10,7 @@
 	<link rel="stylesheet" href="~/css/tabler.min.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/css/theme_styles.min.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/staff.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/Template.Web.styles.css" asp-append-version="true" />
 	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 	<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css"
@@ -60,6 +61,20 @@
 								<span class="hide-menu">Dashboard</span>
 							</a>
 						</li>
+
+						@if (User.IsInRole(RoleConstants.InnovationTeam))
+						{
+							<li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">IDEA MANAGEMENT</span></li>
+							<li class="sidebar-item"><a class="sidebar-link" asp-controller="Idea" asp-action="AllIdeas"><span><i class="ti ti-list-check"></i></span><span class="hide-menu">Submitted Ideas</span></a></li>
+							<li class="sidebar-item"><a class="sidebar-link" asp-controller="Category" asp-action="Index"><span><i class="ti ti-category"></i></span><span class="hide-menu">Categories</span></a></li>
+						}
+						@if (User.IsInRole(RoleConstants.Staff))
+						{
+							<li class="nav-small-cap"><i class="ti ti-dots nav-small-cap-icon fs-4"></i><span class="hide-menu">MY INNOVATIONS</span></li>
+							<li class="sidebar-item"><a class="sidebar-link" asp-controller="Idea" asp-action="Submit"><span><i class="ti ti-bulb"></i></span><span class="hide-menu">Submit New Idea</span></a></li>
+							<li class="sidebar-item"><a class="sidebar-link" asp-controller="Idea" asp-action="MyIdeas"><span><i class="ti ti-list-details"></i></span><span class="hide-menu">My Ideas</span></a></li>
+							<li class="sidebar-item"><a class="sidebar-link" asp-controller="Notification" asp-action="Index"><span><i class="ti ti-bell"></i></span><span class="hide-menu">Notifications</span></a></li>
+						}
 
 						<permission name="@SystemPermissions.Account.ViewApplicationUsers">
 							<li class="nav-small-cap">

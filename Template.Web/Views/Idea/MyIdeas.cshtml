@@ -17,7 +17,15 @@
        
 
         <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
+        <main class="ims-staff-main-content ims-staff-page">
+            <div class="ims-staff-page-header">
+                <div>
+                    <p class="ims-staff-page-eyebrow">Staff workspace</p>
+                    <h1 class="ims-staff-page-title">My Ideas</h1>
+                    <p class="ims-staff-page-description">Search, track, and manage your innovation submissions.</p>
+                </div>
+                <a asp-controller="Idea" asp-action="Submit" class="ims-staff-btn ims-staff-btn-primary"><i class="ti ti-plus"></i> Submit New Idea</a>
+            </div>
             <!-- Filters Bar -->
             <form asp-controller="Idea" asp-action="MyIdeas" method="get" class="ims-staff-filters-bar">
                 <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search ideas..." asp-for="SearchTerm">
