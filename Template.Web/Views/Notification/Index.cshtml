@@ -95,23 +95,5 @@
                     </div>
                 }
             </div>
-        }
+        </main>
     </div>
-    @if (Model.TotalPages > 1)
-    {
-        <div class="card-footer d-flex justify-content-center">
-            <ul class="pagination mb-0">
-                @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
-                {
-                    <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : string.Empty)">
-                        <a asp-controller="Notification" asp-action="Index" asp-route-filter="@Model.Filter" asp-route-page="@pageNumber" class="page-link">@pageNumber</a>
-                    </li>
-                }
-            </ul>
-        </div>
-    }
-<<<<<<< HEAD
-</body>
-=======
-</div>
->>>>>>> dev

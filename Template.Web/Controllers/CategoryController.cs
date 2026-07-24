@@ -1,36 +1,43 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Template.Data.Configurations;
+using Template.Common.Static;
+using Template.Core.Repository.Category;
 using Template.Data.Entities;
 using Template.Web.Models.Category;
 
 namespace Template.Web.Controllers;
 
-[Authorize(Roles = "Admin,InnovationTeam")]
-public class CategoryController(ApplicationDbContext db) : Controller
+[Authorize(Roles = RoleConstants.InnovationTeam)]
+public class CategoryController : Controller
 {
+    private readonly ICategoryRepository _repository;
     private const int PageSize = 10;
+
+    public CategoryController(ICategoryRepository repository)
+    {
+        _repository = repository;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, int page = 1)
     {
         page = Math.Max(page, 1);
-        var query = db.Categories.AsNoTracking().AsQueryable();
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-            query = query.Where(c => c.Name.Contains(searchTerm) || (c.Description != null && c.Description.Contains(searchTerm)));
-        if (statusFilter == "active") query = query.Where(c => c.IsActive);
-        if (statusFilter == "inactive") query = query.Where(c => !c.IsActive);
-        var count = await query.CountAsync();
-        var items = await query.OrderBy(c => c.Name).Skip((page - 1) * PageSize).Take(PageSize)
+        var count = await _repository.GetCountAsync(searchTerm, statusFilter);
+        var items = await _repository.GetAllAsync(searchTerm, statusFilter);
+
+        var pagedItems = items
+            .OrderBy(c => c.Name)
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize)
             .Select(c => new CategoryItemViewModel
             {
                 Id = c.Id, Name = c.Name, Description = c.Description,
                 IsActive = c.IsActive, CreatedDate = c.CreatedDate
-            }).ToListAsync();
+            }).ToList();
+
         return View(new CategoriesModel
         {
-            SearchTerm = searchTerm, StatusFilter = statusFilter, Categories = items,
+            SearchTerm = searchTerm, StatusFilter = statusFilter, Categories = pagedItems,
             CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize))
         });
     }
@@ -40,30 +47,37 @@ public class CategoryController(ApplicationDbContext db) : Controller
     public async Task<IActionResult> Save(CategoriesModel model)
     {
         if (!ModelState.IsValid)
-            return await Index(model.SearchTerm, model.StatusFilter);
+        {
+            TempData["ErrorMessage"] = "Please correct the validation errors.";
+            return RedirectToAction(nameof(Index));
+        }
 
-        var duplicate = await db.Categories.AnyAsync(c =>
-            c.Name == model.Category.Name && c.Id != model.Category.Id);
-        if (duplicate)
+        var isUnique = await _repository.IsNameUniqueAsync(model.Category.Name.Trim(),
+            model.Category.Id == 0 ? null : model.Category.Id);
+        if (!isUnique)
         {
             TempData["ErrorMessage"] = "A category with that name already exists.";
             return RedirectToAction(nameof(Index));
         }
 
-        Category entity;
         if (model.Category.Id == 0)
         {
-            entity = new Category { Name = model.Category.Name.Trim() };
-            db.Categories.Add(entity);
+            await _repository.CreateAsync(
+                model.Category.Name.Trim(),
+                model.Category.Description?.Trim(),
+                model.Category.IsActive);
+            TempData["SuccessMessage"] = "Category created successfully.";
         }
         else
         {
-            entity = await db.Categories.FindAsync(model.Category.Id) ?? throw new InvalidOperationException();
-            entity.Name = model.Category.Name.Trim();
+            await _repository.UpdateAsync(
+                model.Category.Id,
+                model.Category.Name.Trim(),
+                model.Category.Description?.Trim(),
+                model.Category.IsActive);
+            TempData["SuccessMessage"] = "Category updated successfully.";
         }
-        entity.Description = model.Category.Description?.Trim();
-        entity.IsActive = model.Category.IsActive;
-        await db.SaveChangesAsync();
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -71,10 +85,10 @@ public class CategoryController(ApplicationDbContext db) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var category = await db.Categories.FindAsync(id);
-        if (category == null) return NotFound();
-        category.IsActive = false;
-        await db.SaveChangesAsync();
+        var deleted = await _repository.SoftDeleteAsync(id);
+        if (!deleted) return NotFound();
+
+        TempData["SuccessMessage"] = "Category deactivated successfully.";
         return RedirectToAction(nameof(Index));
     }
 }

@@ -1,17 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-<<<<<<< HEAD
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Template.Common.Enums;
-=======
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Template.Common.Enums;
 using Template.Common.Static;
->>>>>>> dev
 using Template.Data.Configurations;
 using Template.Data.Entities;
 using Template.Web.Models.Idea;
@@ -19,45 +12,31 @@ using Template.Web.Models.Idea;
 namespace Template.Web.Controllers;
 
 [Authorize]
-public class IdeaController(
-<<<<<<< HEAD
-    ApplicationDbContext db,
-    UserManager<ApplicationUser> userManager,
-    IWebHostEnvironment environment) : Controller
+public class IdeaController : Controller
 {
+    private readonly ApplicationDbContext _context;
+    private readonly IWebHostEnvironment _environment;
     private const int PageSize = 10;
-    private static readonly HashSet<string> AllowedExtensions =
+    private const long MaximumAttachmentSize = 10 * 1024 * 1024;
+    private static readonly HashSet<string> AllowedAttachmentExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg" };
 
+    public IdeaController(ApplicationDbContext context, IWebHostEnvironment environment)
+    {
+        _context = context;
+        _environment = environment;
+    }
+
+    [Authorize(Roles = RoleConstants.Staff)]
     [HttpGet]
     public async Task<IActionResult> Submit(Guid? id)
     {
-        var user = await CurrentUserAsync();
-        if (user == null) return Challenge();
+        var user = await GetCurrentUserAsync();
+        if (user == null) return Forbid();
 
         var model = new SubmitIdeaModel
         {
             Id = id,
-=======
-    ApplicationDbContext context,
-    IWebHostEnvironment environment) : Controller
-{
-    private const long MaximumAttachmentSize = 10 * 1024 * 1024;
-    private static readonly HashSet<string> AllowedAttachmentExtensions =
-        new(StringComparer.OrdinalIgnoreCase) { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png" };
-    [Authorize(Roles = RoleConstants.Staff)]
-    [HttpGet]
-    public async Task<IActionResult> Submit()
-    {
-        var user = await GetCurrentUserAsync();
-        if (user == null)
-        {
-            return Forbid();
-        }
-
-        return View(new SubmitIdeaModel
-        {
->>>>>>> dev
             Innovator = new InnovatorViewModel
             {
                 FullName = user.FullName,
@@ -66,16 +45,16 @@ public class IdeaController(
                 DutyStation = user.Station,
                 Age = user.AgeBracket,
                 Gender = user.Gender,
-<<<<<<< HEAD
-                Rank = user.Title
+                Rank = user.JobTitle
             }
         };
 
         if (id.HasValue)
         {
-            var idea = await db.InnovationIdeas.AsNoTracking()
+            var idea = await _context.InnovationIdeas
+                .AsNoTracking()
                 .Include(i => i.Category)
-                .SingleOrDefaultAsync(i => i.Id == id && i.SubmitterId == user.Id && !i.IsDeleted);
+                .SingleOrDefaultAsync(i => i.Id == id.Value && i.SubmitterId == user.Id && !i.IsDeleted);
             if (idea == null) return NotFound();
             if (idea.IsLocked || idea.IsRetracted) return Forbid();
 
@@ -99,17 +78,18 @@ public class IdeaController(
         return View(model);
     }
 
+    [Authorize(Roles = RoleConstants.Staff)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(25 * 1024 * 1024)]
     public async Task<IActionResult> Submit(SubmitIdeaModel model)
     {
-        var user = await CurrentUserAsync();
-        if (user == null) return Challenge();
+        var user = await GetCurrentUserAsync();
+        if (user == null) return Forbid();
 
         if (!ModelState.IsValid) return View(model);
 
-        var category = await db.Categories.FirstOrDefaultAsync(
+        var category = await _context.Categories.FirstOrDefaultAsync(
             c => c.IsActive && c.Name == model.Idea.Category);
         if (category == null)
         {
@@ -118,10 +98,13 @@ public class IdeaController(
         }
 
         InnovationIdea idea;
+        bool isNew = false;
+
         if (model.Id.HasValue)
         {
-            idea = await db.InnovationIdeas.SingleOrDefaultAsync(
-                i => i.Id == model.Id && i.SubmitterId == user.Id && !i.IsDeleted) ?? throw new InvalidOperationException();
+            idea = await _context.InnovationIdeas
+                .SingleOrDefaultAsync(i => i.Id == model.Id && i.SubmitterId == user.Id && !i.IsDeleted)
+                ?? throw new InvalidOperationException("Idea not found.");
             if (idea.IsLocked || idea.IsRetracted) return Forbid();
         }
         else
@@ -129,15 +112,15 @@ public class IdeaController(
             idea = new InnovationIdea
             {
                 Id = Guid.NewGuid(),
-                ReferenceNumber = await NextReferenceAsync(),
+                ReferenceNumber = await GenerateReferenceNumberAsync(),
                 SubmissionDate = DateTime.UtcNow,
                 SubmitterId = user.Id,
-                Submitter = user,
-                CurrentStage = "Submitted",
-                CurrentStatus = "Under Review",
-                RowVersion = Array.Empty<byte>()
+                CurrentStage = nameof(IdeaStage.Submitted),
+                CurrentStatus = nameof(IdeaStatus.UnderReview),
+                RowVersion = new byte[8]
             };
-            db.InnovationIdeas.Add(idea);
+            _context.InnovationIdeas.Add(idea);
+            isNew = true;
         }
 
         idea.SubmissionType = model.SubmissionType;
@@ -151,138 +134,67 @@ public class IdeaController(
         idea.ImpactIndicators = model.Idea.ImpactIndicators?.Trim();
         idea.StrategicObjective = model.Idea.StrategicObjective?.Trim();
         idea.TeamMemberNames = model.SubmissionType == "team" ? model.Innovator.TeamMemberNames?.Trim() : null;
-        idea.TeamCompositionJson = model.SubmissionType == "team"
-            ? JsonSerializer.Serialize(Request.Form
-                .Where(x => x.Key.StartsWith("Team", StringComparison.OrdinalIgnoreCase) && x.Key != "Innovator.TeamMemberNames")
-                .ToDictionary(x => x.Key, x => x.Value.ToString()))
-            : null;
         idea.CategoryId = category.Id;
-        idea.Category = category;
         idea.SubmitterAgeBracket = user.AgeBracket;
         idea.ModifiedBy = user.UserName ?? user.Id.ToString();
         idea.ModifiedDate = DateTime.UtcNow;
 
-        await db.SaveChangesAsync();
-        await SaveAttachmentsAsync(idea, user, model.Attachments);
-
-        db.Notifications.Add(new Notification
+        if (isNew)
         {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            User = user,
-=======
-                Rank = user.JobTitle
-            }
-        });
-    }
-
-    [Authorize(Roles = RoleConstants.Staff)]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Submit(SubmitIdeaModel model)
-    {
-        var user = await GetCurrentUserAsync();
-        if (user == null)
-        {
-            return Forbid();
-        }
-
-        if (string.IsNullOrWhiteSpace(model.Idea.Title) ||
-            string.IsNullOrWhiteSpace(model.Idea.SummaryDescription) ||
-            string.IsNullOrWhiteSpace(model.Idea.ProblemStatement) ||
-            string.IsNullOrWhiteSpace(model.Idea.ProposedSolution))
-        {
-            ModelState.AddModelError(string.Empty, "Complete all required idea fields.");
-            return View(model);
-        }
-
-        var attachments = model.Attachments?.Where(file => file.Length > 0).ToList() ?? [];
-        foreach (var attachment in attachments)
-        {
-            var extension = Path.GetExtension(attachment.FileName);
-            if (!AllowedAttachmentExtensions.Contains(extension) || attachment.Length > MaximumAttachmentSize)
+            _context.IdeaTimelines.Add(new IdeaTimeline
             {
-                ModelState.AddModelError(nameof(model.Attachments),
-                    $"{Path.GetFileName(attachment.FileName)} must be a PDF, Word, Excel, or PNG file no larger than 10 MB.");
-            }
+                Id = Guid.NewGuid(),
+                IdeaId = idea.Id,
+                Idea = idea,
+                StageId = (int)IdeaStage.Submitted,
+                Stage = IdeaStage.Submitted,
+                StartDate = idea.SubmissionDate,
+                DeadlineDate = idea.SubmissionDate.AddDays(30),
+                CreatedDate = DateTime.UtcNow,
+                CreatedBy = user.Id.ToString()
+            });
         }
 
-        if (!ModelState.IsValid)
+        await _context.SaveChangesAsync();
+
+        if (model.Attachments != null && model.Attachments.Count > 0)
         {
-            return View(model);
+            await SaveAttachmentsAsync(idea, user, model.Attachments);
         }
 
-        var category = string.IsNullOrWhiteSpace(model.Idea.Category)
-            ? null
-            : await context.Categories.FirstOrDefaultAsync(item =>
-                item.Name == model.Idea.Category);
-
-        var idea = new InnovationIdea
+        // Create notification for new submission
+        if (isNew)
         {
-            Id = Guid.NewGuid(),
-            ReferenceNumber = $"IMTS-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}"[..22].ToUpperInvariant(),
-            SubmissionType = model.SubmissionType,
-            SubmissionDate = DateTime.UtcNow,
-            SubmitterId = user.Id,
-            Title = model.Idea.Title.Trim(),
-            SummaryDescription = model.Idea.SummaryDescription.Trim(),
-            ProblemStatement = model.Idea.ProblemStatement.Trim(),
-            ProposedSolution = model.Idea.ProposedSolution.Trim(),
-            CategoryId = category?.Id,
-            SubmitterAgeBracket = user.AgeBracket,
-            CurrentStage = nameof(IdeaStage.Submitted),
-            CurrentStatus = nameof(IdeaStatus.UnderReview),
-            RowVersion = new byte[8],
-            CreatedDate = DateTime.UtcNow,
-            CreatedBy = user.Id.ToString()
-        };
-
-        context.InnovationIdeas.Add(idea);
-        context.IdeaTimelines.Add(new IdeaTimeline
-        {
-            Id = Guid.NewGuid(),
-            IdeaId = idea.Id,
-            Idea = idea,
-            StageId = (int)IdeaStage.Submitted,
-            Stage = IdeaStage.Submitted,
-            StartDate = idea.SubmissionDate,
-            DeadlineDate = idea.SubmissionDate.AddDays(30),
-            CreatedDate = DateTime.UtcNow,
-            CreatedBy = user.Id.ToString().ToString()
-        });
-
-        context.Notifications.Add(new Notification
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
->>>>>>> dev
-            IdeaId = idea.Id,
-            Idea = idea,
-            Type = NotificationType.IdeaSubmitted,
-            Subject = "Idea submitted",
-<<<<<<< HEAD
-            Message = $"Your idea \"{idea.Title}\" was submitted successfully.",
-            LinkUrl = Url.Action(nameof(Details), new { id = idea.Id }),
-            CreatedDate = DateTime.UtcNow
-        });
-        await db.SaveChangesAsync();
+            _context.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                IdeaId = idea.Id,
+                Type = NotificationType.IdeaSubmitted,
+                Subject = "Idea submitted",
+                Message = $"Your idea \"{idea.Title}\" was submitted successfully.",
+                CreatedDate = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+        }
 
         TempData["SuccessMessage"] = $"Idea {idea.ReferenceNumber} saved successfully.";
         return RedirectToAction(nameof(Details), new { id = idea.Id });
     }
 
+    [Authorize(Roles = RoleConstants.Staff)]
     [HttpGet]
-    public async Task<IActionResult> MyIdeas(string? searchTerm, string? statusFilter, string? categoryFilter, int page = 1)
+    public async Task<IActionResult> MyIdeas(
+        string? searchTerm, string? statusFilter, string? categoryFilter, int page = 1)
     {
-        var userId = CurrentUserId();
-        if (userId == null) return Challenge();
+        if (!TryGetCurrentUserId(out var userId)) return Forbid();
         page = Math.Max(page, 1);
 
-        var query = db.InnovationIdeas.AsNoTracking()
-            .Include(i => i.Category)
+        var query = _context.InnovationIdeas.AsNoTracking()
             .Where(i => i.SubmitterId == userId && !i.IsDeleted);
+
         if (!string.IsNullOrWhiteSpace(searchTerm))
-            query = query.Where(i => i.Title.Contains(searchTerm));
+            query = query.Where(i => i.Title.Contains(searchTerm) || i.ReferenceNumber.Contains(searchTerm));
         if (!string.IsNullOrWhiteSpace(statusFilter))
             query = query.Where(i => i.CurrentStatus == statusFilter);
         if (!string.IsNullOrWhiteSpace(categoryFilter))
@@ -295,7 +207,7 @@ public class IdeaController(
             {
                 Id = i.Id, Title = i.Title, CategoryName = i.Category != null ? i.Category.Name : null,
                 Stage = i.CurrentStage, Status = i.IsRetracted ? "Retracted" : i.CurrentStatus,
-                SubmissionDate = i.SubmissionDate
+                SubmissionDate = i.SubmissionDate, IsRetracted = i.IsRetracted
             }).ToListAsync();
 
         return View(new MyIdeasModel
@@ -305,18 +217,21 @@ public class IdeaController(
         });
     }
 
-    [Authorize(Roles = "Admin,InnovationTeam")]
+    [Authorize(Roles = $"{RoleConstants.ItAdmin},{RoleConstants.InnovationTeam}")]
     [HttpGet]
     public async Task<IActionResult> AllIdeas(
         string? searchTerm, string? statusFilter, string? categoryFilter,
         string? departmentFilter, DateTime? dateFrom, int page = 1)
     {
         page = Math.Max(page, 1);
-        var query = db.InnovationIdeas.AsNoTracking().Include(i => i.Category).Include(i => i.Submitter)
+        var query = _context.InnovationIdeas.AsNoTracking()
+            .Include(i => i.Category).Include(i => i.Submitter)
             .Where(i => !i.IsDeleted && !i.IsRetracted);
+
         if (!string.IsNullOrWhiteSpace(searchTerm))
             query = query.Where(i => i.Title.Contains(searchTerm) || i.Submitter.FullName.Contains(searchTerm));
-        if (!string.IsNullOrWhiteSpace(statusFilter)) query = query.Where(i => i.CurrentStatus == statusFilter);
+        if (!string.IsNullOrWhiteSpace(statusFilter))
+            query = query.Where(i => i.CurrentStatus == statusFilter);
         if (!string.IsNullOrWhiteSpace(categoryFilter))
             query = query.Where(i => i.Category != null && i.Category.Name == categoryFilter);
         if (!string.IsNullOrWhiteSpace(departmentFilter))
@@ -331,8 +246,9 @@ public class IdeaController(
                 Id = i.Id, Title = i.Title, Submitter = i.Submitter.FullName,
                 Department = i.Submitter.BusinessUnit, CategoryName = i.Category != null ? i.Category.Name : null,
                 Stage = i.CurrentStage, Status = i.CurrentStatus, SubmissionDate = i.SubmissionDate,
-                NeedsReview = i.CurrentStatus == "Under Review"
+                NeedsReview = i.CurrentStatus == nameof(IdeaStatus.UnderReview)
             }).ToListAsync();
+
         return View(new SubmittedIdeasModel
         {
             SearchTerm = searchTerm, StatusFilter = statusFilter, CategoryFilter = categoryFilter,
@@ -344,487 +260,167 @@ public class IdeaController(
     [HttpGet]
     public async Task<IActionResult> Details(Guid id)
     {
-        var idea = await db.InnovationIdeas.AsNoTracking()
-            .Include(i => i.Submitter).Include(i => i.Attachments)
-            .Include(i => i.Comments).ThenInclude(c => c.User)
-            .Include(i => i.Timeline)
-            .SingleOrDefaultAsync(i => i.Id == id && !i.IsDeleted);
-        if (idea == null) return NotFound();
-        if (!CanAccess(idea)) return Forbid();
-
-        return View(ToDetailsModel(idea));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddComment(Guid id, string newComment)
-    {
-        if (string.IsNullOrWhiteSpace(newComment)) return RedirectToAction(nameof(Details), new { id });
-        var user = await CurrentUserAsync();
-        var idea = await db.InnovationIdeas.Include(i => i.Submitter).SingleOrDefaultAsync(i => i.Id == id);
-        if (user == null || idea == null) return NotFound();
-        if (!CanAccess(idea)) return Forbid();
-
-        db.Comments.Add(new Comment
-        {
-            Id = Guid.NewGuid(), IdeaId = idea.Id, Idea = idea, UserId = user.Id, User = user,
-            CommentText = newComment.Trim(), IsInternal = false, CreatedBy = user.UserName ?? "system"
-        });
-        if (idea.SubmitterId != user.Id)
-        {
-            db.Notifications.Add(new Notification
-            {
-                Id = Guid.NewGuid(), UserId = idea.SubmitterId, User = idea.Submitter,
-                IdeaId = idea.Id, Idea = idea, Type = NotificationType.CommentAdded,
-                Subject = "New comment on your idea", Message = newComment.Trim(),
-                LinkUrl = Url.Action(nameof(Details), new { id }), CreatedDate = DateTime.UtcNow
-            });
-        }
-        await db.SaveChangesAsync();
-        return RedirectToAction(nameof(Details), new { id });
-    }
-
-    [Authorize(Roles = "Admin,InnovationTeam")]
-    [HttpGet]
-    public async Task<IActionResult> Review(Guid id)
-    {
-        var idea = await db.InnovationIdeas.AsNoTracking()
-            .Include(i => i.Submitter).Include(i => i.Attachments)
-            .Include(i => i.Comments).ThenInclude(c => c.User)
-            .SingleOrDefaultAsync(i => i.Id == id && !i.IsDeleted);
-        if (idea == null) return NotFound();
-        return View(await ToReviewModelAsync(idea));
-    }
-
-    [Authorize(Roles = "Admin,InnovationTeam")]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Review(ReviewIdeaModel model)
-    {
-        var user = await CurrentUserAsync();
-        var idea = await db.InnovationIdeas.Include(i => i.Submitter)
-            .SingleOrDefaultAsync(i => i.Id == model.Idea.Id && !i.IsDeleted);
-        if (user == null || idea == null) return NotFound();
-
-        var oldStage = idea.CurrentStage;
-        var oldStatus = idea.CurrentStatus;
-        if (!string.IsNullOrWhiteSpace(model.Review.Stage)) idea.CurrentStage = model.Review.Stage;
-        if (!string.IsNullOrWhiteSpace(model.Review.Status)) idea.CurrentStatus = model.Review.Status;
-        if (Guid.TryParse(model.Review.AssignedReviewerId, out var reviewerId)) idea.AssignedReviewerId = reviewerId;
-        idea.IsLocked = true;
-        if (idea.CurrentStatus is "Approved" or "Declined")
-        {
-            idea.DecisionDate = DateTime.UtcNow;
-            idea.DecisionReason = model.Review.Notes;
-        }
-
-        db.StageHistories.Add(new StageHistory
-        {
-            IdeaId = idea.Id, Idea = idea, PreviousStage = oldStage, NewStage = idea.CurrentStage,
-            PreviousStatus = oldStatus, NewStatus = idea.CurrentStatus, ChangedById = user.Id,
-            ChangedBy = user, ChangeReason = model.Review.Notes, ChangedAt = DateTime.UtcNow,
-            CreatedBy = user.UserName ?? "system"
-        });
-        if (model.Review.TimelineDate.HasValue)
-        {
-            db.IdeaTimelines.Add(new IdeaTimeline
-            {
-                Id = Guid.NewGuid(), IdeaId = idea.Id, Idea = idea,
-                Stage = ParseStage(idea.CurrentStage), StartDate = DateTime.UtcNow,
-                DeadlineDate = model.Review.TimelineDate.Value, CreatedBy = user.UserName ?? "system"
-            });
-        }
-        if (!string.IsNullOrWhiteSpace(model.NewComment))
-        {
-            db.Comments.Add(new Comment
-            {
-                Id = Guid.NewGuid(), IdeaId = idea.Id, Idea = idea, UserId = user.Id, User = user,
-                CommentText = model.NewComment.Trim(), CreatedBy = user.UserName ?? "system"
-            });
-        }
-        db.Notifications.Add(new Notification
-        {
-            Id = Guid.NewGuid(), UserId = idea.SubmitterId, User = idea.Submitter, IdeaId = idea.Id, Idea = idea,
-            Type = NotificationType.StatusChanged, Subject = "Your idea was updated",
-            Message = $"Status: {idea.CurrentStatus}; Stage: {idea.CurrentStage}.",
-            LinkUrl = Url.Action(nameof(Details), new { id = idea.Id }), CreatedDate = DateTime.UtcNow
-        });
-        await db.SaveChangesAsync();
-        TempData["SuccessMessage"] = "Review saved.";
-        return RedirectToAction(nameof(Review), new { id = idea.Id });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Retract(Guid id)
-    {
-        var userId = CurrentUserId();
-        var idea = await db.InnovationIdeas.SingleOrDefaultAsync(i => i.Id == id && i.SubmitterId == userId);
-        if (idea == null) return NotFound();
-        if (idea.IsLocked) return Forbid();
-        idea.IsRetracted = true;
-        idea.CurrentStatus = "Retracted";
-        await db.SaveChangesAsync();
-        return RedirectToAction(nameof(MyIdeas));
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> DownloadAttachment(Guid id)
-    {
-        var attachment = await db.IdeaAttachments.Include(a => a.Idea).SingleOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
-        if (attachment == null || !CanAccess(attachment.Idea)) return NotFound();
-        var fullPath = Path.GetFullPath(Path.Combine(environment.WebRootPath, attachment.FilePath.TrimStart('/', '\\')));
-        var uploadRoot = Path.GetFullPath(Path.Combine(environment.WebRootPath, "uploads", "ideas"));
-        if (!fullPath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
-            return NotFound();
-        attachment.DownloadCount++;
-        await db.SaveChangesAsync();
-        return PhysicalFile(fullPath, attachment.MimeType, attachment.FileName);
-    }
-
-    private Guid? CurrentUserId() =>
-        Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
-
-    private Task<ApplicationUser?> CurrentUserAsync() => userManager.GetUserAsync(User);
-
-    private bool CanAccess(InnovationIdea idea) =>
-        idea.SubmitterId == CurrentUserId() || User.IsInRole("Admin") || User.IsInRole("InnovationTeam");
-
-    private async Task<string> NextReferenceAsync() =>
-        $"IMTS-{DateTime.UtcNow:yyyy}-{(await db.InnovationIdeas.CountAsync() + 1):D5}";
-
-    private async Task SaveAttachmentsAsync(InnovationIdea idea, ApplicationUser user, IEnumerable<IFormFile>? files)
-    {
-        if (files == null) return;
-        var root = Path.Combine(environment.WebRootPath, "uploads", "ideas", idea.Id.ToString("N"));
-        Directory.CreateDirectory(root);
-        foreach (var file in files.Where(f => f.Length > 0))
-        {
-            var extension = Path.GetExtension(file.FileName);
-            if (!AllowedExtensions.Contains(extension) || file.Length > 10 * 1024 * 1024)
-                continue;
-            var storedName = $"{Guid.NewGuid():N}{extension}";
-            await using var stream = System.IO.File.Create(Path.Combine(root, storedName));
-            await file.CopyToAsync(stream);
-            db.IdeaAttachments.Add(new IdeaAttachment
-            {
-                Id = Guid.NewGuid(), IdeaId = idea.Id, Idea = idea,
-                FileName = Path.GetFileName(file.FileName),
-                FilePath = Path.Combine("uploads", "ideas", idea.Id.ToString("N"), storedName),
-                FileSize = file.Length, FileType = extension.TrimStart('.'),
-                MimeType = file.ContentType ?? "application/octet-stream",
-                UploadedById = user.Id, UploadedBy = user, CreatedBy = user.UserName ?? "system"
-            });
-        }
-        await db.SaveChangesAsync();
-    }
-
-    private static IdeaDetailsModel ToDetailsModel(InnovationIdea idea) => new()
-    {
-        Idea = new IdeaDetailViewModel
-        {
-            Id = idea.Id, Title = idea.Title, Submitter = idea.Submitter.FullName,
-            SubmissionDate = idea.SubmissionDate, SummaryDescription = idea.SummaryDescription,
-            ProblemStatement = idea.ProblemStatement, ProposedSolution = idea.ProposedSolution,
-            Stage = idea.CurrentStage, Status = idea.IsRetracted ? "Retracted" : idea.CurrentStatus,
-            Attachments = idea.Attachments.Where(a => !a.IsDeleted).Select(a => new AttachmentViewModel
-            {
-                Id = a.Id, FileName = a.FileName, FilePath = a.FilePath, Icon = "paperclip"
-            }).ToList()
-        },
-        Comments = idea.Comments.Where(c => !c.IsDeleted).OrderBy(c => c.CreatedDate).Select(c => new CommentDetailViewModel
-        {
-            Author = c.User.FullName, Role = c.User.Title, Avatar = Initials(c.User.FullName),
-            Text = c.CommentText, CreatedAt = c.CreatedDate, TimeAgo = RelativeTime(c.CreatedDate)
-        }).ToList(),
-        TimelineEntries = idea.Timeline.OrderBy(t => t.StartDate).Select(t => new TimelineEntryViewModel
-        {
-            StageName = t.Stage.ToString(), Date = t.ActualCompletionDate ?? t.StartDate
-        }).ToList()
-    };
-
-    private async Task<ReviewIdeaModel> ToReviewModelAsync(InnovationIdea idea) => new()
-    {
-        Idea = new IdeaReviewViewModel
-        {
-            Id = idea.Id, Title = idea.Title, Submitter = idea.Submitter.FullName,
-            SubmitterBusinessUnit = idea.Submitter.BusinessUnit, SubmissionDate = idea.SubmissionDate,
-            SummaryDescription = idea.SummaryDescription, ProblemStatement = idea.ProblemStatement,
-            ProposedSolution = idea.ProposedSolution,
-            Attachments = idea.Attachments.Where(a => !a.IsDeleted).Select(a => new AttachmentReviewViewModel
-            { Id = a.Id, FileName = a.FileName, Icon = "paperclip" }).ToList()
-        },
-        Comments = idea.Comments.Where(c => !c.IsDeleted).OrderBy(c => c.CreatedDate).Select(c => new CommentReviewViewModel
-        {
-            Author = c.User.FullName, Role = c.User.Title, Avatar = Initials(c.User.FullName),
-            Text = c.CommentText, TimeAgo = RelativeTime(c.CreatedDate)
-        }).ToList(),
-        Review = new ReviewFormViewModel
-        {
-            Status = idea.CurrentStatus, Stage = idea.CurrentStage,
-            AssignedReviewerId = idea.AssignedReviewerId?.ToString()
-        },
-        Reviewers = await userManager.GetUsersInRoleAsync("InnovationTeam")
-            .ContinueWith(t => t.Result.Select(u => new ReviewerOptionViewModel
-            { Id = u.Id.ToString(), FullName = u.FullName }).ToList())
-    };
-
-    private static IdeaStage ParseStage(string stage) =>
-        Enum.TryParse<IdeaStage>(stage.Replace(" ", ""), true, out var value) ? value : IdeaStage.Submitted;
-
-    private static string Initials(string name) =>
-        string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0])).ToUpperInvariant();
-
-    private static string RelativeTime(DateTime value)
-    {
-        var elapsed = DateTime.UtcNow - value.ToUniversalTime();
-        if (elapsed.TotalMinutes < 1) return "just now";
-        if (elapsed.TotalHours < 1) return $"{(int)elapsed.TotalMinutes}m ago";
-        if (elapsed.TotalDays < 1) return $"{(int)elapsed.TotalHours}h ago";
-        return $"{(int)elapsed.TotalDays}d ago";
-=======
-            Message = $"{idea.ReferenceNumber} was submitted for review.",
-            CreatedDate = DateTime.UtcNow
-        });
-
-        var uploadRoot = Path.Combine(environment.ContentRootPath, "App_Data", "IdeaAttachments", idea.Id.ToString("N"));
-        var storedFiles = new List<string>();
-        try
-        {
-            if (attachments.Count > 0) Directory.CreateDirectory(uploadRoot);
-            foreach (var attachment in attachments)
-            {
-                var extension = Path.GetExtension(attachment.FileName);
-                var storedFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-                var storedPath = Path.Combine(uploadRoot, storedFileName);
-                await using var stream = System.IO.File.Create(storedPath);
-                await attachment.CopyToAsync(stream);
-                storedFiles.Add(storedPath);
-                context.IdeaAttachments.Add(new IdeaAttachment
-                {
-                    Id = Guid.NewGuid(), IdeaId = idea.Id, Idea = idea,
-                    FileName = Path.GetFileName(attachment.FileName),
-                    FilePath = Path.Combine(idea.Id.ToString("N"), storedFileName),
-                    FileSize = attachment.Length, FileType = extension.TrimStart('.').ToUpperInvariant(),
-                    MimeType = string.IsNullOrWhiteSpace(attachment.ContentType) ? "application/octet-stream" : attachment.ContentType,
-                    UploadedById = user.Id, UploadedBy = user, CreatedDate = DateTime.UtcNow, CreatedBy = user.Id.ToString()
-                });
-            }
-            await context.SaveChangesAsync();
-        }
-        catch
-        {
-            foreach (var storedFile in storedFiles)
-                if (System.IO.File.Exists(storedFile)) System.IO.File.Delete(storedFile);
-            throw;
-        }
-        TempData["SuccessMessage"] = $"Idea {idea.ReferenceNumber} submitted successfully.";
-        return RedirectToAction(nameof(MyIdeas));
-    }
-
-    [Authorize(Roles = RoleConstants.Staff)]
-    public async Task<IActionResult> MyIdeas(
-        string? searchTerm,
-        string? statusFilter,
-        string? categoryFilter,
-        int page = 1)
-    {
-        if (!TryGetCurrentUserId(out var userId))
-        {
-            return Forbid();
-        }
-
-        const int pageSize = 10;
-        var query = context.InnovationIdeas
-            .AsNoTracking()
-            .Where(idea => idea.SubmitterId == userId && !idea.IsDeleted);
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            query = query.Where(idea =>
-                idea.Title.Contains(searchTerm) ||
-                idea.ReferenceNumber.Contains(searchTerm));
-        }
-
-        if (!string.IsNullOrWhiteSpace(statusFilter))
-        {
-            query = query.Where(idea => idea.CurrentStatus == statusFilter);
-        }
-
-        if (!string.IsNullOrWhiteSpace(categoryFilter))
-        {
-            query = query.Where(idea =>
-                idea.Category != null && idea.Category.Name == categoryFilter);
-        }
-
-        var count = await query.CountAsync();
-        var model = new MyIdeasModel
-        {
-            SearchTerm = searchTerm,
-            StatusFilter = statusFilter,
-            CategoryFilter = categoryFilter,
-            CurrentPage = Math.Max(page, 1),
-            TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)pageSize)),
-            Ideas = await query
-                .OrderByDescending(idea => idea.SubmissionDate)
-                .Skip((Math.Max(page, 1) - 1) * pageSize)
-                .Take(pageSize)
-                .Select(idea => new IdeaListItemViewModel
-                {
-                    Id = idea.Id,
-                    Title = idea.Title,
-                    CategoryName = idea.Category != null ? idea.Category.Name : "Uncategorized",
-                    Stage = idea.CurrentStage,
-                    Status = idea.IsRetracted ? "Retracted" : idea.CurrentStatus,
-                    SubmissionDate = idea.SubmissionDate,
-                    IsRetracted = idea.IsRetracted
-                })
-                .ToListAsync()
-        };
-
-        return View(model);
-    }
-
-    [Authorize(Roles = RoleConstants.InnovationTeam)]
-    public async Task<IActionResult> AllIdeas(
-        string? searchTerm,
-        string? statusFilter,
-        string? categoryFilter,
-        string? departmentFilter,
-        DateTime? dateFrom,
-        int page = 1)
-    {
-        const int pageSize = 10;
-        var query = context.InnovationIdeas
-            .AsNoTracking()
-            .Where(idea => !idea.IsDeleted && !idea.IsRetracted);
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            query = query.Where(idea =>
-                idea.Title.Contains(searchTerm) ||
-                idea.ReferenceNumber.Contains(searchTerm));
-        }
-        if (!string.IsNullOrWhiteSpace(statusFilter))
-        {
-            query = query.Where(idea => idea.CurrentStatus == statusFilter);
-        }
-        if (!string.IsNullOrWhiteSpace(categoryFilter))
-        {
-            query = query.Where(idea =>
-                idea.Category != null && idea.Category.Name == categoryFilter);
-        }
-        if (!string.IsNullOrWhiteSpace(departmentFilter))
-        {
-            query = query.Where(idea => idea.Submitter.BusinessUnit == departmentFilter);
-        }
-        if (dateFrom.HasValue)
-        {
-            query = query.Where(idea => idea.SubmissionDate >= dateFrom.Value);
-        }
-
-        var count = await query.CountAsync();
-        var model = new SubmittedIdeasModel
-        {
-            SearchTerm = searchTerm,
-            StatusFilter = statusFilter,
-            CategoryFilter = categoryFilter,
-            DepartmentFilter = departmentFilter,
-            DateFrom = dateFrom,
-            CurrentPage = Math.Max(page, 1),
-            TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)pageSize)),
-            Ideas = await query
-                .OrderBy(idea => idea.SubmissionDate)
-                .Skip((Math.Max(page, 1) - 1) * pageSize)
-                .Take(pageSize)
-                .Select(idea => new SubmittedIdeaItemViewModel
-                {
-                    Id = idea.Id,
-                    Title = idea.Title,
-                    Submitter = idea.Submitter.FullName,
-                    Department = idea.Submitter.BusinessUnit,
-                    CategoryName = idea.Category != null ? idea.Category.Name : "Uncategorized",
-                    Stage = idea.CurrentStage,
-                    Status = idea.CurrentStatus,
-                    SubmissionDate = idea.SubmissionDate,
-                    NeedsReview = idea.CurrentStatus == nameof(IdeaStatus.UnderReview)
-                })
-                .ToListAsync()
-        };
-
-        return View(model);
-    }
-
-    public async Task<IActionResult> Details(Guid id)
-    {
-        if (!TryGetCurrentUserId(out var userId))
-        {
-            return Forbid();
-        }
-
+        if (!TryGetCurrentUserId(out var userId)) return Forbid();
         var isInnovationTeam = User.IsInRole(RoleConstants.InnovationTeam);
-        var idea = await context.InnovationIdeas
+
+        var idea = await _context.InnovationIdeas
             .AsNoTracking()
-            .Where(item =>
-                item.Id == id &&
-                !item.IsDeleted &&
-                (isInnovationTeam || item.SubmitterId == userId))
-            .Select(item => new IdeaDetailsModel
+            .Include(i => i.Submitter)
+            .Include(i => i.Attachments)
+            .Include(i => i.Comments.Where(c => !c.IsDeleted && (!c.IsInternal || isInnovationTeam))).ThenInclude(c => c.User)
+            .Include(i => i.Timeline)
+            .Where(i => !i.IsDeleted && (isInnovationTeam || i.SubmitterId == userId))
+            .Select(i => new IdeaDetailsModel
             {
                 Idea = new IdeaDetailViewModel
                 {
-                    Id = item.Id,
-                    Title = item.Title,
-                    Submitter = item.Submitter.FullName,
-                    SubmissionDate = item.SubmissionDate,
-                    SummaryDescription = item.SummaryDescription,
-                    ProblemStatement = item.ProblemStatement,
-                    ProposedSolution = item.ProposedSolution,
-                    Stage = item.CurrentStage,
-                    Status = item.IsRetracted ? "Retracted" : item.CurrentStatus,
-                    Attachments = item.Attachments.Select(file => new AttachmentViewModel
+                    Id = i.Id,
+                    Title = i.Title,
+                    Submitter = i.Submitter.FullName,
+                    SubmissionDate = i.SubmissionDate,
+                    SummaryDescription = i.SummaryDescription,
+                    ProblemStatement = i.ProblemStatement,
+                    ProposedSolution = i.ProposedSolution,
+                    Stage = i.CurrentStage,
+                    Status = i.IsRetracted ? "Retracted" : i.CurrentStatus,
+                    Attachments = i.Attachments.Where(a => !a.IsDeleted).Select(a => new AttachmentViewModel
                     {
-                        Id = file.Id,
-                        FileName = file.FileName,
-                        FilePath = file.FilePath,
-                        Icon = "paperclip"
+                        Id = a.Id, FileName = a.FileName, FilePath = a.FilePath, Icon = "paperclip"
                     }).ToList()
                 },
-                TimelineEntries = item.Timeline
-                    .OrderBy(entry => entry.StartDate)
-                    .Select(entry => new TimelineEntryViewModel
-                    {
-                        StageName = entry.Stage.ToString(),
-                        Date = entry.StartDate
-                    }).ToList(),
-                Comments = item.Comments
-                    .Where(comment => !comment.IsDeleted && !comment.IsInternal)
-                    .OrderBy(comment => comment.CreatedDate)
-                    .Select(comment => new CommentDetailViewModel
-                    {
-                        Avatar = comment.User.FullName.Substring(0, 1),
-                        Author = comment.User.FullName,
-                        Role = "Participant",
-                        TimeAgo = comment.CreatedDate.ToString("dd MMM yyyy HH:mm"),
-                        Text = comment.CommentText
-                    }).ToList()
+                TimelineEntries = i.Timeline.OrderBy(t => t.StartDate).Select(t => new TimelineEntryViewModel
+                {
+                    StageName = t.Stage.ToString(), Date = t.StartDate
+                }).ToList(),
+                Comments = i.Comments.OrderBy(c => c.CreatedDate).Select(c => new CommentDetailViewModel
+                {
+                    Avatar = c.User.FullName.Substring(0, 1),
+                    Author = c.User.FullName,
+                    Role = "Participant",
+                    TimeAgo = c.CreatedDate.ToString("dd MMM yyyy HH:mm"),
+                    Text = c.CommentText,
+                    CreatedAt = c.CreatedDate
+                }).ToList()
             })
             .FirstOrDefaultAsync();
 
-        return idea == null ? NotFound() : View(idea);
+        if (idea == null) return NotFound();
+        return View(idea);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddComment(Guid id, string newComment, bool isInternal = false)
+    {
+        if (string.IsNullOrWhiteSpace(newComment)) return RedirectToAction(nameof(Details), new { id });
+
+        if (!TryGetCurrentUserId(out var userId)) return Forbid();
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        var idea = await _context.InnovationIdeas
+            .Include(i => i.Submitter)
+            .FirstOrDefaultAsync(i => i.Id == id && !i.IsDeleted);
+
+        if (user == null || idea == null) return NotFound();
+
+        // Check access: submitter can comment on own ideas, Innovation Team can comment on any
+        bool canAccess = idea.SubmitterId == userId || User.IsInRole(RoleConstants.InnovationTeam);
+        if (!canAccess) return Forbid();
+
+        _context.Comments.Add(new Comment
+        {
+            Id = Guid.NewGuid(),
+            IdeaId = idea.Id,
+            Idea = idea,
+            UserId = user.Id,
+            User = user,
+            CommentText = newComment.Trim(),
+            IsInternal = isInternal && User.IsInRole(RoleConstants.InnovationTeam),
+            CreatedDate = DateTime.UtcNow,
+            CreatedBy = user.Id.ToString()
+        });
+
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Comment added.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    #region Helpers
 
     private bool TryGetCurrentUserId(out Guid userId) =>
         Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
 
     private async Task<ApplicationUser?> GetCurrentUserAsync()
     {
-        if (!TryGetCurrentUserId(out var userId))
-        {
-            return null;
-        }
-
-        return await context.Users.FirstOrDefaultAsync(user => user.Id == userId);
->>>>>>> dev
+        if (!TryGetCurrentUserId(out var userId)) return null;
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
     }
+
+    private async Task<string> GenerateReferenceNumberAsync()
+    {
+        var datePart = DateTime.UtcNow.ToString("yyyyMMdd");
+        var count = await _context.InnovationIdeas.CountAsync() + 1;
+        return $"IMTS-{datePart}-{count:D4}";
+    }
+
+    private async Task SaveAttachmentsAsync(InnovationIdea idea, ApplicationUser user, List<IFormFile> attachments)
+    {
+        var uploadRoot = Path.Combine(_environment.ContentRootPath, "App_Data", "IdeaAttachments", idea.Id.ToString("N"));
+        var storedFiles = new List<string>();
+
+        try
+        {
+            if (attachments.Count > 0) Directory.CreateDirectory(uploadRoot);
+
+            foreach (var attachment in attachments)
+            {
+                if (attachment.Length == 0 || attachment.Length > MaximumAttachmentSize) continue;
+
+                var extension = Path.GetExtension(attachment.FileName);
+                if (!AllowedAttachmentExtensions.Contains(extension)) continue;
+
+                var storedFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+                var storedPath = Path.Combine(uploadRoot, storedFileName);
+
+                await using (var stream = System.IO.File.Create(storedPath))
+                {
+                    await attachment.CopyToAsync(stream);
+                }
+
+                storedFiles.Add(storedPath);
+
+                _context.IdeaAttachments.Add(new IdeaAttachment
+                {
+                    Id = Guid.NewGuid(),
+                    IdeaId = idea.Id,
+                    Idea = idea,
+                    FileName = Path.GetFileName(attachment.FileName),
+                    FilePath = Path.Combine(idea.Id.ToString("N"), storedFileName),
+                    FileSize = attachment.Length,
+                    FileType = extension.TrimStart('.').ToUpperInvariant(),
+                    MimeType = string.IsNullOrWhiteSpace(attachment.ContentType)
+                        ? "application/octet-stream"
+                        : attachment.ContentType,
+                    UploadedById = user.Id,
+                    UploadedBy = user,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = user.Id.ToString()
+                });
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            foreach (var storedFile in storedFiles)
+            {
+                if (System.IO.File.Exists(storedFile))
+                    System.IO.File.Delete(storedFile);
+            }
+            throw;
+        }
+    }
+
+    #endregion
 }

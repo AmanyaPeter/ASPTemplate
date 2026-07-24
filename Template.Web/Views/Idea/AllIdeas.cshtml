@@ -78,11 +78,7 @@
                                     </td>
                                     <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
                                     <td>
-<<<<<<< HEAD
                                         <a asp-controller="Idea" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
-=======
-                                        <a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
->>>>>>> dev
                                             @(idea.NeedsReview ? "Review" : "View Review")
                                         </a>
                                     </td>
@@ -119,9 +115,4 @@
         <script>
             lucide.createIcons();
         </script>
-<<<<<<< HEAD
     }
-</body>
-=======
-    }
->>>>>>> dev

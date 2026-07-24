@@ -59,10 +59,10 @@
                             <div class="ims-staff-attachment-list">
                                 @foreach (var attachment in Model.Idea.Attachments)
                                 {
-                                    <a class="ims-staff-attachment-item" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">
+                                    <a class="ims-staff-attachment-item" asp-controller="Idea" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">
                                         <i data-lucide="@attachment.Icon" style="width:14px;height:14px;vertical-align:middle;"></i>
-                                        <a asp-controller="IdeaStaffActions" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">@attachment.FileName</a>
-                                    </span>
+                                        @attachment.FileName
+                                    </a>
                                 }
                             </div>
                         </div>
@@ -86,19 +86,9 @@
                                 </div>
                             }
                         </div>
-<<<<<<< HEAD
-                        <form method="post" asp-action="AddComment" asp-route-id="@Model.Idea.Id" class="ims-staff-comment-box">
-                            <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
-                            <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." name="newComment" asp-for="NewComment"></textarea>
-=======
-                        <form asp-controller="IdeaStaffActions"
-                              asp-action="AddComment"
-                              asp-route-id="@Model.Idea.Id"
-                              method="post"
-                              class="ims-staff-comment-box">
+                        <form method="post" asp-controller="Idea" asp-action="AddComment" asp-route-id="@Model.Idea.Id" class="ims-staff-comment-box">
                             <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
                             <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." name="newComment"></textarea>
->>>>>>> dev
                             <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
                         </form>
                     </div>
@@ -147,4 +137,3 @@
             lucide.createIcons();
         </script>
     }
-</html>

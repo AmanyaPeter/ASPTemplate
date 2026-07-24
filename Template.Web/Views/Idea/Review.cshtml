@@ -69,191 +69,97 @@
                         </div>
                     </div>
 
-                    <!-- Comments -->
-                    <div class="ims-staff-card">
-                        <div class="ims-staff-section-header">
-                            <h3>Comments</h3>
+                    <!-- Comments Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Comments</h3>
                         </div>
-                        <div class="ims-staff-comment-thread">
-                            @foreach (var comment in Model.Comments)
+                        <div class="card-body">
+                            @if (Model.Comments.Any())
                             {
-                                <div class="ims-staff-comment-item">
-                                    <div class="ims-staff-comment-avatar">@comment.Avatar</div>
-                                    <div class="ims-staff-comment-body">
-                                        <span class="ims-staff-comment-author">@comment.Author</span>
-                                        <span class="ims-staff-comment-meta">@comment.Role &middot; @comment.TimeAgo</span>
-                                        <div class="ims-staff-comment-text">@comment.Text</div>
+                                @foreach (var comment in Model.Comments)
+                                {
+                                    <div class="d-flex mb-3">
+                                        <div class="me-2">
+                                            <span class="avatar avatar-sm">@comment.Avatar</span>
+                                        </div>
+                                        <div>
+                                            <div><strong>@comment.Author</strong> <span class="text-muted ms-2">@comment.Role</span></div>
+                                            <div class="text-muted small">@comment.TimeAgo</div>
+                                            <div class="mt-1">@comment.Text</div>
+                                        </div>
                                     </div>
-                                </div>
+                                }
                             }
-                        </div>
-                        <div class="ims-staff-comment-box">
-                            <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
-                            <textarea class="ims-staff-form-control" rows="2" placeholder="Add a comment..." asp-for="NewComment"></textarea>
-                            <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn" asp-page-handler="AddComment">Send</button>
+                            <form asp-controller="Idea" asp-action="AddComment" asp-route-id="@Model.Idea.Id" method="post" class="mt-3">
+                                <textarea name="newComment" class="form-control" rows="2" required placeholder="Add a comment for the submitter"></textarea>
+                                <button type="submit" class="btn btn-primary mt-2">Send</button>
+                            </form>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Right Column -->
-                <div>
-                    <!-- Review Controls -->
-                    <div class="ims-staff-card">
-                        <div class="ims-staff-section-header">
-                            <h3>Review Controls</h3>
-                        </div>
-                        <form method="post" asp-controller="Idea" asp-action="Review">
-                            <input type="hidden" asp-for="Idea.Id" />
-                            <div class="ims-staff-form-group">
-                                <label>Change Status</label>
-                                <select class="ims-staff-form-control" asp-for="Review.Status">
-                                    <option value="Submitted">Submitted</option>
-                                    <option value="Under Review" selected>Under Review</option>
-                                    <option value="Pending Information">Pending Information</option>
-                                    <option value="Approved">Approved</option>
-                                    <option value="Declined">Declined</option>
-                                </select>
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header"><h3 class="card-title">Review controls</h3></div>
+                    <div class="card-body">
+                        <form asp-controller="IdeaWorkflow" asp-action="SaveReview" asp-route-id="@Model.Idea.Id" method="post">
+                            <div class="mb-3">
+                                <label asp-for="Review.Status" class="form-label">Status</label>
+                                <select asp-for="Review.Status" asp-items="Html.GetEnumSelectList<IdeaStatus>()" class="form-select"></select>
                             </div>
-                            <div class="ims-staff-form-group">
-                                <label>Change Stage</label>
-                                <select class="ims-staff-form-control" asp-for="Review.Stage">
-                                    <option value="Submitted">Submitted</option>
-                                    <option value="Concept Development" selected>Concept Development</option>
-                                    <option value="Experimentation">Experimentation</option>
-                                    <option value="Deployment">Deployment</option>
-                                    <option value="Closed">Closed</option>
-                                </select>
+                            <div class="mb-3">
+                                <label asp-for="Review.Stage" class="form-label">Stage</label>
+                                <select asp-for="Review.Stage" asp-items="Html.GetEnumSelectList<IdeaStage>()" class="form-select"></select>
                             </div>
-                            <div class="ims-staff-form-group">
-                                <label>Set Timeline</label>
-                                <input type="date" class="ims-staff-form-control" asp-for="Review.TimelineDate" />
+                            <div class="mb-3">
+                                <label asp-for="Review.TimelineDate" class="form-label">Stage deadline</label>
+                                <input asp-for="Review.TimelineDate" type="date" class="form-control" />
                             </div>
-                            <div class="ims-staff-form-group">
-                                <label>Assign Reviewer</label>
-                                <select class="ims-staff-form-control" asp-for="Review.AssignedReviewerId">
+                            <div class="mb-3">
+                                <label asp-for="Review.AssignedReviewerId" class="form-label">Assigned reviewer</label>
+                                <select asp-for="Review.AssignedReviewerId" class="form-select">
+                                    <option value="">Unassigned</option>
                                     @foreach (var reviewer in Model.Reviewers)
                                     {
                                         <option value="@reviewer.Id">@reviewer.FullName</option>
                                     }
                                 </select>
                             </div>
-                            <div class="ims-staff-form-group">
-                                <label>Review Notes</label>
-                                <textarea class="ims-staff-form-control" rows="3" asp-for="Review.Notes" placeholder="Enter your review notes..."></textarea>
+                            <div class="mb-3">
+                                <label asp-for="Review.Notes" class="form-label">Reason / notes</label>
+                                <textarea asp-for="Review.Notes" class="form-control" rows="3"></textarea>
                             </div>
-                            <div class="ims-staff-review-actions">
-                                <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-save-review-btn">Save Review</button>
-                                <button type="button" class="ims-staff-btn ims-staff-btn-secondary ims-staff-notify-submitter-btn" onclick="notifySubmitter()">Notify Submitter</button>
-                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Save review and notify submitter</button>
                         </form>
                     </div>
+                </div>
 
-                    <!-- Approval Workflow -->
-                    <div class="ims-staff-card">
-                        <div class="ims-staff-section-header">
-                            <h3>Approval Workflow</h3>
-                        </div>
-                        <div class="ims-staff-workflow">
-                            @foreach (var step in Model.WorkflowSteps)
-                            {
-                                <div class="ims-staff-workflow-item @(step.StatusClass)">
-                                    <span class="ims-staff-workflow-name">@step.Name</span>
-                                    <span class="ims-staff-workflow-status">
-                                        @if (step.IsComplete)
-                                        {
-                                            <i data-lucide="check-circle" style="width:14px;height:14px;vertical-align:middle;"></i> <text>Complete</text>
-                                        }
-                                        else if (step.IsPending)
-                                        {
-                                            <span style="color:#e65100;">Pending</span>
-                                        }
-                                        else
-                                        {
-                                            <span style="color:#999;">Not Started</span>
-                                        }
-                                    </span>
-                                </div>
-                            }
-                        </div>
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title">Workflow</h3></div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var step in Model.WorkflowSteps)
+                        {
+                            <div class="list-group-item d-flex justify-content-between">
+                                <span>@step.Name</span>
+                                @if (step.IsComplete)
+                                {
+                                    <span class="badge bg-success-lt">Complete</span>
+                                }
+                                else if (step.IsPending)
+                                {
+                                    <span class="badge bg-warning-lt">Current</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-lt">Not started</span>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
-            <div class="card-footer">
-                <form asp-controller="IdeaWorkflow" asp-action="AddComment" asp-route-id="@Model.Idea.Id" method="post">
-                    <div class="input-group">
-                        <textarea name="newComment" class="form-control" rows="2" required placeholder="Add a comment for the submitter"></textarea>
-                        <button type="submit" class="btn btn-primary">Send</button>
-                    </div>
-                </form>
-            </div>
         </div>
-    </div>
-
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header"><h3 class="card-title">Review controls</h3></div>
-            <div class="card-body">
-                <form asp-controller="IdeaWorkflow" asp-action="SaveReview" asp-route-id="@Model.Idea.Id" method="post">
-                    <div class="mb-3">
-                        <label asp-for="Review.Status" class="form-label">Status</label>
-                        <select asp-for="Review.Status" asp-items="Html.GetEnumSelectList<IdeaStatus>()" class="form-select"></select>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Review.Stage" class="form-label">Stage</label>
-                        <select asp-for="Review.Stage" asp-items="Html.GetEnumSelectList<IdeaStage>()" class="form-select"></select>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Review.TimelineDate" class="form-label">Stage deadline</label>
-                        <input asp-for="Review.TimelineDate" type="date" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Review.AssignedReviewerId" class="form-label">Assigned reviewer</label>
-                        <select asp-for="Review.AssignedReviewerId" class="form-select">
-                            <option value="">Unassigned</option>
-                            @foreach (var reviewer in Model.Reviewers)
-                            {
-                                <option value="@reviewer.Id">@reviewer.FullName</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Review.Notes" class="form-label">Reason / notes</label>
-                        <textarea asp-for="Review.Notes" class="form-control" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Save review and notify submitter</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header"><h3 class="card-title">Workflow</h3></div>
-            <div class="list-group list-group-flush">
-                @foreach (var step in Model.WorkflowSteps)
-                {
-                    <div class="list-group-item d-flex justify-content-between">
-                        <span>@step.Name</span>
-                        @if (step.IsComplete)
-                        {
-                            <span class="badge bg-success-lt">Complete</span>
-                        }
-                        else if (step.IsPending)
-                        {
-                            <span class="badge bg-warning-lt">Current</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary-lt">Not started</span>
-                        }
-                    </div>
-                }
-<<<<<<< HEAD
-            }
-        </script>
-    }
-</body>
-=======
-            </div>
-        </div>
-    </div>
+    </main>
 </div>
->>>>>>> dev
