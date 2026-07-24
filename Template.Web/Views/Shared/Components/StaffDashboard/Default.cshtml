@@ -1,6 +1,7 @@
 @model StaffDashboardModel
 @{
     ViewData["Title"] = "Staff Dashboard - Innovation Management Tracking System";
+    string BadgeClass(string? value) => (value ?? "unknown").Replace(" ", "-").ToLowerInvariant();
 }
 
 <body class="ims-staff-dashboard">
@@ -92,7 +93,7 @@
                                     <tr>
                                         <td>@submission.Title</td>
                                         <td>@submission.Category</td>
-                                        <td><span class="ims-staff-badge ims-staff-badge-@((submission.Status ?? "unknown").Replace(" ", "-").ToLower())">@submission.Status</span></td>
+                                        <td><span class="ims-staff-badge ims-staff-badge-@BadgeClass(submission.Status)">@submission.Status</span></td>
                                         <td>@submission.Date.ToString("dd MMM yyyy")</td>
                                     </tr>
                                 }

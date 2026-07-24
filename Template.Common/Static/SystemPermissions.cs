@@ -21,5 +21,17 @@
         {
             public const string ViewAuditLogs = "AuditLogController Index";
         }
+
+        public static class Ideas
+        {
+            public const string Review = "Ideas Review";
+            public const string ManageWorkflow = "Ideas ManageWorkflow";
+        }
+
+        public static class Governance
+        {
+            public const string ViewReports = "Governance ViewReports";
+            public const string AssignRoles = "Governance AssignRoles";
+        }
 	}
 }

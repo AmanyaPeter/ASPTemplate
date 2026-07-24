@@ -1,6 +1,7 @@
 @model MyIdeasModel
 @{
     ViewData["Title"] = "My Ideas - Innovation Management System";
+    string BadgeClass(string? value) => (value ?? "unknown").Replace(" ", "-").ToLowerInvariant();
 }
 @if (TempData["SuccessMessage"] is string success)
 {
@@ -59,8 +60,8 @@
                                 <tr>
                                     <td>@idea.Title</td>
                                     <td>@idea.CategoryName</td>
-                                    <td><span class="ims-staff-badge ims-staff-badge-@((idea.Stage ?? "unknown").Replace(" ", "-").ToLower())">@idea.Stage</span></td>
-                                    <td><span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">@idea.Status</span></td>
+                                    <td><span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Stage)">@idea.Stage</span></td>
+                                    <td><span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Status)">@idea.Status</span></td>
                                     <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
                                     <td>
                                         <div class="ims-staff-actions">
@@ -124,9 +125,4 @@
                 }
             }
         </script>
-<<<<<<< HEAD
     }
-</body>
-=======
-    }
->>>>>>> dev

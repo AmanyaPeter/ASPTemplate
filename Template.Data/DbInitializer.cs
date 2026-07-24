@@ -11,7 +11,7 @@ namespace Template.Data;
 
 public static class DbInitializer
 {
-    private const string DefaultPassword = "Admin@123";
+    private const string DefaultPassword = "Admin@12345678";
 
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
@@ -22,7 +22,7 @@ public static class DbInitializer
 
         await context.Database.MigrateAsync();
 
-        foreach (var roleName in new[] { "Admin", "Staff", "InnovationTeam" })
+        foreach (var roleName in new[] { RoleConstants.ItAdmin, RoleConstants.Staff, RoleConstants.InnovationTeam, RoleConstants.DeputyDirector })
         {
             if (!await roleManager.RoleExistsAsync(roleName))
             {
@@ -30,7 +30,11 @@ public static class DbInitializer
             }
         }
 
-        await SeedRolePermissionsAsync(roleManager, "Admin", GetAllPermissions());
+        await SeedRolePermissionsAsync(roleManager, RoleConstants.ItAdmin, GetAllPermissions());
+        await SeedRolePermissionsAsync(roleManager, RoleConstants.DeputyDirector,
+            [SystemPermissions.Roles.ViewRoles, SystemPermissions.Roles.EditRole,
+             SystemPermissions.Governance.ViewReports, SystemPermissions.Governance.AssignRoles,
+             SystemPermissions.AuditLog.ViewAuditLogs]);
 
         await SeedUserAsync(
             userManager,
@@ -70,6 +74,11 @@ public static class DbInitializer
             businessUnit: "Strategy",
             jobTitle: "Innovation Team Lead",
             station: "Head Office");
+
+        await SeedUserAsync(
+            userManager, "deputydirector", "deputydirector@bou.or.ug",
+            RoleConstants.DeputyDirector, "Deputy Director Innovation", "Deputy", "Director",
+            "Deputy Director", "Strategy", "Deputy Director Innovation", "Head Office");
 
         await ResetLoggedInStateAsync(userManager);
         await SeedCategoriesAsync(context);
@@ -119,6 +128,7 @@ public static class DbInitializer
             LastActivity = DateTime.UtcNow.AddHours(-1),
             IsLoggedIn = false
         };
+        user.IsBreakGlassAccount = roleName == RoleConstants.ItAdmin;
 
         var result = await userManager.CreateAsync(user, DefaultPassword);
         if (result.Succeeded)

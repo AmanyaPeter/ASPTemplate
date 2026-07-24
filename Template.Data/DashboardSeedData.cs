@@ -114,8 +114,8 @@ public static class DashboardSeedData
             ProposedSolution = "Introduce a measurable digital workflow with clear ownership.",
             CategoryId = category.Id,
             SubmitterAgeBracket = staff.AgeBracket,
-            CurrentStage = stage.ToString(),
-            CurrentStatus = status.ToString(),
+            CurrentStage = stage,
+            CurrentStatus = status,
             RowVersion = new byte[8],
             CreatedDate = submittedAt,
             CreatedBy = staff.Id.ToString()

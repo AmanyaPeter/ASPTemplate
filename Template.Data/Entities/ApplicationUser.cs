@@ -20,10 +20,9 @@ namespace Template.Data.Entities
     public string AgeBracket { get; set; } = string.Empty;
     public string Gender { get; set; } = string.Empty;
 
-    public int? RoleId { get; set; }
-    public Role? Role { get; set; }
-
     public bool IsActive { get; set; } = true;
+    /// <summary>True only for tightly controlled local emergency accounts.</summary>
+    public bool IsBreakGlassAccount { get; set; }
     public string? LockReason { get; set; }
 
     public DateTime? LastLoginDate { get; set; }
@@ -34,6 +33,9 @@ namespace Template.Data.Entities
 
     public DateTime? UpdatedDate { get; set; }
     public Guid? UpdatedBy { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Timestamp]
+    public byte[] RowVersion { get; set; } = [];
 
   public ICollection<InnovationIdea> Ideas { get; set; } = new List<InnovationIdea>();
 }

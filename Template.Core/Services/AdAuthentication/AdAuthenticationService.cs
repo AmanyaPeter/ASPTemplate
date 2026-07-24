@@ -11,28 +11,26 @@ namespace Template.Core.Services.AdAuthentication
         , ILogger<AdAuthenticationService> _logger
         ) : IAdAuthenticationService
     {
+        [SupportedOSPlatform("windows")]
         public bool ValidateCredentials(string username, string password)
         {
             try
             {
-                //using (var context = new PrincipalContext(ContextType.Domain, _ldapServer, _ldapContainer))
-                //{
-                //    return context.ValidateCredentials(username, password);
-                //}
-                return true;
+                using var context = new PrincipalContext(ContextType.Domain, _ldapServer, _ldapContainer);
+                return context.ValidateCredentials(username, password, ContextOptions.Negotiate);
             }
-            catch (PrincipalServerDownException)
+            catch (PrincipalServerDownException ex)
             {
                 // Handle connection issues with LDAP server
                 // Log the exception
-                //_logger.LogError(ex, "LDAP server is down or unreachable. Server: {LdapServer}", _ldapServer);
+                _logger.LogError(ex, "LDAP server is down or unreachable. Server: {LdapServer}", _ldapServer);
                 return false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Handle other exceptions
                 // Log the exception
-                //_logger.LogError(ex, "An unexpected error occurred during LDAP authentication. Username: {Username}", username);
+                _logger.LogError(ex, "Unexpected Active Directory authentication error for {Username}", username);
                 return false;
             }
         }

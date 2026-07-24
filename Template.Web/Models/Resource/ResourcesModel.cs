@@ -1,4 +1,5 @@
 using Template.Common.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace Template.Web.Models.Resource
 {
@@ -18,5 +19,16 @@ namespace Template.Web.Models.Resource
         public string? Description { get; set; }
         public DateTime UploadedAt { get; set; }
         public string? Icon { get; set; }
+    }
+
+    public sealed class ResourceUploadViewModel
+    {
+        [Required, StringLength(200)]
+        public string ResourceTitle { get; set; } = string.Empty;
+        public ResourceCategory Category { get; set; }
+        [StringLength(1000)]
+        public string? Description { get; set; }
+        [Required]
+        public IFormFile? File { get; set; }
     }
 }

@@ -55,18 +55,22 @@ public class AuthService(
         // Development uses the password stored by ASP.NET Identity so the seeded
         // local accounts work without access to the organization's LDAP server.
         // Non-development environments continue to require Active Directory.
-        var credentialsAreValid = _environment.IsDevelopment()
+        var credentialsAreValid = user.IsBreakGlassAccount || _environment.IsDevelopment()
             ? await _userManager.CheckPasswordAsync(user, password)
             : _adAuthService.ValidateCredentials(username, password);
 
         if (!credentialsAreValid)
         {
+            await _userManager.AccessFailedAsync(user);
             _logger.LogWarning(
                 "Failed {AuthenticationType} authentication for username {Username}.",
                 _environment.IsDevelopment() ? "local" : "Active Directory",
                 username);
             return (false, "Wrong username or password.", null);
         }
+        if (await _userManager.IsLockedOutAsync(user))
+            return (false, "Account locked. Contact an administrator.", null);
+        await _userManager.ResetAccessFailedCountAsync(user);
 
         // Check if user is active
         if (!user.IsActive)

@@ -7,12 +7,16 @@ using Template.Common.Static;
 using Template.Data.Configurations;
 using Template.Data.Entities;
 using Template.Web.Models.Idea;
+using Microsoft.AspNetCore.SignalR;
+using Template.Web.Hubs;
+using Template.Core.Services.Workflow;
 
 namespace Template.Web.Controllers;
 
 [Authorize(Roles = RoleConstants.InnovationTeam)]
 [Route("Idea")]
-public class IdeaWorkflowController(ApplicationDbContext context) : Controller
+public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<ImtsHub> hub,
+    IIdeaWorkflowService workflow) : Controller
 {
     [HttpGet("Review/{id:guid}")]
     public async Task<IActionResult> Review(Guid id)
@@ -42,8 +46,9 @@ public class IdeaWorkflowController(ApplicationDbContext context) : Controller
                 },
                 Review = new ReviewFormViewModel
                 {
-                    Status = idea.CurrentStatus,
-                    Stage = idea.CurrentStage,
+                    RowVersion = Convert.ToBase64String(idea.RowVersion),
+                    Status = idea.CurrentStatus.ToString(),
+                    Stage = idea.CurrentStage.ToString(),
                     AssignedReviewerId = idea.AssignedReviewerId.HasValue
                         ? idea.AssignedReviewerId.ToString()
                         : null,
@@ -108,6 +113,7 @@ public class IdeaWorkflowController(ApplicationDbContext context) : Controller
         var reviewerId = GetCurrentUserId();
         var idea = await context.InnovationIdeas
             .Include(item => item.Timeline)
+            .Include(item => item.Submitter)
             .FirstOrDefaultAsync(item => item.Id == id && !item.IsDeleted && !item.IsRetracted);
         if (idea == null)
         {
@@ -116,8 +122,20 @@ public class IdeaWorkflowController(ApplicationDbContext context) : Controller
 
         var previousStage = idea.CurrentStage;
         var previousStatus = idea.CurrentStatus;
-        idea.CurrentStage = stage.ToString();
-        idea.CurrentStatus = status.ToString();
+        if (!workflow.CanTransition(previousStage, previousStatus, stage, status))
+        {
+            TempData["ErrorMessage"] = "That workflow transition is not permitted.";
+            return RedirectToAction(nameof(Review), new { id });
+        }
+        if (string.IsNullOrWhiteSpace(review.RowVersion))
+        {
+            TempData["ErrorMessage"] = "The review version is missing. Reload and try again.";
+            return RedirectToAction(nameof(Review), new { id });
+        }
+        context.Entry(idea).Property(item => item.RowVersion).OriginalValue =
+            Convert.FromBase64String(review.RowVersion);
+        idea.CurrentStage = stage;
+        idea.CurrentStatus = status;
         idea.AssignedReviewerId = Guid.TryParse(review.AssignedReviewerId, out var assigned)
             ? assigned
             : null;
@@ -179,8 +197,26 @@ public class IdeaWorkflowController(ApplicationDbContext context) : Controller
             Message = $"{idea.ReferenceNumber} is now {idea.CurrentStage} / {idea.CurrentStatus}.",
             CreatedDate = DateTime.UtcNow
         });
+        if (!string.IsNullOrWhiteSpace(idea.Submitter.Email))
+            context.EmailOutbox.Add(new EmailOutbox
+            {
+                Id = Guid.NewGuid(), IdempotencyKey = $"review:{idea.Id}:{DateTime.UtcNow.Ticks}",
+                Recipient = idea.Submitter.Email, Subject = "Innovation idea updated",
+                Body = $"{idea.ReferenceNumber} is now {idea.CurrentStage} / {idea.CurrentStatus}.",
+                CreatedAtUtc = DateTime.UtcNow
+            });
 
-        await context.SaveChangesAsync();
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            TempData["ErrorMessage"] = "Another reviewer changed this idea. Reload and review the latest values.";
+            return RedirectToAction(nameof(Review), new { id });
+        }
+        await hub.Clients.Group($"user:{idea.SubmitterId}").SendAsync(
+            "ideaChanged", new { ideaId = idea.Id, stage = idea.CurrentStage.ToString(), status = idea.CurrentStatus.ToString() });
         TempData["SuccessMessage"] = "Review saved and the submitter was notified.";
         return RedirectToAction(nameof(Review), new { id });
     }

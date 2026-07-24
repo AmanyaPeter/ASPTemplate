@@ -53,13 +53,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             .HasForeignKey(a => a.UploadedById)
             .OnDelete(DeleteBehavior.NoAction);
         
-         builder.Entity<ApplicationUser>()
-            .HasOne(u => u.Role)
-            .WithMany(r => r.Users)
-            .HasForeignKey(u => u.RoleId)
-            .OnDelete(DeleteBehavior.SetNull);
+        builder.Entity<EmailOutbox>()
+            .HasIndex(x => x.IdempotencyKey)
+            .IsUnique();
+        builder.Entity<ReminderExecution>()
+            .HasIndex(x => new { x.IdeaTimelineId, x.ReminderKind, x.DueDate })
+            .IsUnique();
+        builder.Entity<IdeaAttachment>().Property(x => x.Content).HasColumnType("varbinary(max)");
+        builder.Entity<Resource>().Property(x => x.Content).HasColumnType("varbinary(max)");
+        builder.Entity<InnovationIdea>().Property(x => x.RowVersion).IsRowVersion();
+        builder.Entity<ApplicationUser>().Property(x => x.RowVersion).IsRowVersion();
+        builder.Entity<Resource>().Property(x => x.RowVersion).IsRowVersion();
     } 
-    public new DbSet<Role> Roles { get; set; }
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Category> Categories { get; set; }
@@ -77,6 +82,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<TimelineSetting> TimelineSettings { get; set; }
     public DbSet<UserSession> UserSessions { get; set; }
+    public DbSet<EmailOutbox> EmailOutbox { get; set; }
+    public DbSet<ReminderExecution> ReminderExecutions { get; set; }
+    public DbSet<IdeaTeamMember> IdeaTeamMembers { get; set; }
 
 
 }

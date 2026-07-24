@@ -1,6 +1,7 @@
 @model InnovationDashboardModel
 @{
     ViewData["Title"] = "Innovation Team Dashboard - Innovation Management Tracking System";
+    string BadgeClass(string? value) => (value ?? "unknown").Replace(" ", "-").ToLowerInvariant();
 }
 
 <body class="ims-staff-dashboard">
@@ -100,7 +101,7 @@
                                         <td>@idea.Title</td>
                                         <td>@idea.Submitter</td>
                                         <td>
-                                            <span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">
+                                            <span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Status)">
                                                 @idea.Status
                                             </span>
                                         </td>

@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Template.Data.Configurations;
 using Template.Data.Entities;
 using Template.Web.Models.Report;
+using Template.Common.Enums;
+using Template.Web.Services;
 
 namespace Template.Web.Controllers;
 
@@ -25,16 +27,22 @@ public class ReportController(ApplicationDbContext db) : Controller
     {
         var rows = await Query(new ReportFilterViewModel()).OrderByDescending(i => i.SubmissionDate)
             .Select(i => new { i.Title, Submitter = i.Submitter.FullName, Department = i.Submitter.BusinessUnit,
-                Category = i.Category != null ? i.Category.Name : "", Status = i.CurrentStatus, i.SubmissionDate })
+                Category = i.Category != null ? i.Category.Name : "", Status = i.CurrentStatus.ToString(), i.SubmissionDate })
             .ToListAsync();
+        var exportRows = rows.Select(row => new ReportExportRow(row.Title, row.Submitter,
+            row.Department, row.Category, row.Status, row.SubmissionDate)).ToList();
+        if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+            return File(ReportExportBuilder.BuildPdf(exportRows), "application/pdf",
+                $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.pdf");
+        if (format.Equals("excel", StringComparison.OrdinalIgnoreCase))
+            return File(ReportExportBuilder.BuildExcel(exportRows), "application/vnd.ms-excel",
+                $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.xml");
         var text = new StringBuilder("Idea Title,Submitter,Department,Category,Status,Date\r\n");
-        foreach (var row in rows)
+        foreach (var row in exportRows)
             text.AppendLine(string.Join(",", new[] { row.Title, row.Submitter, row.Department, row.Category, row.Status,
                 row.SubmissionDate.ToString("yyyy-MM-dd") }.Select(Csv)));
-        var mime = format.Equals("excel", StringComparison.OrdinalIgnoreCase)
-            ? "application/vnd.ms-excel" : "text/csv";
-        var extension = format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xls" : "csv";
-        return File(Encoding.UTF8.GetBytes(text.ToString()), mime, $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.{extension}");
+        return File(Encoding.UTF8.GetBytes(text.ToString()), "text/csv",
+            $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.csv");
     }
 
     private async Task<IActionResult> BuildReport(ReportFilterViewModel filters, int page)
@@ -45,7 +53,7 @@ public class ReportController(ApplicationDbContext db) : Controller
         var paged = all.Skip((page - 1) * PageSize).Take(PageSize).Select(i => new ReportIdeaItemViewModel
         {
             Title = i.Title, Submitter = i.Submitter.FullName, Department = i.Submitter.BusinessUnit,
-            Category = i.Category?.Name, Status = i.CurrentStatus, Date = i.SubmissionDate
+            Category = i.Category?.Name, Status = i.CurrentStatus.ToString(), Date = i.SubmissionDate
         }).ToList();
         var byCategory = all.GroupBy(i => i.Category?.Name ?? "Uncategorised").OrderBy(g => g.Key).ToList();
         var byMonth = all.GroupBy(i => new DateTime(i.SubmissionDate.Year, i.SubmissionDate.Month, 1))
@@ -57,9 +65,9 @@ public class ReportController(ApplicationDbContext db) : Controller
             Categories = await db.Categories.Where(c => c.IsActive).Select(c => c.Name).OrderBy(x => x).ToListAsync(),
             ReportSummary = new ReportSummaryViewModel
             {
-                TotalIdeas = all.Count, Approved = all.Count(i => i.CurrentStatus == "Approved"),
-                UnderReview = all.Count(i => i.CurrentStatus == "Under Review"),
-                Declined = all.Count(i => i.CurrentStatus == "Declined")
+                TotalIdeas = all.Count, Approved = all.Count(i => i.CurrentStatus == IdeaStatus.Approved),
+                UnderReview = all.Count(i => i.CurrentStatus == IdeaStatus.UnderReview),
+                Declined = all.Count(i => i.CurrentStatus == IdeaStatus.Declined)
             },
             CategoryChartLabels = byCategory.Select(g => g.Key).ToList(),
             CategoryChartData = byCategory.Select(g => g.Count()).ToList(),
@@ -79,7 +87,9 @@ public class ReportController(ApplicationDbContext db) : Controller
             query = query.Where(i => i.Submitter.BusinessUnit == filters.Department);
         if (!string.IsNullOrWhiteSpace(filters.Category))
             query = query.Where(i => i.Category != null && i.Category.Name == filters.Category);
-        if (!string.IsNullOrWhiteSpace(filters.Status)) query = query.Where(i => i.CurrentStatus == filters.Status);
+        if (!string.IsNullOrWhiteSpace(filters.Status) &&
+            Enum.TryParse<IdeaStatus>(filters.Status, true, out var parsedStatus))
+            query = query.Where(i => i.CurrentStatus == parsedStatus);
         return query;
     }
 

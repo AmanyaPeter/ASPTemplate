@@ -5,6 +5,7 @@ namespace Template.Common.Static
         public const string Staff = "Staff";
         public const string InnovationTeam = "InnovationTeam";
         public const string ItAdmin = "Admin";
+        public const string DeputyDirector = "DeputyDirector";
 
         public const string ItSupport = "IT Support";
         public const string BudgetOfficer = "Budget Officer";

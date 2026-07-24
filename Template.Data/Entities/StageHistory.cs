@@ -9,13 +9,10 @@ namespace Template.Data.Entities
         public Guid IdeaId { get; set; }
         public InnovationIdea Idea { get; set; } = null!;
 
-        public string PreviousStage { get; set; } = string.Empty;
-
-        public string NewStage { get; set; } = string.Empty;
-
-        public string PreviousStatus { get; set; } = string.Empty;
-
-        public string NewStatus { get; set; } = string.Empty;
+        public Template.Common.Enums.IdeaStage PreviousStage { get; set; }
+        public Template.Common.Enums.IdeaStage NewStage { get; set; }
+        public Template.Common.Enums.IdeaStatus PreviousStatus { get; set; }
+        public Template.Common.Enums.IdeaStatus NewStatus { get; set; }
 
         public Guid ChangedById { get; set; }
         public ApplicationUser ChangedBy { get; set; } = null!;

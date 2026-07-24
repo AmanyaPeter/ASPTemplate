@@ -102,27 +102,17 @@
                         <div class="ims-staff-section-header">
                             <h3>Review Controls</h3>
                         </div>
-                        <form method="post" asp-controller="Idea" asp-action="Review">
-                            <input type="hidden" asp-for="Idea.Id" />
+                        <form method="post" asp-controller="IdeaWorkflow" asp-action="SaveReview" asp-route-id="@Model.Idea.Id">
+                            <input type="hidden" asp-for="Review.RowVersion" />
                             <div class="ims-staff-form-group">
                                 <label>Change Status</label>
-                                <select class="ims-staff-form-control" asp-for="Review.Status">
-                                    <option value="Submitted">Submitted</option>
-                                    <option value="Under Review" selected>Under Review</option>
-                                    <option value="Pending Information">Pending Information</option>
-                                    <option value="Approved">Approved</option>
-                                    <option value="Declined">Declined</option>
-                                </select>
+                                <select class="ims-staff-form-control" asp-for="Review.Status"
+                                        asp-items="Html.GetEnumSelectList<IdeaStatus>()"></select>
                             </div>
                             <div class="ims-staff-form-group">
                                 <label>Change Stage</label>
-                                <select class="ims-staff-form-control" asp-for="Review.Stage">
-                                    <option value="Submitted">Submitted</option>
-                                    <option value="Concept Development" selected>Concept Development</option>
-                                    <option value="Experimentation">Experimentation</option>
-                                    <option value="Deployment">Deployment</option>
-                                    <option value="Closed">Closed</option>
-                                </select>
+                                <select class="ims-staff-form-control" asp-for="Review.Stage"
+                                        asp-items="Html.GetEnumSelectList<IdeaStage>()"></select>
                             </div>
                             <div class="ims-staff-form-group">
                                 <label>Set Timeline</label>
@@ -194,6 +184,7 @@
             <div class="card-header"><h3 class="card-title">Review controls</h3></div>
             <div class="card-body">
                 <form asp-controller="IdeaWorkflow" asp-action="SaveReview" asp-route-id="@Model.Idea.Id" method="post">
+                    <input type="hidden" asp-for="Review.RowVersion" />
                     <div class="mb-3">
                         <label asp-for="Review.Status" class="form-label">Status</label>
                         <select asp-for="Review.Status" asp-items="Html.GetEnumSelectList<IdeaStatus>()" class="form-select"></select>
@@ -246,14 +237,7 @@
                         }
                     </div>
                 }
-<<<<<<< HEAD
-            }
-        </script>
-    }
-</body>
-=======
             </div>
         </div>
     </div>
 </div>
->>>>>>> dev

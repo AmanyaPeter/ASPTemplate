@@ -1,590 +1,318 @@
-﻿# Innovation Management Tracking System (IMTS)
+# Innovation Management Tracking System
 
-## System overview
+The Innovation Management Tracking System (IMTS) is an ASP.NET Core application for managing the Bank of Uganda innovation lifecycle. It centralizes idea submission, review, communication, stage tracking, notifications, reporting, resources, user administration, and audit activity.
 
-IMTS is an ASP.NET Core 8 web application for Bank of Uganda's innovation-management process. It replaces manual idea records and communication with a central workflow from idea submission through selection, concept development, experimentation or research, deployment, and closure.
+The implementation is guided by [Innovation Management System Requirements.pdf](Innovation%20Management%20System%20Requirements.pdf).
 
-The system is based on the *Innovation Management System Requirements* SRS and supports three primary users:
+## Supported roles
 
-- **Staff** submit individual or team ideas, add attachments, view progress, receive notifications, comment, and retract or cancel their own submissions.
-- **Innovation Team** view and filter submitted ideas, review details and attachments, manage stages and statuses, communicate with submitters, and monitor stage deadlines.
-- **IT Administrator** manages user accounts, roles, account status, and audit activity.
+| Role | Main responsibilities |
+|---|---|
+| Staff | Submit ideas, upload attachments, view progress, comment, receive notifications, and retract or cancel owned submissions |
+| Innovation Team | Review submitted ideas, update workflow stages and statuses, assign reviewers, set deadlines, comment, and notify submitters |
+| IT Administrator | Manage users, roles, permissions, account status, categories, reports, resources, and audit activity |
 
-The application uses role-based personal dashboards, SQL Server persistence, ASP.NET Core Identity, audit records, notifications, reports, and downloadable resources. It is intended for on-premises deployment on Windows Server, IIS, and Microsoft SQL Server.
+Role names used by the application are defined in `Template.Common/Static/RoleConstants.cs`:
 
-## Folder structure
+- `Staff`
+- `InnovationTeam`
+- `Admin`
+
+## Innovation workflow
+
+The application supports the SRS-aligned idea lifecycle:
+
+1. Staff completes the idea submission form.
+2. The system validates required fields and attachments.
+3. A reference number is generated and the idea enters the submitted/under-review state.
+4. The Innovation Team reviews the idea and may assign a reviewer and deadline.
+5. Stage and status changes are recorded in the timeline and stage history.
+6. The submitter receives in-app notifications and may follow progress or comment.
+7. Approved ideas progress through concept development, experimentation or research, deployment, and closure.
+
+Workflow operations are separated by responsibility:
+
+- `IdeaController` handles submission, staff lists, review queues, and details.
+- `IdeaStaffActionsController` handles staff-owned actions, comments, and attachment downloads.
+- `IdeaWorkflowController` handles Innovation Team review and workflow transitions.
+
+## Solution structure
 
 ```text
-ASPTemplate/
-|-- Template.sln          Solution file
-|-- Template.Common/      Shared enums, role names, constants, and audit base classes
-|-- Template.Data/        EF Core entities, DbContext, migrations, and seed data
-|-- Template.Core/        Business models, repositories, services, and authorization
-|-- Template.Web/         MVC controllers, Razor views, static files, and application startup
-|-- design-reference/     UI and design reference material
+Template.sln
+|-- Template.Common/   Shared enums, constants, permissions, and audit base types
+|-- Template.Data/     EF Core entities, DbContext, migrations, and seed data
+|-- Template.Core/     Repositories, services, authorization, and application models
+|-- Template.Web/      MVC controllers, Razor views, UI models, and static assets
+|-- design-reference/  UI reference material
 |-- Innovation Management System Requirements.pdf
 `-- README.md
 ```
 
-Dependencies flow from `Template.Web` to `Template.Core`, then `Template.Data` and `Template.Common`.
+The main dependency direction is:
 
-## Run offline with Visual Studio
+```text
+Template.Web -> Template.Core -> Template.Data -> Template.Common
+```
 
-### Prerequisites
+## Technology
 
-- Visual Studio 2022 with the **ASP.NET and web development** workload
-- .NET 8 SDK
-- SQL Server Express LocalDB, normally installed through Visual Studio
-- NuGet packages restored at least once while internet access is available
-
-### Start the application
-
-1. Open `Template.sln` in Visual Studio.
-2. Right-click `Template.Web` and select **Set as Startup Project**.
-3. Start LocalDB from a terminal or Package Manager Console:
-
-   ```powershell
-   sqllocaldb start MSSQLLocalDB
-   ```
-
-4. Restore packages if they are not already cached:
-
-   ```powershell
-   dotnet restore
-   ```
-
-5. Build the solution with **Build > Build Solution** or `Ctrl+Shift+B`.
-6. Select the `https` launch profile and press `F5`, or press `Ctrl+F5` without debugging.
-
-The application uses the `InnovationManagementDb` LocalDB database configured in `Template.Web/appsettings.json`. On startup it automatically applies EF Core migrations and seeds the roles, development users, categories, and sample dashboard data. No manual `Update-Database` command is normally required.
-
-The default development addresses are:
-
-- `https://localhost:7254`
-- `http://localhost:5104`
-
-Development accounts use the seeded password `Admin@123`:
-
-| Role | Username |
-|---|---|
-| IT Administrator | `admin` |
-| Staff | `staff` |
-| Innovation Team | `innovation` |
-
-### Template.Web
-
-The presentation layer. ASP.NET Core MVC with Blazor Server integration.
-
-| Directory / File                | Description                                                                 |
-|---------------------------------|-----------------------------------------------------------------------------|
-| `Program.cs`                    | Application entry point. Configures services, middleware pipeline, authentication, session, Blazor, Swagger, NLog, breadcrumbs |
-| `appsettings.json`              | Configuration — connection string (`IMTSDb` on LocalDB)                     |
-| `nlog.config`                   | NLog configuration for file and database logging targets                     |
-| `Controllers/`                  | MVC controllers                                                             |
-| `Views/`                        | Razor views (e.g., Shared `_Layoutmain.cshtml`)                             |
-| `Components/Shared/`            | Blazor Server components: `BreadcrumbViewComponent`, `ProfileViewComponent`, `ToastMessages` |
-| `Middleware/`                   | Custom HTTP middleware (e.g., `LastActivityMiddleware`)                     |
-| `Models/`                       | UI-specific view models                                                      |
-| `wwwroot/`                      | Static assets (CSS, JS, fonts, images)                                      |
-| `Properties/`                   | Launch profiles, IIS settings                                               |
-| `.config/`                      | Additional configuration files                                              |
-
-**Key `Program.cs` pipeline order:**
-
-1. NLog logging setup
-2. Controllers with Views + Blazor Server
-3. Cookie authentication (`LoginPath = /Account/Login`)
-4. Distributed memory cache + session (365-day timeout)
-5. EF Core `ApplicationDbContext` (SQL Server)
-6. ASP.NET Core Identity with `IdentityUser<Guid>`
-7. LDAP `AdAuthenticationService` (singleton)
-8. DataServicesRegistration + CoreServicesRegistration
-9. SmartBreadcrumbs
-10. Database seeding via `DbInitializer.SeedAsync`
-11. Middleware: Swagger (non-dev), Exception Handling (non-dev), HSTS, Response Caching, Static Files (7-day cache), HTTPS Redirection, Routing, Session, Authentication, Authorization
-12. MapIdentityApi, MapControllerRoute, MapBlazorHub
-
----
-
-## Key Features
-
-- **Innovation Idea Management** — Full lifecycle: draft → submit → review → approve → implement
-- **Stage-Based Workflow** — Ideas progress through defined stages with history tracking
-- **Role-Based Access Control** — Granular permissions per role (IT Support, Budget Officer, Budget Holder, Budget Admin)
-- **Active Directory Integration** — Authenticate users against corporate LDAP directory
-- **Audit Logging** — Automatic tracking of entity changes via EF Core interceptor
-- **Notifications** — In-app notifications with configurable preferences
-- **Reporting** — Report generation with multiple format options
-- **File Attachments** — Upload and manage attachments on ideas
-- **Category Management** — Classify ideas into categories
-- **Timeline Tracking** — Visual timeline of idea progression
-- **Survey Support** — Collect feedback via survey responses
-- **Blazor Server Dashboard** — Interactive components for enhanced UX
-- **Breadcrumb Navigation** — Smart hierarchical navigation via SmartBreadcrumbs
-- **Comprehensive Logging** — NLog with file and database targets
-
----
+- .NET 8
+- ASP.NET Core MVC and Razor
+- ASP.NET Core Identity with `Guid` user and role keys
+- Entity Framework Core 8
+- Microsoft SQL Server / SQL Server LocalDB
+- Blazor Server components
+- NLog
+- AutoMapper
+- SmartBreadcrumbs
+- Swagger/OpenAPI
 
 ## Prerequisites
 
-Ensure the following are installed on your **Windows** machine:
+Install:
 
-| Requirement               | Version / Notes                                                |
-|---------------------------|----------------------------------------------------------------|
-| **Windows OS**            | Windows 10 or Windows 11 (Windows Server also supported)       |
-| **.NET 8 SDK**            | [Download .NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) |
-| **SQL Server**            | LocalDB (installed with Visual Studio) or SQL Server Express/Developer |
-| **Visual Studio 2022**    | (Recommended) Community, Professional, or Enterprise edition   |
-| **OR**                    |                                                                |
-| **VS Code**               | Latest version with C# Dev Kit extension                       |
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- SQL Server LocalDB, SQL Server Express, SQL Server Developer, or another accessible SQL Server instance
+- Visual Studio 2022 with the **ASP.NET and web development** workload, or VS Code with C# Dev Kit
+- Git
 
-Optional but recommended:
-- **SQL Server Management Studio (SSMS)** — For database management
-- **Git** — For version control
+Check the SDK:
 
----
-
-## Environment Setup — Visual Studio 2022
-
-### Step 1: Install Visual Studio 2022
-
-1. Download from [visualstudio.microsoft.com](https://visualstudio.microsoft.com/vs/)
-2. Run the installer and select the following workloads:
-   - **ASP.NET and web development**
-   - **.NET desktop development** (optional, if needed)
-   - **Data storage and processing** (includes SQL Server LocalDB)
-3. In the **Individual components** tab, ensure these are selected:
-   - .NET 8 SDK
-   - SQL Server LocalDB
-   - Entity Framework 6 tools (optional)
-4. Complete installation and restart your machine.
-
-### Step 2: Clone or Open the Project
-
-```bash
-git clone https://github.com/AmanyaPeter/ASPTemplate.git
+```powershell
+dotnet --version
 ```
 
-Or open the existing project folder:
+## Configuration
 
-1. Launch **Visual Studio 2022**
-2. Click **File → Open → Project/Solution**
-3. Navigate to `..\ASPTemplate\Template.sln`
-4. Click **Open**
-
-### Step 3: Verify Dependencies
-
-Once the solution loads:
-
-1. **Right-click** the solution in **Solution Explorer** → **Restore NuGet Packages**
-2. Wait for package restore to complete (check Output window → "NuGet Package Manager")
-
-### Step 4: Configure the Database Connection
-
-Open `Template.Web/appsettings.json`:
+The development connection string is in `Template.Web/appsettings.json`:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=IMTSDb;Trusted_Connection=True;TrustServerCertificate=True"
-  },
-  "Logging": { "LogLevel": { "Default": "Information" } }
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=InnovationDb;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=false"
+  }
 }
 ```
 
-This uses **SQL Server LocalDB** which is included with Visual Studio. If you have a different SQL Server instance, update the `Server` value accordingly.
+For a shared or production database, override `ConnectionStrings:DefaultConnection` with user secrets, an environment-specific settings file, or an environment variable:
 
-### Step 5: Apply Database Migrations
-
-**Option A — Using Package Manager Console (PMC):**
-
-1. **Tools → NuGet Package Manager → Package Manager Console**
-2. Set **Default project** to `Template.Data`
-3. Run:
 ```powershell
-Update-Database
+$env:ConnectionStrings__DefaultConnection = "Server=YOUR_SERVER;Database=InnovationDb;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True"
 ```
 
-**Option B — Using .NET CLI (if PMC is unavailable):**
+Do not commit production credentials or secrets.
+
+## Restore, build, and run
+
+From the repository root:
+
 ```powershell
-To Run:
-sqllocaldb create MSSQLLocalDB
-sqllocaldb start MSSQLLocalDB
-dotnet run --project Template.Web --no-build --launch-profile http
-```
-
-```bash
-dotnet ef database update --project Template.Data --startup-project Template.Web
-```
-
-This will create the `IMTSDb` database and apply all migrations.
-
-### Step 6: Build and Run
-
-1. Press **Ctrl+Shift+B** to build the solution (or **Build → Build Solution**)
-2. Press **F5** to run with debugging, or **Ctrl+F5** to run without debugging
-3. The application will:
-   - Launch in your default browser
-   - Seed the database with initial roles and data (via `DbInitializer.SeedAsync`)
-   - Redirect to the login page
-
-### Step 7: Set as Startup Project (if needed)
-
-If you encounter a "No startup project configured" error:
-
-1. In **Solution Explorer**, **right-click** `Template.Web`
-2. Select **Set as Startup Project**
-
----
-
-## Environment Setup — VS Code
-
-### Step 1: Install VS Code and Extensions
-
-1. Download VS Code from [code.visualstudio.com](https://code.visualstudio.com/)
-2. Install the following extensions:
-   - **C# Dev Kit** (ms-dotnettools.csdevkit) — includes C#, .NET debugging, project management
-   - **C# Extensions** (jchannon.csharpextensions) — for creating classes, interfaces, etc.
-   - **MSBuild project tools** (tintoy.msbuild-project-tools) — for .csproj editing
-   - **SQL Server (mssql)** — optional, for database management
-   - **NuGet Gallery** — optional, for package management
-
-### Step 2: Install .NET 8 SDK
-
-Download and install from [dotnet.microsoft.com/download/dotnet/8.0](https://dotnet.microsoft.com/download/dotnet/8.0).
-
-Verify installation:
-
-```bash
-dotnet --version
-# Expected output: 8.0.xxx
-```
-
-### Step 3: Clone or Open the Project
-
-```bash
-git clone <repository-url> C:\Users\Ozai\Desktop\ASPTemplate
-```
-
-Or:
-
-1. **File → Open Folder** → Select `C:\Users\Ozai\Desktop\ASPTemplate`
-2. When prompted, click **Yes** to trust the authors (if applicable)
-
-### Step 4: Install SQL Server (if not already installed)
-
-If you don't have SQL Server installed:
-
-**Option A — Install LocalDB (recommended for development):**
-
-1. Download [SQL Server Express with LocalDB](https://go.microsoft.com/fwlink/?linkid=866662)
-2. Run the installer and select **LocalDB** installation
-3. Verify LocalDB is running:
-```bash
-sqllocaldb info
-# Should show "MSSQLLocalDB" in the list
-```
-
-**Option B — Use SQL Server Express or Developer Edition** (free from Microsoft).
-
-### Step 5: Restore NuGet Packages
-
-```bash
 dotnet restore
+dotnet build Template.sln
+dotnet run --project Template.Web/Template.Web.csproj --launch-profile http
 ```
 
-### Step 6: Apply Database Migrations
+Open:
 
-```bash
-dotnet ef database update --project Template.Data --startup-project Template.Web
+- HTTP: [http://localhost:5104](http://localhost:5104)
+- HTTPS profile: [https://localhost:7254](https://localhost:7254)
+
+For hot reload:
+
+```powershell
+dotnet watch --project Template.Web/Template.Web.csproj run --launch-profile http
 ```
 
-If you get a "dotnet-ef not found" error, install the EF Core tools:
+### Visual Studio
 
-```bash
+1. Open `Template.sln`.
+2. Set `Template.Web` as the startup project.
+3. Select the `http` or `https` launch profile.
+4. Press `F5`, or `Ctrl+F5` to run without debugging.
+
+### VS Code
+
+Open the repository root, then run:
+
+```powershell
+dotnet run --project Template.Web/Template.Web.csproj --launch-profile http
+```
+
+If VS Code shows stale Razor problems after a successful build, open the Command Palette and run **Developer: Reload Window**.
+
+## Database initialization
+
+Application startup calls `DbInitializer.SeedAsync`, which:
+
+- Applies pending EF Core migrations.
+- Creates the `Admin`, `Staff`, and `InnovationTeam` roles.
+- Grants all currently defined permission claims to the Admin role.
+- Creates development users when they do not exist.
+- Seeds the default idea categories.
+- Resets stale development login-state flags.
+
+In Development, `DashboardSeedData.SeedAsync` also creates sample dashboard data.
+
+### Development accounts
+
+The default development password is `Admin@12345678`.
+
+| Username | Role |
+|---|---|
+| `admin` | Admin |
+| `staff` | Staff |
+| `innovation` | InnovationTeam |
+
+These accounts are for local development only. Change or remove seeded credentials before deployment.
+
+## Entity Framework migrations
+
+Install the EF CLI tool if necessary:
+
+```powershell
 dotnet tool install --global dotnet-ef
 ```
 
-Then retry the `database update` command.
+Create a migration:
 
-### Step 7: Build and Run
-
-```bash
-dotnet build
-dotnet run --project Template.Web
-```
-
-The application will be available at:
-- HTTP: `http://localhost:5000` (or another port shown in terminal output)
-- HTTPS: `https://localhost:5001`
-
-### Step 8: Configure VS Code Launch Settings
-
-For a better debugging experience, create a `.vscode/launch.json` file:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch Web",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build",
-      "program": "${workspaceFolder}/Template.Web/bin/Debug/net8.0/Template.Web.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Template.Web",
-      "stopAtEntry": false,
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "sourceFileMap": {
-        "/Views": "${workspaceFolder}/Template.Web/Views"
-      }
-    }
-  ]
-}
-```
-
-And a `.vscode/tasks.json` file for the build task:
-
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "build",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/Template.Web/Template.Web.csproj",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary"
-      ],
-      "problemMatcher": "$msCompile"
-    }
-  ]
-}
-```
-
----
-
-## Running the Application
-
-### Using Visual Studio
-
-1. **Set `Template.Web` as the startup project**
-2. Press **F5** (Debug) or **Ctrl+F5** (Without Debug)
-3. The browser opens automatically to the application URL
-
-### Using VS Code
-
-```bash
-# Terminal 1: Run the application
-dotnet run --project Template.Web
-
-# Or with hot reload (for development)
-dotnet watch run --project Template.Web
-```
-
-### Using .NET CLI directly
-
-```bash
-cd Template.Web
-dotnet run
-```
-
-### Accessing Swagger UI
-
-Swagger is only available in **non-development** environments. To access:
-1. Set `ASPNETCORE_ENVIRONMENT=Staging` or `Production`
-2. Navigate to `https://localhost:5001/swagger`
-
-Or modify `Program.cs` to enable Swagger in development as well (remove the `!app.Environment.IsDevelopment()` condition around the Swagger block).
-
----
-
-## Database Migrations
-
-### Adding a New Migration
-
-**Package Manager Console (Visual Studio):**
 ```powershell
-Add-Migration MigrationName -Project Template.Data -StartupProject Template.Web
-```
-
-**.NET CLI:**
-```bash
 dotnet ef migrations add MigrationName --project Template.Data --startup-project Template.Web
 ```
 
-### Applying Migrations
+Apply migrations manually:
 
-**Package Manager Console:**
 ```powershell
-Update-Database -Project Template.Data -StartupProject Template.Web
-```
-
-**.NET CLI:**
-```bash
 dotnet ef database update --project Template.Data --startup-project Template.Web
 ```
 
-### Removing Last Migration
+List migrations:
 
-```bash
-dotnet ef migrations remove --project Template.Data --startup-project Template.Web
+```powershell
+dotnet ef migrations list --project Template.Data --startup-project Template.Web
 ```
 
-### Generating SQL Script
+Generate a deployment script:
 
-```bash
-dotnet ef migrations script --project Template.Data --startup-project Template.Web
+```powershell
+dotnet ef migrations script --idempotent --project Template.Data --startup-project Template.Web --output migration.sql
 ```
 
----
+The application normally applies migrations during startup. Manual commands are mainly useful for development diagnostics and controlled deployment workflows.
 
-## Authentication & Authorization
+## Major application areas
 
-### Authentication
+| Area | Purpose |
+|---|---|
+| Dashboard | Role-specific summary for Staff, Innovation Team, and Admin users |
+| Ideas | Submission, personal idea list, review queue, details, attachments, comments, and workflow |
+| Notifications | Read/unread filtering and individual or bulk read actions |
+| Categories | Create, update, activate, deactivate, and classify ideas |
+| Reports | Filter innovation data and export supported report formats |
+| Resources | Browse and download innovation resources |
+| Accounts | Create and update users and assign roles |
+| Roles and permissions | Maintain Identity roles and permission claims |
+| Audit logs | Review recorded system activity |
+| Settings and profile | User-facing support, settings, and profile pages |
 
-The system supports two authentication methods:
+## Attachment rules
 
-1. **Cookie Authentication** (default) — Users log in via `/Account/Login`
-2. **Active Directory / LDAP Authentication** — Integrated via `AdAuthenticationService` (configured in `Program.cs`)
+Idea attachments are validated by the server:
 
-The LDAP service is configured as a singleton in `Program.cs`:
+- Maximum size: 10 MB per file
+- Supported types: PDF, Word, Excel, and PNG
+- Uploaded filenames are replaced with generated storage names
+- Downloads are authorized against the requesting user’s role and idea ownership
 
-```csharp
-builder.Services.AddSingleton<IAdAuthenticationService>(provider =>
-    new AdAuthenticationService(
-        "SVRHQSDC001",                           // LDAP server
-        "DC=BCNET,DC=BOU,DC=OR,DC=UG",           // LDAP container
-        provider.GetRequiredService<ILogger<AdAuthenticationService>>()
-    ));
-```
+Client-side validation is useful for feedback, but server-side validation remains authoritative.
 
-### Authorization
+## Authentication and authorization
 
-The system implements **permission-based authorization**:
+The application uses ASP.NET Core Identity and cookie authentication:
 
-- `ApplicationPermissionHandler` — Custom `AuthorizationHandler` that checks user permissions
-- `ApplicationPermissionPolicyProvider` — Custom `IAuthorizationPolicyProvider` that dynamically creates policies
-- `PermissionTagHelper` — Razor Tag Helper to conditionally render UI elements based on permissions
+- Login path: `/Account/Login`
+- Logout path: `/Account/Logout`
+- Cookie sliding expiration: 15 minutes
+- Role-based authorization protects staff, review, and administration operations
+- Permission claims support finer-grained authorization for administrative features
 
-Roles defined in `RoleConstants`:
-- `IT Support`
-- `Budget Officer`
-- `Budget Holder`
-- `Budget Admin`
-- `Budget Admin Viewer`
-
----
+Active Directory integration is represented by `IAdAuthenticationService`. LDAP server and container values are currently registered in `Template.Web/Program.cs`; move environment-specific values into protected configuration before production deployment.
 
 ## Logging
 
-Logging is configured via **NLog** with the following configuration (`nlog.config`):
+NLog is configured through `Template.Web/nlog.config`. Application code also uses standard `ILogger<T>` logging.
 
-- **File target** — Logs written to files with rotation
-- **Database target** — Logs written to the application database
-- ASP.NET Core internal logging is cleared and replaced with NLog
+Never log:
 
-Configuration is set up in `Program.cs`:
-```csharp
-builder.Logging.ClearProviders();
-builder.Host.UseNLog();
-builder.Services.AddLogging();
+- Passwords
+- Authentication cookies or tokens
+- Production connection strings
+- Sensitive personal data
+- Full attachment contents
+
+## Verification
+
+Run a forced solution rebuild before opening a pull request:
+
+```powershell
+dotnet build Template.sln --no-restore -t:Rebuild
 ```
 
----
+Expected result:
 
-## Project Conventions
-
-### Naming Conventions
-
-- **Solution**: `Template.sln`
-- **Projects**: `Template.Common`, `Template.Data`, `Template.Core`, `Template.Web`
-- **Namespaces**: Follow folder structure, e.g., `Template.Core.Repository.Accounts`
-- **Enums**: PascalCase in dedicated `enums/` folder
-- **Interfaces**: Prefix with `I` (e.g., `IRepositoryBase<T, TId>`)
-- **Entities**: PascalCase, singular (e.g., `InnovationIdea`, `AuditLog`, `Category`)
-
-### Coding Standards
-
-- Target framework: `.NET 8`
-- Nullable reference types: **Enabled** (`<Nullable>enable</Nullable>`) in most projects
-- Implicit usings: **Enabled** (`<ImplicitUsings>enable</ImplicitUsings>`)
-- File-scoped namespaces used in most files (e.g., `namespace Template.Data.Configurations;`)
-- Async/await pattern used throughout for I/O operations
-- Repository pattern for data access abstraction
-- AutoMapper for entity-to-DTO mapping
-
-### DI Registration
-
-Each layer exposes a static extension method for registering its services:
-- `DataServicesRegistration.AddDataServices()` — Registers DbContext
-- `CoreServicesRegistration.AddCoreServices()` — Registers repositories, services, AutoMapper, authorization
-
-These are called from `Program.cs`:
-```csharp
-DataServicesRegistration.AddDataServices(builder.Services, builder.Configuration);
-CoreServicesRegistration.AddCoreServices(builder.Services);
+```text
+Build succeeded.
+0 Warning(s)
+0 Error(s)
 ```
 
----
+Also scan for unresolved merge markers:
 
-## Troubleshooting
-
-### Common Issues & Solutions
-
-| Issue                                         | Solution                                                                                 |
-|-----------------------------------------------|------------------------------------------------------------------------------------------|
-| **SQL Server LocalDB not found**              | Run `sqllocaldb start MSSQLLocalDB` or reinstall LocalDB via Visual Studio installer     |
-| **"dotnet-ef" command not found**             | Run `dotnet tool install --global dotnet-ef`                                             |
-| **NuGet packages not restored**               | Run `dotnet restore` or use Visual Studio's **Restore NuGet Packages**                   |
-| **Database does not exist / login failed**    | Verify connection string in `appsettings.json`. Ensure SQL Server is running.            |
-| **Port already in use**                       | Change the `applicationUrl` in `Properties/launchSettings.json`                          |
-| **Build errors after cloning**                | Ensure .NET 8 SDK is installed. Run `dotnet restore` then `dotnet build`.                |
-| **Migrations pending error**                  | Run `dotnet ef database update` to apply pending migrations                              |
-| **LDAP authentication fails**                 | Update server name and LDAP container in `Program.cs` to match your AD environment       |
-| **Blazor Server disconnects**                 | Ensure SignalR is configured. Check browser console for connection errors.               |
-| **Permission denied on static files**         | Verify the `StaticFileOptions` in `Program.cs` and that `wwwroot/` contains the files     |
-
-### Useful Commands
-
-```bash
-# Restore all NuGet packages
-dotnet restore
-
-# Build the solution
-dotnet build
-
-# Apply EF Core migrations
-dotnet ef database update --project Template.Data --startup-project Template.Web
-
-# List all EF Core migrations
-dotnet ef migrations list --project Template.Data --startup-project Template.Web
-
-# Run the application
-dotnet run --project Template.Web
-
-# Run with hot reload
-dotnet watch run --project Template.Web
-
-# Clear NuGet cache (if packages are corrupted)
-dotnet nuget locals all --clear
+```powershell
+rg -n "^(<<<<<<< |=======|>>>>>>> )" Template.Common Template.Data Template.Core Template.Web -g "*.cs" -g "*.cshtml"
 ```
 
-### Getting Help
+No output is expected.
 
-If you encounter issues not covered here:
-1. Check Visual Studio's **Output** window for detailed error messages
-2. For VS Code, check the **Terminal** and **Problems** panels
-3. Review application logs (NLog file targets)
-4. Verify your .NET SDK version: `dotnet --info`
+## Collaboration and merge guidance
 
----
+Before pulling or merging:
 
-*This README was generated for the ASPTemplate (IMTS) project — an Innovation Management Tracking System built with ASP.NET Core 8.*
-For fully offline use, ensure the .NET SDK, LocalDB, and required NuGet packages are installed or cached before disconnecting from the network.
+```powershell
+git status
+git fetch
+```
+
+After resolving a merge:
+
+1. Search for unresolved conflict markers.
+2. Check that controllers do not exist twice under similar filenames.
+3. Verify Razor tags and `@section` blocks are balanced.
+4. Run a forced rebuild.
+5. Exercise the Staff submission, Innovation Team review, and Admin dashboard flows.
+6. Review database migration ordering and the model snapshot.
+
+Do not resolve a controller conflict by simply retaining both implementations. Reconcile routes, authorization roles, dependency injection, model bindings, and ownership checks.
+
+## Production checklist
+
+Before production deployment:
+
+- Replace LocalDB with the approved SQL Server connection.
+- Store connection strings and LDAP settings outside source control.
+- Remove or secure development seed accounts and sample dashboard data.
+- Enforce HTTPS and validate the reverse-proxy/IIS configuration.
+- Review cookie lifetime and session policy.
+- Verify role and permission assignments.
+- Confirm attachment storage permissions and retention rules.
+- Review NLog targets and log retention.
+- Back up the database before applying migrations.
+- Perform security, accessibility, performance, and user-acceptance testing against the SRS.
+
+## Requirements reference
+
+The repository’s functional baseline is:
+
+[Innovation Management System Requirements.pdf](Innovation%20Management%20System%20Requirements.pdf)
+
+When implementation behavior and this README differ, verify the SRS and update the code and documentation together.

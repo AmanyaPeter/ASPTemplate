@@ -17,11 +17,11 @@ public class DashboardRepository(ApplicationDbContext context) : IDashboardRepos
         {
             TotalIdeas = await ideas.CountAsync(),
             IdeasUnderReview = await ideas.CountAsync(idea =>
-                !idea.IsRetracted && idea.CurrentStatus == nameof(IdeaStatus.UnderReview)),
+                !idea.IsRetracted && idea.CurrentStatus == IdeaStatus.UnderReview),
             ApprovedIdeas = await ideas.CountAsync(idea =>
-                !idea.IsRetracted && idea.CurrentStatus == nameof(IdeaStatus.Approved)),
+                !idea.IsRetracted && idea.CurrentStatus == IdeaStatus.Approved),
             CompletedIdeas = await ideas.CountAsync(idea =>
-                !idea.IsRetracted && idea.CurrentStage == nameof(IdeaStage.Closed)),
+                !idea.IsRetracted && idea.CurrentStage == IdeaStage.Closed),
             RecentIdeas = await ideas
                 .OrderByDescending(idea => idea.SubmissionDate)
                 .Take(5)
@@ -31,8 +31,8 @@ public class DashboardRepository(ApplicationDbContext context) : IDashboardRepos
                     ReferenceNumber = idea.ReferenceNumber ?? string.Empty,
                     Title = idea.Title ?? string.Empty,
                     Category = idea.Category != null ? idea.Category.Name : "Uncategorized",
-                    Stage = idea.CurrentStage ?? string.Empty,
-                    Status = idea.CurrentStatus ?? string.Empty,
+                    Stage = idea.CurrentStage.ToString(),
+                    Status = idea.CurrentStatus.ToString(),
                     SubmissionDate = idea.SubmissionDate,
                     IsRetracted = idea.IsRetracted
                 })
@@ -62,24 +62,24 @@ public class DashboardRepository(ApplicationDbContext context) : IDashboardRepos
             .Where(idea =>
                 !idea.IsDeleted &&
                 !idea.IsRetracted &&
-                idea.CurrentStage != nameof(IdeaStage.Closed) &&
-                idea.CurrentStatus != nameof(IdeaStatus.Declined));
+                idea.CurrentStage != IdeaStage.Closed &&
+                idea.CurrentStatus != IdeaStatus.Declined);
 
         return new InnovationTeamDashboardViewModel
         {
             TotalActiveIdeas = await activeIdeas.CountAsync(),
             PendingReviewIdeas = await activeIdeas.CountAsync(idea =>
-                idea.CurrentStatus == nameof(IdeaStatus.UnderReview)),
+                idea.CurrentStatus == IdeaStatus.UnderReview),
             ConceptDevelopmentIdeas = await activeIdeas.CountAsync(idea =>
-                idea.CurrentStage == nameof(IdeaStage.ConceptDevelopment)),
+                idea.CurrentStage == IdeaStage.ConceptDevelopment),
             ExperimentationIdeas = await activeIdeas.CountAsync(idea =>
-                idea.CurrentStage == nameof(IdeaStage.Experimentation)),
+                idea.CurrentStage == IdeaStage.Experimentation),
             DeploymentIdeas = await activeIdeas.CountAsync(idea =>
-                idea.CurrentStage == nameof(IdeaStage.Deployment)),
+                idea.CurrentStage == IdeaStage.Deployment),
             ReviewQueue = await activeIdeas
                 .Where(idea =>
-                    idea.CurrentStatus == nameof(IdeaStatus.UnderReview) ||
-                    idea.CurrentStage == nameof(IdeaStage.Submitted))
+                    idea.CurrentStatus == IdeaStatus.UnderReview ||
+                    idea.CurrentStage == IdeaStage.Submitted)
                 .OrderBy(idea => idea.SubmissionDate)
                 .Take(10)
                 .Select(idea => new DashboardIdeaViewModel
@@ -88,8 +88,8 @@ public class DashboardRepository(ApplicationDbContext context) : IDashboardRepos
                     ReferenceNumber = idea.ReferenceNumber ?? string.Empty,
                     Title = idea.Title ?? string.Empty,
                     Category = idea.Category != null ? idea.Category.Name : "Uncategorized",
-                    Stage = idea.CurrentStage ?? string.Empty,
-                    Status = idea.CurrentStatus ?? string.Empty,
+                    Stage = idea.CurrentStage.ToString(),
+                    Status = idea.CurrentStatus.ToString(),
                     SubmissionDate = idea.SubmissionDate,
                     SubmitterName = idea.Submitter != null ? idea.Submitter.FullName : "Unknown",
                     SubmitterDepartment = idea.Submitter != null

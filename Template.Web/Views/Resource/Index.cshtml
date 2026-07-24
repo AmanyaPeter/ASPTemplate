@@ -8,6 +8,16 @@
     <div class="ims-staff-main-wrapper">
         <!-- Main Content Area -->
         <main class="ims-staff-main-content">
+            @if (User.IsInRole(RoleConstants.ItAdmin) || User.IsInRole(RoleConstants.InnovationTeam))
+            {
+                <form asp-controller="Resource" asp-action="Upload" method="post" enctype="multipart/form-data" class="ims-staff-filters-bar">
+                    <input name="ResourceTitle" class="ims-staff-form-control" required maxlength="200" placeholder="Resource title" />
+                    <select name="Category" class="ims-staff-form-control" asp-items="Html.GetEnumSelectList<ResourceCategory>()"></select>
+                    <input name="Description" class="ims-staff-form-control" maxlength="1000" placeholder="Description" />
+                    <input name="File" type="file" class="ims-staff-form-control" accept=".pdf,.docx" required />
+                    <button class="ims-staff-btn ims-staff-btn-primary" type="submit">Upload</button>
+                </form>
+            }
             <!-- Filters Bar -->
             <form method="get" asp-controller="Resource" asp-action="Index" class="ims-staff-filters-bar">
                 <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search resources..." asp-for="SearchTerm">

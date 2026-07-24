@@ -1,6 +1,7 @@
 @model ReportsModel
 @{
     ViewData["Title"] = "Reports - Innovation Management System";
+    string BadgeClass(string? value) => (value ?? "unknown").Replace(" ", "-").ToLowerInvariant();
 }
 
 <body class="ims-staff-dashboard">
@@ -111,6 +112,7 @@
                     <h3>Detailed Report</h3>
                     <div class="ims-staff-export-actions">
                         <a asp-controller="Report" asp-action="Export" asp-route-format="excel" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export Excel</a>
+                        <a asp-controller="Report" asp-action="Export" asp-route-format="pdf" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export PDF</a>
                         <a asp-controller="Report" asp-action="Export" asp-route-format="csv" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export CSV</a>
                     </div>
                 </div>
@@ -135,7 +137,7 @@
                                     <td>@idea.Department</td>
                                     <td>@idea.Category</td>
                                     <td>
-                                        <span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">
+                                        <span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Status)">
                                             @idea.Status
                                         </span>
                                     </td>

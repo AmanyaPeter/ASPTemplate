@@ -1,6 +1,7 @@
 @model SubmittedIdeasModel
 @{
     ViewData["Title"] = "Submitted Ideas - Innovation Management System";
+    string BadgeClass(string? value) => (value ?? "unknown").Replace(" ", "-").ToLowerInvariant();
 }
 
     <!-- Main Content -->
@@ -67,22 +68,18 @@
                                     <td>@idea.Department</td>
                                     <td>@idea.CategoryName</td>
                                     <td>
-                                        <span class="ims-staff-badge ims-staff-badge-@((idea.Stage ?? "unknown").Replace(" ", "-").ToLower())">
+                                        <span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Stage)">
                                             @idea.Stage
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">
+                                        <span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Status)">
                                             @idea.Status
                                         </span>
                                     </td>
                                     <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
                                     <td>
-<<<<<<< HEAD
-                                        <a asp-controller="Idea" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
-=======
                                         <a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm @(idea.NeedsReview ? "ims-staff-btn-primary" : "ims-staff-btn-secondary")">
->>>>>>> dev
                                             @(idea.NeedsReview ? "Review" : "View Review")
                                         </a>
                                     </td>
@@ -119,9 +116,4 @@
         <script>
             lucide.createIcons();
         </script>
-<<<<<<< HEAD
     }
-</body>
-=======
-    }
->>>>>>> dev

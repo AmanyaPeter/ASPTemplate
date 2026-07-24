@@ -6,6 +6,7 @@ using Template.Core.Services.Authorization;
 using Template.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using SmartBreadcrumbs.Attributes;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Template.Web.Controllers;
 
@@ -39,6 +40,8 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
 
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
     {
         var result = await _authService.ValidateApplicationUser(username, password);

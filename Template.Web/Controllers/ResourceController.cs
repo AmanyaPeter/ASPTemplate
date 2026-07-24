@@ -4,11 +4,15 @@ using Microsoft.EntityFrameworkCore;
 using Template.Common.Enums;
 using Template.Data.Configurations;
 using Template.Web.Models.Resource;
+using Template.Core.Services.Files;
+using Template.Common.Static;
+using System.Security.Claims;
+using Template.Data.Entities;
 
 namespace Template.Web.Controllers;
 
 [Authorize]
-public class ResourceController(ApplicationDbContext db, IWebHostEnvironment environment) : Controller
+public class ResourceController(ApplicationDbContext db, IDatabaseFileService fileService) : Controller
 {
     private const int PageSize = 12;
 
@@ -37,18 +41,56 @@ public class ResourceController(ApplicationDbContext db, IWebHostEnvironment env
         });
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = RoleConstants.ItAdmin + "," + RoleConstants.InnovationTeam)]
+    public async Task<IActionResult> Upload(ResourceUploadViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid || model.File == null) return RedirectToAction(nameof(Index));
+        try
+        {
+            await using var stream = model.File.OpenReadStream();
+            var file = await fileService.ValidateAsync(model.File.FileName, model.File.ContentType,
+                stream, model.File.Length, cancellationToken);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await db.Users.SingleAsync(x => x.Id == userId, cancellationToken);
+            db.Resources.Add(new Resource
+            {
+                ResourceTitle = model.ResourceTitle.Trim(), Category = model.Category,
+                Description = model.Description?.Trim(), FileName = file.OriginalName,
+                StorageName = file.StorageName, Content = file.Content, Sha256 = file.Sha256,
+                FileSizeBytes = file.Size, FileType = Path.GetExtension(file.OriginalName).TrimStart('.').ToUpperInvariant(),
+                MimeType = file.MimeType, UploadedById = userId, UploadedBy = user,
+                CreatedDate = DateTime.UtcNow, CreatedBy = userId.ToString()
+            });
+            await db.SaveChangesAsync(cancellationToken);
+            TempData["SuccessMessage"] = "Resource uploaded.";
+        }
+        catch (InvalidDataException ex) { TempData["ErrorMessage"] = ex.Message; }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = RoleConstants.ItAdmin + "," + RoleConstants.InnovationTeam)]
+    public async Task<IActionResult> Deactivate(int id, CancellationToken cancellationToken)
+    {
+        var resource = await db.Resources.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (resource == null) return NotFound();
+        resource.IsActive = false;
+        await db.SaveChangesAsync(cancellationToken);
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpGet]
     public async Task<IActionResult> Download(int id, bool inline = false)
     {
         var resource = await db.Resources.FindAsync(id);
         if (resource == null || !resource.IsActive) return NotFound();
-        var path = Path.GetFullPath(Path.Combine(environment.WebRootPath, resource.FilePath.TrimStart('/', '\\')));
-        var root = Path.GetFullPath(Path.Combine(environment.WebRootPath, "uploads", "resources"));
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(path)) return NotFound();
         resource.DownloadCount++;
         await db.SaveChangesAsync();
         return inline
-            ? PhysicalFile(path, resource.MimeType ?? "application/octet-stream")
-            : PhysicalFile(path, resource.MimeType ?? "application/octet-stream", resource.FileName);
+            ? File(resource.Content, resource.MimeType ?? "application/octet-stream")
+            : File(resource.Content, resource.MimeType ?? "application/octet-stream", resource.FileName);
     }
 }

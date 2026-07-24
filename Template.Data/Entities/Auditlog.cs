@@ -9,8 +9,8 @@ namespace Template.Data.Entities
 
     public required string LogEntryId { get; set; }
 
-    public Guid UserId { get; set; }              // or string if IdentityUser
-    public ApplicationUser User { get; set; }= null!;
+    public Guid? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
 
     public required string Username { get; set; }
 

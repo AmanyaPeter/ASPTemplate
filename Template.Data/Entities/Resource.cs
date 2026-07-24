@@ -15,7 +15,9 @@ namespace Template.Data.Entities
 
         public required string FileName { get; set; }
 
-        public required string FilePath { get; set; }
+        public required string StorageName { get; set; }
+        public byte[] Content { get; set; } = [];
+        public required string Sha256 { get; set; }
 
         public long FileSizeBytes { get; set; }
 
@@ -34,5 +36,8 @@ namespace Template.Data.Entities
         public Guid UploadedById { get; set; }
 
         public required ApplicationUser UploadedBy { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Timestamp]
+        public byte[] RowVersion { get; set; } = [];
     }
 }

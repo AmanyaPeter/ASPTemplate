@@ -12,8 +12,7 @@ namespace Template.Web.Controllers;
 [Authorize]
 [Route("Idea")]
 public class IdeaStaffActionsController(
-    ApplicationDbContext context,
-    IWebHostEnvironment environment) : Controller
+    ApplicationDbContext context) : Controller
 {
     [Authorize(Roles = RoleConstants.Staff)]
     [HttpPost("Retract/{id:guid}")]
@@ -32,8 +31,8 @@ public class IdeaStaffActionsController(
             return NotFound();
         }
 
-        if (idea.CurrentStatus == nameof(IdeaStatus.Approved) ||
-            idea.CurrentStage == nameof(IdeaStage.Closed))
+        if (idea.CurrentStatus == IdeaStatus.Approved ||
+            idea.CurrentStage == IdeaStage.Closed)
         {
             TempData["ErrorMessage"] = "Approved or closed ideas cannot be retracted.";
             return RedirectToAction("MyIdeas", "Idea");
@@ -97,19 +96,9 @@ public class IdeaStaffActionsController(
             return NotFound();
         }
 
-        var uploadRoot = Path.GetFullPath(
-            Path.Combine(environment.ContentRootPath, "App_Data", "IdeaAttachments"));
-        var storedPath = Path.GetFullPath(
-            Path.Combine(uploadRoot, attachment.FilePath));
-        if (!storedPath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase) ||
-            !System.IO.File.Exists(storedPath))
-        {
-            return NotFound();
-        }
-
         attachment.DownloadCount++;
         await context.SaveChangesAsync();
-        return PhysicalFile(storedPath, attachment.MimeType, attachment.FileName);
+        return File(attachment.Content, attachment.MimeType, attachment.FileName);
     }
 
     [Authorize(Roles = RoleConstants.Staff)]

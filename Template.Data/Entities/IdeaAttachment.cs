@@ -11,7 +11,9 @@ namespace Template.Data.Entities
 
         public required string FileName { get; set; }
 
-        public required string FilePath { get; set; }
+        public required string StorageName { get; set; }
+        public byte[] Content { get; set; } = [];
+        public required string Sha256 { get; set; }
 
         public long FileSize { get; set; }
 

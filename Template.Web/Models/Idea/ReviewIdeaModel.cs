@@ -43,6 +43,7 @@ namespace Template.Web.Models.Idea
 
     public class ReviewFormViewModel
     {
+        public string RowVersion { get; set; } = string.Empty;
         public string? Status { get; set; }
         public string? Stage { get; set; }
         public DateTime? TimelineDate { get; set; }

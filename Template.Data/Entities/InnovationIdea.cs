@@ -38,8 +38,8 @@ public class InnovationIdea : AuditableEntity
     public string SubmitterAgeBracket { get; set; } = string.Empty;
 
     // Workflow
-    public string CurrentStage { get; set; } = string.Empty;
-    public string CurrentStatus { get; set; } = string.Empty;
+    public Template.Common.Enums.IdeaStage CurrentStage { get; set; } = Template.Common.Enums.IdeaStage.Submitted;
+    public Template.Common.Enums.IdeaStatus CurrentStatus { get; set; } = Template.Common.Enums.IdeaStatus.UnderReview;
 
     // Review
     public Guid? AssignedReviewerId { get; set; }
@@ -53,6 +53,7 @@ public class InnovationIdea : AuditableEntity
     public bool IsRetracted { get; set; }
     public bool IsDeleted { get; set; }
 
+    [System.ComponentModel.DataAnnotations.Timestamp]
     public byte[] RowVersion { get; set; } = [];
 
     // Collections
