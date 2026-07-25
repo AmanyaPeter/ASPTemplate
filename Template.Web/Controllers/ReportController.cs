@@ -2,86 +2,133 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Template.Common.Enums;
+using Template.Common.Static;
 using Template.Data.Configurations;
-using Template.Data.Entities;
 using Template.Web.Models.Report;
+using Template.Web.Services.Reports;
 
 namespace Template.Web.Controllers;
 
-[Authorize(Roles = "Admin,InnovationTeam")]
+[Authorize(Roles = $"{RoleConstants.ItAdmin},{RoleConstants.InnovationTeam}")]
 public class ReportController(ApplicationDbContext db) : Controller
 {
     private const int PageSize = 25;
 
     [HttpGet]
-    public Task<IActionResult> Index(int page = 1) => BuildReport(new ReportFilterViewModel(), page);
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public Task<IActionResult> Index(ReportsModel model, int page = 1) => BuildReport(model.Filters, page);
-
-    [HttpGet]
-    public async Task<IActionResult> Export(string format = "csv")
-    {
-        var rows = await Query(new ReportFilterViewModel()).OrderByDescending(i => i.SubmissionDate)
-            .Select(i => new { i.Title, Submitter = i.Submitter.FullName, Department = i.Submitter.BusinessUnit,
-                Category = i.Category != null ? i.Category.Name : "", Status = i.CurrentStatus, i.SubmissionDate })
-            .ToListAsync();
-        var text = new StringBuilder("Idea Title,Submitter,Department,Category,Status,Date\r\n");
-        foreach (var row in rows)
-            text.AppendLine(string.Join(",", new[] { row.Title, row.Submitter, row.Department, row.Category, row.Status,
-                row.SubmissionDate.ToString("yyyy-MM-dd") }.Select(Csv)));
-        var mime = format.Equals("excel", StringComparison.OrdinalIgnoreCase)
-            ? "application/vnd.ms-excel" : "text/csv";
-        var extension = format.Equals("excel", StringComparison.OrdinalIgnoreCase) ? "xls" : "csv";
-        return File(Encoding.UTF8.GetBytes(text.ToString()), mime, $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.{extension}");
-    }
-
-    private async Task<IActionResult> BuildReport(ReportFilterViewModel filters, int page)
+    public async Task<IActionResult> Index([FromQuery] ReportFilterViewModel filters, int page = 1)
     {
         page = Math.Max(page, 1);
         var query = Query(filters);
-        var all = await query.OrderByDescending(i => i.SubmissionDate).ToListAsync();
-        var paged = all.Skip((page - 1) * PageSize).Take(PageSize).Select(i => new ReportIdeaItemViewModel
-        {
-            Title = i.Title, Submitter = i.Submitter.FullName, Department = i.Submitter.BusinessUnit,
-            Category = i.Category?.Name, Status = i.CurrentStatus, Date = i.SubmissionDate
-        }).ToList();
-        var byCategory = all.GroupBy(i => i.Category?.Name ?? "Uncategorised").OrderBy(g => g.Key).ToList();
-        var byMonth = all.GroupBy(i => new DateTime(i.SubmissionDate.Year, i.SubmissionDate.Month, 1))
-            .OrderBy(g => g.Key).ToList();
+        var total = await query.CountAsync();
+        var approved = await query.CountAsync(i => i.CurrentStatus == nameof(IdeaStatus.Approved));
+        var underReview = await query.CountAsync(i => i.CurrentStatus == nameof(IdeaStatus.UnderReview));
+        var declined = await query.CountAsync(i => i.CurrentStatus == nameof(IdeaStatus.Declined));
+
+        var categoryGroups = await query
+            .GroupBy(i => i.Category != null ? i.Category.Name : "Uncategorised")
+            .Select(group => new { Name = group.Key, Count = group.Count() })
+            .OrderBy(group => group.Name)
+            .ToListAsync();
+        var monthGroups = await query
+            .GroupBy(i => new { i.SubmissionDate.Year, i.SubmissionDate.Month })
+            .Select(group => new { group.Key.Year, group.Key.Month, Count = group.Count() })
+            .OrderBy(group => group.Year).ThenBy(group => group.Month)
+            .ToListAsync();
+
+        var rows = await query
+            .OrderByDescending(i => i.SubmissionDate)
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize)
+            .Select(i => new ReportIdeaItemViewModel
+            {
+                Title = i.Title,
+                Submitter = i.Submitter.FullName,
+                Department = i.Submitter.BusinessUnit,
+                Category = i.Category != null ? i.Category.Name : "Uncategorised",
+                Status = i.CurrentStatus,
+                Date = i.SubmissionDate
+            }).ToListAsync();
+
         return View(new ReportsModel
         {
-            Filters = filters, ReportIdeas = paged,
-            Departments = await db.ApplicationUsers.Select(u => u.BusinessUnit).Distinct().OrderBy(x => x).ToListAsync(),
-            Categories = await db.Categories.Where(c => c.IsActive).Select(c => c.Name).OrderBy(x => x).ToListAsync(),
+            Filters = filters,
+            ReportIdeas = rows,
+            Departments = await db.ApplicationUsers.AsNoTracking()
+                .Where(user => user.BusinessUnit != null && user.BusinessUnit != "")
+                .Select(user => user.BusinessUnit).Distinct().OrderBy(value => value).ToListAsync(),
+            Categories = await db.Categories.AsNoTracking().Where(category => category.IsActive)
+                .Select(category => category.Name).OrderBy(value => value).ToListAsync(),
             ReportSummary = new ReportSummaryViewModel
             {
-                TotalIdeas = all.Count, Approved = all.Count(i => i.CurrentStatus == "Approved"),
-                UnderReview = all.Count(i => i.CurrentStatus == "Under Review"),
-                Declined = all.Count(i => i.CurrentStatus == "Declined")
+                TotalIdeas = total,
+                Approved = approved,
+                UnderReview = underReview,
+                Declined = declined
             },
-            CategoryChartLabels = byCategory.Select(g => g.Key).ToList(),
-            CategoryChartData = byCategory.Select(g => g.Count()).ToList(),
-            TrendChartLabels = byMonth.Select(g => g.Key.ToString("MMM yyyy")).ToList(),
-            TrendChartData = byMonth.Select(g => g.Count()).ToList(),
-            CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(all.Count / (double)PageSize))
+            CategoryChartLabels = categoryGroups.Select(group => group.Name).ToList(),
+            CategoryChartData = categoryGroups.Select(group => group.Count).ToList(),
+            TrendChartLabels = monthGroups.Select(group => new DateTime(group.Year, group.Month, 1).ToString("MMM yyyy")).ToList(),
+            TrendChartData = monthGroups.Select(group => group.Count).ToList(),
+            CurrentPage = page,
+            TotalPages = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize))
         });
     }
 
-    private IQueryable<InnovationIdea> Query(ReportFilterViewModel filters)
+    [HttpGet]
+    public async Task<IActionResult> Export([FromQuery] ReportFilterViewModel filters, string format = "csv")
     {
-        var query = db.InnovationIdeas.AsNoTracking().Include(i => i.Submitter).Include(i => i.Category)
-            .Where(i => !i.IsDeleted && !i.IsRetracted);
-        if (filters.StartDate.HasValue) query = query.Where(i => i.SubmissionDate >= filters.StartDate);
-        if (filters.EndDate.HasValue) query = query.Where(i => i.SubmissionDate < filters.EndDate.Value.AddDays(1));
+        var data = await Query(filters)
+            .OrderByDescending(i => i.SubmissionDate)
+            .Select(i => new
+            {
+                i.Title,
+                Submitter = i.Submitter.FullName,
+                Department = i.Submitter.BusinessUnit,
+                Category = i.Category != null ? i.Category.Name : "Uncategorised",
+                Status = i.CurrentStatus,
+                i.SubmissionDate
+            }).ToListAsync();
+        var rows = data.Select(i => new[]
+        {
+            i.Title,
+            i.Submitter,
+            i.Department,
+            i.Category,
+            i.Status,
+            i.SubmissionDate.ToString("yyyy-MM-dd")
+        }).ToList();
+        rows.Insert(0, new[] { "Idea Title", "Submitter", "Department", "Category", "Status", "Date" });
+
+        if (format.Equals("xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            return File(SimpleXlsxWriter.Create(rows),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.xlsx");
+        }
+
+        var csv = new StringBuilder();
+        foreach (var row in rows)
+            csv.AppendLine(string.Join(",", row.Select(Csv)));
+        return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv",
+            $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.csv");
+    }
+
+    private IQueryable<Template.Data.Entities.InnovationIdea> Query(ReportFilterViewModel filters)
+    {
+        var query = db.InnovationIdeas.AsNoTracking()
+            .Where(idea => !idea.IsDeleted && !idea.IsRetracted);
+        if (filters.StartDate.HasValue) query = query.Where(idea => idea.SubmissionDate >= filters.StartDate.Value);
+        if (filters.EndDate.HasValue) query = query.Where(idea => idea.SubmissionDate < filters.EndDate.Value.Date.AddDays(1));
         if (!string.IsNullOrWhiteSpace(filters.Department))
-            query = query.Where(i => i.Submitter.BusinessUnit == filters.Department);
+            query = query.Where(idea => idea.Submitter.BusinessUnit == filters.Department);
         if (!string.IsNullOrWhiteSpace(filters.Category))
-            query = query.Where(i => i.Category != null && i.Category.Name == filters.Category);
-        if (!string.IsNullOrWhiteSpace(filters.Status)) query = query.Where(i => i.CurrentStatus == filters.Status);
+            query = query.Where(idea => idea.Category != null && idea.Category.Name == filters.Category);
+        if (!string.IsNullOrWhiteSpace(filters.Status))
+            query = query.Where(idea => idea.CurrentStatus == filters.Status);
         return query;
     }
 
-    private static string Csv(string? value) => $"\"{(value ?? "").Replace("\"", "\"\"")}\"";
+    private static string Csv(string? value) => $"\"{(value ?? string.Empty).Replace("\"", "\"\"")}\"";
 }
+

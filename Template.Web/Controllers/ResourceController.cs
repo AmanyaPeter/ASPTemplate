@@ -42,9 +42,14 @@ public class ResourceController(ApplicationDbContext db, IWebHostEnvironment env
     {
         var resource = await db.Resources.FindAsync(id);
         if (resource == null || !resource.IsActive) return NotFound();
-        var path = Path.GetFullPath(Path.Combine(environment.WebRootPath, resource.FilePath.TrimStart('/', '\\')));
-        var root = Path.GetFullPath(Path.Combine(environment.WebRootPath, "uploads", "resources"));
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(path)) return NotFound();
+        var root = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "App_Data", "Resources"));
+        var relativePath = resource.FilePath.Replace('\\', '/').TrimStart('/');
+        const string legacyPrefix = "uploads/resources/";
+        if (relativePath.StartsWith(legacyPrefix, StringComparison.OrdinalIgnoreCase))
+            relativePath = relativePath[legacyPrefix.Length..];
+        var path = Path.GetFullPath(Path.Combine(root, relativePath));
+        if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+            !System.IO.File.Exists(path)) return NotFound();
         resource.DownloadCount++;
         await db.SaveChangesAsync();
         return inline
@@ -52,3 +57,5 @@ public class ResourceController(ApplicationDbContext db, IWebHostEnvironment env
             : PhysicalFile(path, resource.MimeType ?? "application/octet-stream", resource.FileName);
     }
 }
+
+

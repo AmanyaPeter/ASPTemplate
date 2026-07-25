@@ -1,27 +1,27 @@
 @model MyIdeasModel
 @{
-    ViewData["Title"] = "My Ideas - Innovation Management System";
+    ViewData["Title"] = "My Ideas";
 }
 @if (TempData["SuccessMessage"] is string success)
 {
-    <div class="alert alert-success">@success</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">@success<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
 }
 @if (TempData["ErrorMessage"] is string error)
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">@error<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
 }
 
-
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-       
-
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            <!-- Filters Bar -->
-            <form asp-controller="Idea" asp-action="MyIdeas" method="get" class="ims-staff-filters-bar">
-                <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search ideas..." asp-for="SearchTerm">
-                <select class="ims-staff-form-control" asp-for="StatusFilter">
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">My Ideas</h3>
+    </div>
+    <div class="card-body">
+        <form asp-controller="Idea" asp-action="MyIdeas" method="get" class="row g-2 mb-3">
+            <div class="col-auto flex-grow-1">
+                <input type="text" class="form-control" placeholder="Search ideas..." asp-for="SearchTerm">
+            </div>
+            <div class="col-auto">
+                <select class="form-select" asp-for="StatusFilter">
                     <option value="">All Statuses</option>
                     <option value="Submitted">Submitted</option>
                     <option value="Under Review">Under Review</option>
@@ -29,99 +29,93 @@
                     <option value="Approved">Approved</option>
                     <option value="Declined">Declined</option>
                 </select>
-                <select class="ims-staff-form-control" asp-for="CategoryFilter">
+            </div>
+            <div class="col-auto">
+                <select class="form-select" asp-for="CategoryFilter">
                     <option value="">All Categories</option>
-                    <option value="FinTech">FinTech</option>
-                    <option value="Process Improvement">Process Improvement</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Product Innovation">Product Innovation</option>
                 </select>
-                <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" type="submit">Apply</button>
-            </form>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">Apply</button>
+            </div>
+        </form>
 
-            <!-- Ideas Table -->
-            <div class="ims-staff-card ims-staff-table-card">
-                <div class="ims-staff-table-container">
-                    <table class="ims-staff-data-table">
-                        <thead>
-                            <tr>
-                                <th>Idea Title</th>
-                                <th>Category</th>
-                                <th>Stage</th>
-                                <th>Status</th>
-                                <th>Date Submitted</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var idea in Model.Ideas)
-                            {
-                                <tr>
-                                    <td>@idea.Title</td>
-                                    <td>@idea.CategoryName</td>
-                                    <td><span class="ims-staff-badge ims-staff-badge-@((idea.Stage ?? "unknown").Replace(" ", "-").ToLower())">@idea.Stage</span></td>
-                                    <td><span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">@idea.Status</span></td>
-                                    <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
-                                    <td>
-                                        <div class="ims-staff-actions">
-                                            <a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">View</a>
-                                            @if (!idea.IsRetracted)
-                                            {
-                                                <form asp-controller="IdeaStaffActions" asp-action="Retract" asp-route-id="@idea.Id" method="post" class="d-inline">
-                                                    <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Retract</button>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <form asp-controller="IdeaStaffActions" asp-action="Cancel" asp-route-id="@idea.Id" method="post" class="d-inline">
-                                                    <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-danger">Cancel</button>
-                                                </form>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Idea</th>
+                        <th>Category</th>
+                        <th>Stage</th>
+                        <th>Status</th>
+                        <th>Date Submitted</th>
+                        <th class="w-1">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var idea in Model.Ideas)
+                    {
+                        <tr class="@(idea.IsRetracted ? "text-muted" : "")">
+                            <td>@idea.Title</td>
+                            <td>@idea.CategoryName</td>
+                            <td><span class="badge bg-blue-lt">@idea.Stage</span></td>
+                            <td><span class="badge @(idea.IsRetracted ? "bg-danger-lt" : "bg-secondary-lt")">@idea.Status</span></td>
+                            <td>@idea.SubmissionDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id" class="btn btn-sm btn-outline-secondary">View</a>
+                                    @if (!idea.IsRetracted)
+                                    {
+                                        <form asp-controller="IdeaStaffActions" asp-action="Retract" asp-route-id="@idea.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('Are you sure you want to retract this idea?')">Retract</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-controller="IdeaStaffActions" asp-action="Cancel" asp-route-id="@idea.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure? This action cannot be undone.')">Cancel</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-                <!-- Pagination -->
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="ims-staff-pagination">
+        @if (Model.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center mt-3">
+                <nav>
+                    <ul class="pagination">
                         @if (Model.CurrentPage > 1)
                         {
-                            <a asp-controller="Idea" asp-action="MyIdeas" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
+                            <li class="page-item">
+                                <a class="page-link" asp-controller="Idea" asp-action="MyIdeas" asp-route-page="@(Model.CurrentPage - 1)"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-statusFilter="@Model.StatusFilter"
+                                   asp-route-categoryFilter="@Model.CategoryFilter">&laquo; Previous</a>
+                            </li>
                         }
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
-                            <a asp-controller="Idea" asp-action="MyIdeas" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" asp-controller="Idea" asp-action="MyIdeas" asp-route-page="@i"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-statusFilter="@Model.StatusFilter"
+                                   asp-route-categoryFilter="@Model.CategoryFilter">@i</a>
+                            </li>
                         }
                         @if (Model.CurrentPage < Model.TotalPages)
                         {
-                            <a asp-controller="Idea" asp-action="MyIdeas" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
+                            <li class="page-item">
+                                <a class="page-link" asp-controller="Idea" asp-action="MyIdeas" asp-route-page="@(Model.CurrentPage + 1)"
+                                   asp-route-searchTerm="@Model.SearchTerm" asp-route-statusFilter="@Model.StatusFilter"
+                                   asp-route-categoryFilter="@Model.CategoryFilter">Next &raquo;</a>
+                            </li>
                         }
-                    </div>
-                }
+                    </ul>
+                </nav>
             </div>
-        </main>
+        }
     </div>
-
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-
-            function retractIdea(id) {
-                if (confirm('Are you sure you want to retract this idea?')) {
-                    window.location.href = /Staff/MyIdeas?handler=Retract&id=;
-                }
-            }
-
-            function cancelIdea(id) {
-                if (confirm('Are you sure you want to cancel this idea? This action cannot be undone.')) {
-                    window.location.href = /Staff/MyIdeas?handler=Cancel&id=;
-                }
-            }
-        </script>
-    }
+</div>

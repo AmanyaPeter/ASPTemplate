@@ -1,252 +1,57 @@
 @model ReportsModel
 @{
-    ViewData["Title"] = "Reports - Innovation Management System";
+    ViewData["Title"] = "Reports and Analytics";
 }
 
-<body class="ims-staff-dashboard">
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            <!-- Report Filters -->
-            <div class="ims-staff-card">
-                <div class="ims-staff-section-header">
-                    <h3>Report Filters</h3>
-                </div>
-                <form method="post" asp-controller="Report" asp-action="Index">
-                    <div class="ims-staff-filters-bar ims-staff-report-filters">
-                        <div class="ims-staff-form-group">
-                            <label>Date Range</label>
-                            <div class="ims-staff-date-range">
-                                <input type="date" class="ims-staff-form-control" asp-for="Filters.StartDate">
-                                <span class="ims-staff-date-separator">to</span>
-                                <input type="date" class="ims-staff-form-control" asp-for="Filters.EndDate">
-                            </div>
-                        </div>
-                        <div class="ims-staff-form-group">
-                            <label>Department</label>
-                            <select class="ims-staff-form-control" asp-for="Filters.Department">
-                                <option value="">All Departments</option>
-                                @foreach (var dept in Model.Departments)
-                                {
-                                    <option value="@dept">@dept</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="ims-staff-form-group">
-                            <label>Category</label>
-                            <select class="ims-staff-form-control" asp-for="Filters.Category">
-                                <option value="">All Categories</option>
-                                @foreach (var cat in Model.Categories)
-                                {
-                                    <option value="@cat">@cat</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="ims-staff-form-group">
-                            <label>Status</label>
-                            <select class="ims-staff-form-control" asp-for="Filters.Status">
-                                <option value="">All Statuses</option>
-                                <option value="Submitted">Submitted</option>
-                                <option value="Under Review">Under Review</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Declined">Declined</option>
-                            </select>
-                        </div>
-                        <div class="ims-staff-form-group ims-staff-filter-actions">
-                            <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-generate-report-btn">Generate Report</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="ims-staff-two-col-grid">
-                <div class="ims-staff-card">
-                    <div class="ims-staff-section-header">
-                        <h3>Summary</h3>
-                    </div>
-                    <div class="ims-staff-summary-stats">
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Total Ideas</div>
-                            <div class="ims-staff-stat-value">@Model.ReportSummary.TotalIdeas</div>
-                        </div>
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Approved</div>
-                            <div class="ims-staff-stat-value ims-staff-stat-success">@Model.ReportSummary.Approved</div>
-                        </div>
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Under Review</div>
-                            <div class="ims-staff-stat-value ims-staff-stat-warning">@Model.ReportSummary.UnderReview</div>
-                        </div>
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Declined</div>
-                            <div class="ims-staff-stat-value ims-staff-stat-danger">@Model.ReportSummary.Declined</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ims-staff-card">
-                    <div class="ims-staff-section-header">
-                        <h3>Ideas by Category</h3>
-                    </div>
-                    <div class="ims-staff-chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Monthly Trend -->
-            <div class="ims-staff-card">
-                <div class="ims-staff-section-header">
-                    <h3>Monthly Submission Trend</h3>
-                </div>
-                <div class="ims-staff-chart-container">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Detailed Report -->
-            <div class="ims-staff-card ims-staff-table-card">
-                <div class="ims-staff-section-header">
-                    <h3>Detailed Report</h3>
-                    <div class="ims-staff-export-actions">
-                        <a asp-controller="Report" asp-action="Export" asp-route-format="excel" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export Excel</a>
-                        <a asp-controller="Report" asp-action="Export" asp-route-format="csv" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export CSV</a>
-                    </div>
-                </div>
-                <div class="ims-staff-table-container">
-                    <table class="ims-staff-data-table" id="reportTable">
-                        <thead>
-                            <tr>
-                                <th>Idea Title</th>
-                                <th>Submitter</th>
-                                <th>Department</th>
-                                <th>Category</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var idea in Model.ReportIdeas)
-                            {
-                                <tr>
-                                    <td>@idea.Title</td>
-                                    <td>@idea.Submitter</td>
-                                    <td>@idea.Department</td>
-                                    <td>@idea.Category</td>
-                                    <td>
-                                        <span class="ims-staff-badge ims-staff-badge-@((idea.Status ?? "unknown").Replace(" ", "-").ToLower())">
-                                            @idea.Status
-                                        </span>
-                                    </td>
-                                    <td>@idea.Date.ToString("dd MMM yyyy")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="ims-staff-pagination">
-                        @if (Model.CurrentPage > 1)
-                        {
-                            <a asp-controller="Report" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
-                        }
-                        @for (int i = 1; i <= Model.TotalPages; i++)
-                        {
-                            <a asp-controller="Report" asp-action="Index" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
-                        }
-                        @if (Model.CurrentPage < Model.TotalPages)
-                        {
-                            <a asp-controller="Report" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
-                        }
-                    </div>
-                }
-            </div>
-        </main>
+<div class="ims-staff-page">
+    <div class="ims-staff-page-header">
+        <div>
+            <p class="ims-staff-page-eyebrow">Innovation performance</p>
+            <h1 class="ims-staff-page-title">Reports and Analytics</h1>
+            <p class="ims-staff-page-description">Filter innovation records and export the same result set as CSV or Excel.</p>
+        </div>
     </div>
 
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script src="https://unpkg.com/chart.js@latest"></script>
-        <script>
-            lucide.createIcons();
+    <section class="card mb-4">
+        <div class="card-header"><h3 class="card-title">Report filters</h3></div>
+        <div class="card-body">
+            <form method="get" asp-controller="Report" asp-action="Index">
+                <div class="row g-3">
+                    <div class="col-md-2"><label for="startDate" class="form-label">From</label><input id="startDate" name="StartDate" type="date" value="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+                    <div class="col-md-2"><label for="endDate" class="form-label">To</label><input id="endDate" name="EndDate" type="date" value="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+                    <div class="col-md-2"><label for="department" class="form-label">Department</label><select id="department" name="Department" class="form-select"><option value="">All departments</option>@foreach (var item in Model.Departments) { <option value="@item" selected="@(item == Model.Filters.Department)">@item</option> }</select></div>
+                    <div class="col-md-2"><label for="category" class="form-label">Category</label><select id="category" name="Category" class="form-select"><option value="">All categories</option>@foreach (var item in Model.Categories) { <option value="@item" selected="@(item == Model.Filters.Category)">@item</option> }</select></div>
+                    <div class="col-md-2"><label for="status" class="form-label">Status</label><select id="status" name="Status" class="form-select"><option value="">All statuses</option>@foreach (var item in new[] { "UnderReview", "PendingInformation", "Approved", "Declined" }) { <option value="@item" selected="@(item == Model.Filters.Status)">@item</option> }</select></div>
+                    <div class="col-md-2 d-flex align-items-end gap-2"><button type="submit" class="btn btn-primary flex-fill">Apply</button><a asp-controller="Report" asp-action="Index" class="btn btn-outline-secondary">Clear</a></div>
+                </div>
+            </form>
+        </div>
+    </section>
 
-            // Chart data from server
-            const categoryLabels = @Html.Raw(Json.Serialize(Model.CategoryChartLabels));
-            const categoryData = @Html.Raw(Json.Serialize(Model.CategoryChartData));
-            const trendLabels = @Html.Raw(Json.Serialize(Model.TrendChartLabels));
-            const trendData = @Html.Raw(Json.Serialize(Model.TrendChartData));
+    <div class="row row-cards mb-4">
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Total ideas</div><div class="h1 mb-0">@Model.ReportSummary.TotalIdeas</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Approved</div><div class="h1 text-success mb-0">@Model.ReportSummary.Approved</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Under review</div><div class="h1 text-warning mb-0">@Model.ReportSummary.UnderReview</div></div></div></div>
+        <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Declined</div><div class="h1 text-danger mb-0">@Model.ReportSummary.Declined</div></div></div></div>
+    </div>
 
-            // Category Chart
-            const ctx1 = document.getElementById('categoryChart').getContext('2d');
-            new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: categoryLabels,
-                    datasets: [{
-                        data: categoryData,
-                        backgroundColor: ['#0078d4', '#27ae60', '#f39c12', '#9b59b6', '#e74c3c', '#3498db'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 12,
-                                font: { size: 12 }
-                            }
-                        }
-                    }
-                }
-            });
+    <div class="row row-cards mb-4">
+        <div class="col-lg-6"><section class="card h-100"><div class="card-header"><h3 class="card-title">Ideas by category</h3></div><div class="list-group list-group-flush">@for (var i = 0; i < Model.CategoryChartLabels.Count; i++) { <div class="list-group-item d-flex justify-content-between"><span>@Model.CategoryChartLabels[i]</span><strong>@Model.CategoryChartData[i]</strong></div> }</div></section></div>
+        <div class="col-lg-6"><section class="card h-100"><div class="card-header"><h3 class="card-title">Monthly submissions</h3></div><div class="list-group list-group-flush">@for (var i = 0; i < Model.TrendChartLabels.Count; i++) { <div class="list-group-item d-flex justify-content-between"><span>@Model.TrendChartLabels[i]</span><strong>@Model.TrendChartData[i]</strong></div> }</div></section></div>
+    </div>
 
-            // Trend Chart
-            const ctx2 = document.getElementById('trendChart').getContext('2d');
-            new Chart(ctx2, {
-                type: 'line',
-                data: {
-                    labels: trendLabels,
-                    datasets: [{
-                        label: 'Submissions',
-                        data: trendData,
-                        borderColor: '#0078d4',
-                        backgroundColor: 'rgba(0, 120, 212, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#0078d4',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-
-        </script>
-    }
-</body>
+    <section class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Detailed report</h3>
+            <div class="d-flex gap-2">
+                <a asp-controller="Report" asp-action="Export" asp-route-format="xlsx" asp-route-startDate="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" asp-route-endDate="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" asp-route-department="@Model.Filters.Department" asp-route-category="@Model.Filters.Category" asp-route-status="@Model.Filters.Status" class="btn btn-outline-primary btn-sm">Export Excel</a>
+                <a asp-controller="Report" asp-action="Export" asp-route-format="csv" asp-route-startDate="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" asp-route-endDate="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" asp-route-department="@Model.Filters.Department" asp-route-category="@Model.Filters.Category" asp-route-status="@Model.Filters.Status" class="btn btn-outline-secondary btn-sm">Export CSV</a>
+            </div>
+        </div>
+        <div class="table-responsive"><table class="table table-vcenter card-table"><thead><tr><th>Idea</th><th>Submitter</th><th>Department</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>
+            @if (Model.ReportIdeas.Count == 0) { <tr><td colspan="6" class="text-center text-muted py-5">No ideas match these filters.</td></tr> }
+            @foreach (var idea in Model.ReportIdeas) { <tr><td>@idea.Title</td><td>@idea.Submitter</td><td>@idea.Department</td><td>@idea.Category</td><td><span class="badge bg-secondary-lt">@idea.Status</span></td><td>@idea.Date.ToString("dd MMM yyyy")</td></tr> }
+        </tbody></table></div>
+        @if (Model.TotalPages > 1) { <div class="card-footer"><nav class="d-flex justify-content-center gap-1">@for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++) { <a asp-controller="Report" asp-action="Index" asp-route-page="@pageNumber" asp-route-startDate="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" asp-route-endDate="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" asp-route-department="@Model.Filters.Department" asp-route-category="@Model.Filters.Category" asp-route-status="@Model.Filters.Status" class="btn btn-sm @(pageNumber == Model.CurrentPage ? "btn-primary" : "btn-outline-secondary")">@pageNumber</a> }</nav></div> }
+    </section>
+</div>

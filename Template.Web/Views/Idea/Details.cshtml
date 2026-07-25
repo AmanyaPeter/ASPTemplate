@@ -1,139 +1,122 @@
 @model IdeaDetailsModel
 @{
-    ViewData["Title"] = "Idea Details - Innovation Management System";
+    ViewData["Title"] = "Idea Details";
+}
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">@successMessage<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">@errorMessage<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
 }
 
-       
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            @if (TempData["SuccessMessage"] is string successMessage)
-            {
-                <div class="alert alert-success">@successMessage</div>
-            }
-            @if (TempData["ErrorMessage"] is string errorMessage)
-            {
-                <div class="alert alert-danger">@errorMessage</div>
-            }
-            <!-- Back Button -->
-            <div class="ims-staff-back-link">
-                <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
-            </div>
+<div class="mb-3">
+    <a asp-controller="Idea" asp-action="MyIdeas" class="text-muted">&larr; Back to My Ideas</a>
+</div>
 
-            <!-- Detail Grid -->
-            <div class="ims-staff-detail-grid">
-                <!-- Left Column -->
-                <div>
-                    <!-- Idea Details Card -->
-                    <div class="ims-staff-card">
-                        <div class="ims-staff-detail-section">
-                            <h3 class="ims-staff-detail-title">@Model.Idea.Title</h3>
-                            <p class="ims-staff-detail-meta">
-                                Submitted on @Model.Idea.SubmissionDate.ToString("dd MMM yyyy")
-                                by @Model.Idea.Submitter
-                            </p>
-                            <div class="ims-staff-detail-badges">
-                                <span class="ims-staff-badge ims-staff-badge-@((Model.Idea.Status ?? "unknown").Replace(" ", "-").ToLower())">@Model.Idea.Status</span>
-                                <span class="ims-staff-badge ims-staff-badge-@((Model.Idea.Stage ?? "unknown").Replace(" ", "-").ToLower())">@Model.Idea.Stage</span>
-                            </div>
-                        </div>
-
-                        <div class="ims-staff-detail-section">
-                            <h3 class="ims-staff-detail-section-title">Description</h3>
-                            <p class="ims-staff-detail-text">@Model.Idea.SummaryDescription</p>
-                        </div>
-
-                        <div class="ims-staff-detail-section">
-                            <h3 class="ims-staff-detail-section-title">Problem Statement</h3>
-                            <p class="ims-staff-detail-text">@Model.Idea.ProblemStatement</p>
-                        </div>
-
-                        <div class="ims-staff-detail-section">
-                            <h3 class="ims-staff-detail-section-title">Proposed Solution</h3>
-                            <p class="ims-staff-detail-text">@Model.Idea.ProposedSolution</p>
-                        </div>
-
-                        <div class="ims-staff-detail-section">
-                            <h3 class="ims-staff-detail-section-title">Attachments</h3>
-                            <div class="ims-staff-attachment-list">
-                                @foreach (var attachment in Model.Idea.Attachments)
-                                {
-                                    <a class="ims-staff-attachment-item" asp-controller="Idea" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">
-                                        <i data-lucide="@attachment.Icon" style="width:14px;height:14px;vertical-align:middle;"></i>
-                                        @attachment.FileName
-                                    </a>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Comments Card -->
-                    <div class="ims-staff-card">
-                        <div class="ims-staff-section-header">
-                            <h3>Comments</h3>
-                        </div>
-                        <div class="ims-staff-comment-thread">
-                            @foreach (var comment in Model.Comments)
-                            {
-                                <div class="ims-staff-comment-item">
-                                    <div class="ims-staff-comment-avatar">@comment.Avatar</div>
-                                    <div class="ims-staff-comment-body">
-                                        <span class="ims-staff-comment-author">@comment.Author</span>
-                                        <span class="ims-staff-comment-meta">@comment.Role &middot; @comment.TimeAgo</span>
-                                        <div class="ims-staff-comment-text">@comment.Text</div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                        <form method="post" asp-controller="Idea" asp-action="AddComment" asp-route-id="@Model.Idea.Id" class="ims-staff-comment-box">
-                            <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
-                            <textarea class="ims-staff-form-control" rows="2" placeholder="Write a comment..." name="newComment"></textarea>
-                            <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Right Column -->
-                <div>
-                    <!-- Progress Tracker Card -->
-                    <div class="ims-staff-card">
-                        <div class="ims-staff-section-header">
-                            <h3>Progress Tracker</h3>
-                        </div>
-                        <div class="ims-staff-progress-tracker">
-                            @foreach (var entry in Model.TimelineEntries)
-                            {
-                                <div class="ims-staff-stage-item">
-                                    <div class="ims-staff-stage-dot"></div>
-                                    <div class="ims-staff-stage-name">@entry.StageName</div>
-                                    <div class="ims-staff-stage-date">@entry.Date.ToString("dd MMM yyyy")</div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Timeline Card -->
-                    <div class="ims-staff-card">
-                        <h3 class="ims-staff-timeline-title">Timeline</h3>
-                        <div class="ims-staff-timeline-list">
-                            @foreach (var entry in Model.TimelineEntries)
-                            {
-                                <div class="ims-staff-timeline-item">
-                                    <span>@entry.StageName</span>
-                                    <span>@entry.Date.ToString("dd MMM yyyy")</span>
-                                </div>
-                            }
-                        </div>
-                    </div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title mb-1">@Model.Idea.Title</h2>
+                <p class="text-muted">Submitted on @Model.Idea.SubmissionDate.ToString("dd MMM yyyy") by @Model.Idea.Submitter</p>
+                <div class="mb-3">
+                    <span class="badge bg-secondary-lt me-1">@Model.Idea.Status</span>
+                    <span class="badge bg-blue-lt">@Model.Idea.Stage</span>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Description</h3></div>
+            <div class="card-body"><p class="mb-0">@Model.Idea.SummaryDescription</p></div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Problem Statement</h3></div>
+            <div class="card-body"><p class="mb-0">@Model.Idea.ProblemStatement</p></div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Proposed Solution</h3></div>
+            <div class="card-body"><p class="mb-0">@Model.Idea.ProposedSolution</p></div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Attachments</h3></div>
+            <div class="card-body">
+                @if (Model.Idea.Attachments.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var attachment in Model.Idea.Attachments)
+                        {
+                            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" asp-controller="Idea" asp-action="DownloadAttachment" asp-route-id="@attachment.Id">
+                                <i class="ti ti-paperclip"></i> @attachment.FileName
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No attachments.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Comments</h3></div>
+            <div class="card-body">
+                @if (Model.Comments.Any())
+                {
+                    @foreach (var comment in Model.Comments)
+                    {
+                        <div class="d-flex mb-3">
+                            <div class="me-2"><span class="avatar avatar-sm">@comment.Avatar</span></div>
+                            <div>
+                                <div><strong>@comment.Author</strong> <span class="text-muted ms-2 small">@comment.Role &middot; @comment.TimeAgo</span></div>
+                                <div class="mt-1">@comment.Text</div>
+                            </div>
+                        </div>
+                    }
+                }
+                <form method="post" asp-controller="Idea" asp-action="AddComment" asp-route-id="@Model.Idea.Id" class="mt-3">
+                    <textarea class="form-control" rows="2" placeholder="Write a comment..." name="newComment"></textarea>
+                    <button type="submit" class="btn btn-primary mt-2">Send</button>
+                </form>
+            </div>
+        </div>
     </div>
 
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-        </script>
-    }
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Progress Tracker</h3></div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    @foreach (var entry in Model.TimelineEntries)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@entry.StageName</span>
+                            <span class="text-muted small">@entry.Date.ToString("dd MMM yyyy")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Timeline</h3></div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    @foreach (var entry in Model.TimelineEntries)
+                    {
+                        <div class="list-group-item d-flex justify-content-between">
+                            <span>@entry.StageName</span>
+                            <span class="text-muted small">@entry.Date.ToString("dd MMM yyyy")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

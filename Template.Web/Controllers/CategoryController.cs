@@ -85,10 +85,13 @@ public class CategoryController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _repository.SoftDeleteAsync(id);
-        if (!deleted) return NotFound();
+        var result = await _repository.SoftDeleteAsync(id);
+        if (!result.Success) return NotFound();
 
-        TempData["SuccessMessage"] = "Category deactivated successfully.";
+        TempData["SuccessMessage"] = result.Referenced
+            ? "Category is used by existing ideas and was safely deactivated."
+            : "Category deactivated successfully.";
         return RedirectToAction(nameof(Index));
     }
 }
+

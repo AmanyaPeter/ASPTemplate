@@ -1,3 +1,4 @@
+@using Template.Common.Static
 @{
     ViewData["Title"] = "Profile";
 }
@@ -12,7 +13,7 @@
                 <dt class="col-sm-3">Signed in</dt>
                 <dd class="col-sm-9">@(User.Identity?.IsAuthenticated == true ? "Yes" : "No")</dd>
                 <dt class="col-sm-3">Role</dt>
-                <dd class="col-sm-9">@(User.IsInRole("Admin") ? "Admin" : User.IsInRole("InnovationTeam") ? "Innovation Team" : "Staff")</dd>
+                <dd class="col-sm-9">@(User.IsInRole(RoleConstants.ItAdmin) ? "Admin" : User.IsInRole(RoleConstants.InnovationTeam) ? "Innovation Team" : "Staff")</dd>
             </dl>
             <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Back to dashboard</a>
         </div>

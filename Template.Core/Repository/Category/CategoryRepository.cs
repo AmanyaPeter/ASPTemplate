@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Template.Data.Configurations;
 
+#nullable enable
 namespace Template.Core.Repository.Category;
 
 public class CategoryRepository : ICategoryRepository
@@ -32,9 +33,14 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null)
     {
+        var normalizedName = name.Trim().ToUpper();
         return !await _db.Categories.AnyAsync(c =>
-            c.Name == name && c.Id != excludeId);
+            c.Name.ToUpper() == normalizedName &&
+            (!excludeId.HasValue || c.Id != excludeId.Value));
     }
+
+    public Task<bool> IsReferencedAsync(int id) =>
+        _db.InnovationIdeas.AnyAsync(idea => idea.CategoryId == id);
 
     public async Task<Data.Entities.Category> CreateAsync(string name, string? description, bool isActive)
     {
@@ -61,14 +67,15 @@ public class CategoryRepository : ICategoryRepository
         return entity;
     }
 
-    public async Task<bool> SoftDeleteAsync(int id)
+    public async Task<(bool Success, bool Referenced)> SoftDeleteAsync(int id)
     {
         var entity = await _db.Categories.FindAsync(id);
-        if (entity == null) return false;
+        if (entity == null) return (false, false);
 
+        var referenced = await IsReferencedAsync(id);
         entity.IsActive = false;
         await _db.SaveChangesAsync();
-        return true;
+        return (true, referenced);
     }
 
     public async Task<int> GetCountAsync(string? searchTerm = null, string? statusFilter = null)

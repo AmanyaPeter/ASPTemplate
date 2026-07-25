@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Template.Core.Repository.Accounts;
 using Template.Core.Repository.Roles;
 using Template.Core.Services.AdAuthentication;
@@ -39,14 +39,14 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
 
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
     {
         var result = await _authService.ValidateApplicationUser(username, password);
 
         if (!result.Success)
         {
-            ViewData["status"] = result.Status;
-            ModelState.AddModelError("", $"Failed login. {result.Status}");
+            ModelState.AddModelError("", "Login failed. Check your credentials or contact IT support.");
             return View();
         }
 
@@ -282,3 +282,4 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
         return RedirectToAction("Login", "Account", new { ReturnUrl = returnUrl });
     }
 }
+

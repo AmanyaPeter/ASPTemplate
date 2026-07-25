@@ -1,4 +1,4 @@
-﻿@using Template.Common.Static
+@using Template.Common.Static
 @using Microsoft.AspNetCore.Http
 
 <!DOCTYPE html>
@@ -11,11 +11,6 @@
 	<link rel="stylesheet" href="~/css/theme_styles.min.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 	<link rel="stylesheet" href="~/Template.Web.styles.css" asp-append-version="true" />
-	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-	<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css"
-		  integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous" />
-	<link href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.css" rel="stylesheet" />
-	<link href="https://cdn.datatables.net/buttons/3.2.2/css/buttons.dataTables.css" rel="stylesheet" />
 	<style>
 		.parent.active {
 			background-color: transparent !important;
@@ -277,14 +272,8 @@
 			</div>
 		</div>
 	</div>
-
-	<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-	@* <script src="~/lib/jquery/dist/jquery.min.js"></script> *@
-	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-	<script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
-	<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.js"></script>
-
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@* <script src="~/lib/jquery/dist/jquery.min.js"></script> *@
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="~/js/sidebarmenu.js"></script>
 	<script src="~/js/app.min.js"></script>
 	<script src="~/lib/simplebar/dist/simplebar.min.js"></script>
@@ -347,3 +336,4 @@
 	@await RenderSectionAsync("Styles", required: false)
 </body>
 </html>
+
