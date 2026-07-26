@@ -67,10 +67,26 @@
         <header class="prototype-topbar">
             <button class="prototype-icon-button prototype-menu" type="button" data-sidebar-open aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
             <span class="prototype-page-icon"><i class="ti ti-@pageIcon"></i></span>
-            <div><small>Bank of Uganda</small><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
+            <div><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
             <div class="prototype-top-actions">
                 <a class="prototype-icon-button" asp-controller="Notification" asp-action="Index" aria-label="Notifications"><i class="ti ti-bell"></i></a>
-                <a class="prototype-avatar" asp-controller="Profile" asp-action="Index" aria-label="Open profile" title="Profile">@displayName.Substring(0, 1).ToUpperInvariant()</a>
+                <div class="prototype-user-menu">
+                    <button type="button" class="prototype-user-trigger" data-user-menu-toggle aria-haspopup="true" aria-expanded="false">
+                        <span class="prototype-avatar">@displayName.Substring(0, 1).ToUpperInvariant()</span>
+                        <i class="ti ti-chevron-down"></i>
+                    </button>
+                    <div class="prototype-user-panel" data-user-menu-panel>
+                        <div class="prototype-user-panel-head">
+                            <span class="prototype-avatar">@displayName.Substring(0, 1).ToUpperInvariant()</span>
+                            <div>
+                                <strong>@displayName</strong>
+                                <small>@(isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff")</small>
+                            </div>
+                        </div>
+                        <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i>My profile</a>
+                        <a asp-controller="Account" asp-action="Logout"><i class="ti ti-logout"></i>Sign out</a>
+                    </div>
+                </div>
             </div>
         </header>
         <main class="prototype-content">
