@@ -1,74 +1,141 @@
 @model IEnumerable<Template.Core.Models.AuditLogs.ApplicationAuditLogViewModel>
-
 @{
-    ViewData["title"] = "Audit Logs";
-    var permissions = ViewData["permissions"] as string;
+    ViewData["Title"] = "Audit Logs";
+    var logs = Model.OrderByDescending(log => log.CreatedDate).ToList();
+    var successful = logs.Count(log => log.Status == AuditStatus.Success);
+    var failed = logs.Count - successful;
 }
 
-
-	<div class="card">
-		<div class="card-status-top bg_app_color_burgundy"></div>
-		<div class="card-header d-flex justify-content-between align-items-center">
-			<h3 class="card-title">Audit Logs</h3>
-		</div>
-		<div class="card-body">
-			<table id="logs" class="table table-hover table-striped align-middle w-100">
-				<thead>
-					<tr>
-						<th>Username</th>
-						<th>Event Type</th>
-						<th>Operation</th>
-						<th>Source IP</th>
-						<th>Affected Entity</th>
-						<th>Status</th>
-						<th>Timestamp</th>
-						<th>Action Details</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var log in Model)
-					{
-						<tr>
-							<td>@log.Username</td>
-							<td>@log.EventType</td>
-							<td>@log.OperationPerformed</td>
-							<td>@log.SourceIP</td>
-							<td>@log.AffectedEntityType (@log.AffectedEntityId)</td>
-							<td>
-								<span class="badge @(log.Status == Template.Common.Enums.AuditStatus.Success ? "bg-success" : "bg-danger")">
-									@log.Status
-								</span>
-							</td>
-							<td>@log.CreatedDate.ToString("dd MMM yyyy HH:mm:ss")</td>
-							<td>@log.ActionDetails</td>
-						</tr>
-					}
-				</tbody>
-			</table>
-		</div>
-	</div>
-	@if (!Model.Any())
-	{
-		<div class="card-footer text-center text-muted">
-			<i class="ti ti-mood-empty me-2"></i> No logs found
-		</div>
-	}
+<div class="prototype-heading">
+    <div>
+        <h1>Audit logs</h1>
+        <p>Review security, account, and administrative activity across the system.</p>
+    </div>
 </div>
 
-@section Scripts {
-	<script src="https://cdn.datatables.net/buttons/3.2.2/js/dataTables.buttons.js"></script>
-	<script src="https://cdn.datatables.net/buttons/3.2.2/js/buttons.dataTables.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/3.2.2/js/buttons.html5.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/3.2.2/js/buttons.print.min.js"></script>
-	<script>
-		new DataTable('#logs', {
-			layout: {
-				topStart: {
-					buttons: ['csv', 'excel', 'pdf', 'print']
-				}
-			}
-		});
-	</script>
-}
+<section class="admin-user-stats audit-stats" aria-label="Audit log summary">
+    <div class="prototype-card">
+        <i class="ti ti-list-details"></i>
+        <span><strong>@logs.Count</strong><small>Total events</small></span>
+    </div>
+    <div class="prototype-card">
+        <i class="ti ti-circle-check"></i>
+        <span><strong>@successful</strong><small>Successful</small></span>
+    </div>
+    <div class="prototype-card">
+        <i class="ti ti-alert-triangle"></i>
+        <span><strong>@failed</strong><small>Failed or blocked</small></span>
+    </div>
+</section>
 
+<div class="prototype-card audit-toolbar">
+    <label class="audit-search">
+        <span class="visually-hidden">Search audit logs</span>
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input id="auditSearch" type="search" placeholder="Search username, event, operation, entity, or IP address" />
+    </label>
+    <span><i class="ti ti-shield-check"></i>Administrator access only</span>
+</div>
+
+<section class="prototype-card audit-log-card">
+    @if (logs.Count == 0)
+    {
+        <div class="admin-empty-state">
+            <i class="ti ti-history-off"></i>
+            <h2>No audit records</h2>
+            <p>System activity will appear here as it is recorded.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter" id="auditTable">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>User</th>
+                        <th>Event</th>
+                        <th>Operation</th>
+                        <th>Source</th>
+                        <th>Entity</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in logs)
+                    {
+                        var searchableText = $"{log.Username} {log.EventType} {log.OperationPerformed} {log.SourceIP} {log.AffectedEntityType} {log.AffectedEntityId} {log.Status} {log.ActionDetails}".ToLowerInvariant();
+                        <tr data-audit-search="@searchableText">
+                            <td>
+                                <strong>@log.CreatedDate.ToString("dd MMM yyyy")</strong>
+                                <small>@log.CreatedDate.ToString("HH:mm:ss")</small>
+                            </td>
+                            <td>@log.Username</td>
+                            <td><span class="audit-event">@log.EventType</span></td>
+                            <td>@log.OperationPerformed</td>
+                            <td>@(string.IsNullOrWhiteSpace(log.SourceIP) ? "—" : log.SourceIP)</td>
+                            <td>
+                                @if (string.IsNullOrWhiteSpace(log.AffectedEntityType))
+                                {
+                                    <span>—</span>
+                                }
+                                else
+                                {
+                                    <strong>@log.AffectedEntityType</strong>
+                                    <small>@log.AffectedEntityId</small>
+                                }
+                            </td>
+                            <td>
+                                <span class="admin-status @(log.Status == AuditStatus.Success ? "active" : "locked")">
+                                    <i class="ti ti-@(log.Status == AuditStatus.Success ? "circle-check" : "alert-circle")"></i>
+                                    @log.Status
+                                </span>
+                            </td>
+                            <td class="audit-details">
+                                @if (!string.IsNullOrWhiteSpace(log.ActionDetails))
+                                {
+                                    <details>
+                                        <summary>View</summary>
+                                        <p>@log.ActionDetails</p>
+                                    </details>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="admin-empty-state d-none" id="auditSearchEmpty">
+            <i class="ti ti-file-search"></i>
+            <h2>No matching events</h2>
+            <p>Try a different search term.</p>
+        </div>
+    }
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const input = document.getElementById('auditSearch');
+            const rows = [...document.querySelectorAll('[data-audit-search]')];
+            const empty = document.getElementById('auditSearchEmpty');
+            if (!input || rows.length === 0) return;
+
+            input.addEventListener('input', () => {
+                const query = input.value.trim().toLowerCase();
+                let visible = 0;
+                rows.forEach(row => {
+                    const matches = !query || row.dataset.auditSearch.includes(query);
+                    row.classList.toggle('d-none', !matches);
+                    if (matches) visible++;
+                });
+                empty?.classList.toggle('d-none', visible !== 0);
+            });
+        })();
+    </script>
+}

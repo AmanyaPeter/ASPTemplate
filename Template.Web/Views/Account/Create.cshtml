@@ -1,144 +1,130 @@
 @model ApplicationUserViewModel
-
 @{
-    ViewData["Title"] = Model.Id == null ? "Create User" : "Edit User";
-    var action = Model.Id == null ? "Create" : "Update";
+    var isCreate = string.IsNullOrWhiteSpace(Model.Id);
+    ViewData["Title"] = isCreate ? "Create User" : "Edit User";
+    var formAction = isCreate ? "Create" : "Update";
 }
+
 <div class="prototype-heading">
-    <div><h1>@ViewData["Title"]</h1><p>@(Model.Id == null ? "Add an Active Directory user to the innovation system." : "Update this user's access and account details.")</p></div>
-    <a asp-action="Index" class="btn btn-outline-secondary">
-        <i class="ti ti-arrow-left me-1"></i> Back to List
+    <div>
+        <h1>@ViewData["Title"]</h1>
+        <p>@(isCreate
+            ? "Import an Active Directory account and set its Innovation System profile."
+            : "Update the user's access period, profile, and account status.")</p>
+    </div>
+    <a asp-action="Index" class="prototype-button secondary">
+        <i class="ti ti-arrow-left"></i>
+        Back to users
     </a>
 </div>
-<div class="row g-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h2><i class="ti ti-@(Model.Id == null ? "user-plus" : "user-edit") me-2"></i>@ViewData["Title"]</h2>
-                    <h6 class="card-subtitle my-1 text-body-secondary">
-                        @if (Model.Id == null)
-                        {
-                            <span>Create a new user account.</span>
-                        }
-                        else
-                        {
-                            <span>Update existing user account details.</span>
-                        }
-                    </h6>
-                </div>
+
+<form asp-action="@formAction" method="post" class="admin-user-form" data-loading>
+    <input type="hidden" asp-for="Id" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <section class="prototype-card">
+        <div class="admin-form-section-heading">
+            <span><i class="ti ti-id"></i></span>
+            <div>
+                <h2>Account details</h2>
+                <p>The username must match the person's Active Directory account.</p>
             </div>
-
-            <form asp-action="@action" method="post">
-                <input type="hidden" asp-for="Id" />
-                <div class="card-body">
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-
-                    @if (Model.Id != null)
-                    {
-                        <!-- Edit Mode -->
-                        <div class="form-floating mb-3">
-                            <input type="text" asp-for="UserName" class="form-control bg-light"
-                                   readonly placeholder="Username">
-                            <label asp-for="UserName">Username</label>
-                            <div class="form-text text-muted">
-                                <i class="ti ti-lock-square-rounded text-muted me-1"></i>
-                                Username cannot be changed as it must match Active Directory.
-                            </div>
-                            <span asp-validation-for="UserName" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="text" asp-for="Title" class="form-control bg-light"
-                                   placeholder="Title" required>
-                            <label asp-for="Title">Title</label>
-                            <span asp-validation-for="Title" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="date" asp-for="EndDate" class="form-control bg-light"
-                                   placeholder="End Date" required>
-                            <label asp-for="EndDate">End Date</label>
-                            <span asp-validation-for="EndDate" class="text-danger"></span>
-                        </div>
-                        <!-- IsActive toggle switch -->
-                        <div class="form-group mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" asp-for="IsActive" role="switch"
-                                           id="flexSwitchIsActive" style="width: 3em; height: 1.5em;">
-                                    <label class="form-check-label ms-2 fw-medium" asp-for="IsActive">
-                                        <span id="statusText" class="ms-1">
-                                            <span class="text-success" id="activeText">Active</span>
-                                            <span class="text-danger d-none" id="inactiveText">Inactive</span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            <span asp-validation-for="IsActive" class="text-danger d-block mt-1"></span>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="form-floating mb-3">
-                            <input type="text" asp-for="UserName" class="form-control"
-                                   placeholder="Username" required>
-                            <label asp-for="UserName">Username</label>
-                            <small class="form-text text-muted">
-                                Please enter a username that exists on Active Directory.
-                            </small>
-                            <span asp-validation-for="UserName" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="text" asp-for="Title" class="form-control bg-light"
-                                   placeholder="Title" required>
-                            <label asp-for="Title">Title</label>
-                            <span asp-validation-for="Title" class="text-danger"></span>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="date" asp-for="EndDate" class="form-control bg-light"
-                                   placeholder="End Date" required>
-                            <label asp-for="EndDate">End Date</label>
-                            <span asp-validation-for="EndDate" class="text-danger"></span>
-                        </div>
-                    }
-                </div>
-
-                <div class="card-footer d-flex justify-content-between">
-                    <button type="submit" class="btn btn-success">
-                        <i class="ti ti-device-floppy me-1"></i>@(Model.Id == null ? "Create User" : "Save Changes")
-                    </button>
-                </div>
-            </form>
         </div>
+
+        <div class="prototype-form-grid">
+            <div>
+                <label asp-for="UserName">Active Directory username *</label>
+                <input asp-for="UserName" readonly="@(!isCreate)" required autocomplete="off" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="Title">Account title *</label>
+                <input asp-for="Title" required placeholder="e.g. Senior Banking Officer" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="EndDate">Account end date *</label>
+                <input asp-for="EndDate" asp-format="{0:yyyy-MM-dd}" type="date" required />
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+            <div class="admin-active-toggle">
+                <label asp-for="IsActive">Account status</label>
+                <label class="admin-switch">
+                    <input asp-for="IsActive" type="checkbox" />
+                    <span aria-hidden="true"></span>
+                    <strong data-active-label>@(Model.IsActive ? "Active" : "Inactive")</strong>
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section class="prototype-card">
+        <div class="admin-form-section-heading">
+            <span><i class="ti ti-building-bank"></i></span>
+            <div>
+                <h2>Organisational profile</h2>
+                <p>These details are used in idea submissions, reports, and reviewer context.</p>
+            </div>
+        </div>
+
+        <div class="prototype-form-grid">
+            <div>
+                <label asp-for="BusinessUnit">Business unit *</label>
+                <input asp-for="BusinessUnit" required placeholder="e.g. Information Technology" />
+                <span asp-validation-for="BusinessUnit" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="JobTitle">Job title *</label>
+                <input asp-for="JobTitle" required placeholder="e.g. Systems Analyst" />
+                <span asp-validation-for="JobTitle" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="Station">Duty station *</label>
+                <input asp-for="Station" required placeholder="e.g. Kampala Headquarters" />
+                <span asp-validation-for="Station" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="AgeBracket">Age bracket</label>
+                <select asp-for="AgeBracket">
+                    <option value="">Select age bracket</option>
+                    <option value="18-30">18–30</option>
+                    <option value="31-40">31–40</option>
+                    <option value="41-50">41–50</option>
+                    <option value="51+">51+</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="Gender">Gender</label>
+                <select asp-for="Gender">
+                    <option value="">Select gender</option>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <div class="admin-form-actions">
+        <a asp-action="Index" class="prototype-button secondary">Cancel</a>
+        <button type="submit" class="prototype-button">
+            <i class="ti ti-@(isCreate ? "user-plus" : "device-floppy")"></i>
+            @(isCreate ? "Create user" : "Save changes")
+        </button>
     </div>
-</div>
+</form>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const toggle = document.getElementById('flexSwitchIsActive');
-            const activeText = document.getElementById('activeText');
-            const inactiveText = document.getElementById('inactiveText');
-
-            function updateLabel() {
-                if (toggle.checked) {
-                    activeText.classList.remove('d-none');
-                    inactiveText.classList.add('d-none');
-                } else {
-                    activeText.classList.add('d-none');
-                    inactiveText.classList.remove('d-none');
-                }
-            }
-
-            // Initialize
-            updateLabel();
-
-            // Update on change
-            toggle.addEventListener('change', updateLabel);
-        });
+        (() => {
+            const toggle = document.getElementById('IsActive');
+            const label = document.querySelector('[data-active-label]');
+            if (!toggle || !label) return;
+            toggle.addEventListener('change', () => {
+                label.textContent = toggle.checked ? 'Active' : 'Inactive';
+            });
+        })();
     </script>
-}
-
-@section Styles {
-
-
 }

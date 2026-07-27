@@ -25,6 +25,7 @@ namespace Template.Core.Models.Account
         public string AgeBracket { get; set; }
         public string Gender { get; set; }
         public string? LockReason { get; set; }
+        public DateTimeOffset? LockoutEnd { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public bool PasswordResetRequired { get; set; }
         public DateTime CreatedDate { get; set; }

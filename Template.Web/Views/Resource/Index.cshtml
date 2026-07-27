@@ -1,87 +1,137 @@
 @model ResourcesModel
 @{
-    ViewData["Title"] = "Resources - Innovation Management System";
+    ViewData["Title"] = "Resources";
+    var canManage = User.IsInRole(RoleConstants.ItAdmin) || User.IsInRole(RoleConstants.InnovationTeam);
+
+    string CategoryName(ResourceCategory category) => category switch
+    {
+        ResourceCategory.InnovationStrategy => "Innovation Strategy",
+        ResourceCategory.PolicyAndGuidelines => "Policy & Guidelines",
+        ResourceCategory.TrainingMaterial => "Training Material",
+        _ => category.ToString()
+    };
+
+    string FileSize(long bytes) => bytes switch
+    {
+        >= 1_048_576 => $"{bytes / 1_048_576d:0.0} MB",
+        >= 1_024 => $"{bytes / 1_024d:0.0} KB",
+        _ => $"{bytes} B"
+    };
 }
 
-<body class="ims-staff-dashboard">
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            @if (User.IsInRole(RoleConstants.ItAdmin) || User.IsInRole(RoleConstants.InnovationTeam))
-            {
-                <form asp-controller="Resource" asp-action="Upload" method="post" enctype="multipart/form-data" class="ims-staff-filters-bar">
-                    <input name="ResourceTitle" class="ims-staff-form-control" required maxlength="200" placeholder="Resource title" />
-                    <select name="Category" class="ims-staff-form-control" asp-items="Html.GetEnumSelectList<ResourceCategory>()"></select>
-                    <input name="Description" class="ims-staff-form-control" maxlength="1000" placeholder="Description" />
-                    <input name="File" type="file" class="ims-staff-form-control" accept=".pdf,.docx" required />
-                    <button class="ims-staff-btn ims-staff-btn-primary" type="submit">Upload</button>
-                </form>
-            }
-            <!-- Filters Bar -->
-            <form method="get" asp-controller="Resource" asp-action="Index" class="ims-staff-filters-bar">
-                <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search resources..." asp-for="SearchTerm">
-                <select class="ims-staff-form-control" asp-for="CategoryFilter" asp-items="Html.GetEnumSelectList<ResourceCategory>()">
-                    <option value="">All Categories</option>
-                </select>
-                <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm">Apply</button>
-            </form>
+<div class="prototype-heading">
+    <div>
+        <h1>Resource library</h1>
+        <p>Access innovation strategies, policies, templates, and training materials.</p>
+    </div>
+</div>
 
-            <!-- Resources Grid -->
-            @if (Model.Resources.Any())
-            {
-                <div class="ims-staff-resource-grid">
-                    @foreach (var resource in Model.Resources)
+@if (canManage)
+{
+    <details class="prototype-card resource-upload-card">
+        <summary>
+            <span><i class="ti ti-cloud-upload"></i>Upload a resource</span>
+            <i class="ti ti-chevron-down" aria-hidden="true"></i>
+        </summary>
+        <form asp-controller="Resource" asp-action="Upload" method="post" enctype="multipart/form-data" data-loading>
+            <div>
+                <label for="ResourceTitle">Resource title *</label>
+                <input id="ResourceTitle" name="ResourceTitle" required maxlength="200" placeholder="Enter a clear resource title" />
+            </div>
+            <div>
+                <label for="ResourceCategory">Category *</label>
+                <select id="ResourceCategory" name="Category" asp-items="Html.GetEnumSelectList<ResourceCategory>()"></select>
+            </div>
+            <div class="resource-description-input">
+                <label for="ResourceDescription">Description</label>
+                <input id="ResourceDescription" name="Description" maxlength="1000" placeholder="Briefly describe this resource" />
+            </div>
+            <div class="resource-file-input">
+                <label for="ResourceFile">Document *</label>
+                <input id="ResourceFile" name="File" type="file" accept=".pdf,.docx" required />
+            </div>
+            <button class="prototype-button" type="submit"><i class="ti ti-upload"></i>Upload resource</button>
+        </form>
+    </details>
+}
+
+<form method="get" asp-controller="Resource" asp-action="Index" class="prototype-card resource-filters">
+    <label class="resource-search">
+        <span class="visually-hidden">Search resources</span>
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="search" asp-for="SearchTerm" placeholder="Search resources" />
+    </label>
+    <label>
+        <span class="visually-hidden">Filter by category</span>
+        <select asp-for="CategoryFilter" asp-items="Html.GetEnumSelectList<ResourceCategory>()">
+            <option value="">All categories</option>
+        </select>
+    </label>
+    <button type="submit" class="prototype-button"><i class="ti ti-adjustments"></i>Apply</button>
+    <a asp-action="Index" class="prototype-button secondary">Clear</a>
+</form>
+
+@if (Model.Resources.Count == 0)
+{
+    <div class="prototype-card admin-empty-state">
+        <i class="ti ti-books-off"></i>
+        <h2>No resources found</h2>
+        <p>Change the search filters or upload a new document.</p>
+    </div>
+}
+else
+{
+    <div class="resource-card-grid">
+        @foreach (var resource in Model.Resources)
+        {
+            <article class="prototype-card resource-library-card">
+                <header>
+                    <span class="resource-document-icon"><i class="ti ti-file-text"></i></span>
+                    <span class="resource-category">@CategoryName(resource.Category)</span>
+                </header>
+                <div>
+                    <h2>@resource.ResourceTitle</h2>
+                    <p>@(string.IsNullOrWhiteSpace(resource.Description) ? "No description provided." : resource.Description)</p>
+                </div>
+                <dl>
+                    <div><dt><i class="ti ti-paperclip"></i><span class="visually-hidden">File</span></dt><dd>@resource.FileName</dd></div>
+                    <div><dt><i class="ti ti-database"></i><span class="visually-hidden">Size</span></dt><dd>@FileSize(resource.FileSizeBytes)</dd></div>
+                    <div><dt><i class="ti ti-calendar"></i><span class="visually-hidden">Uploaded</span></dt><dd>@resource.UploadedAt.ToString("dd MMM yyyy")</dd></div>
+                    <div><dt><i class="ti ti-download"></i><span class="visually-hidden">Downloads</span></dt><dd>@resource.DownloadCount download(s)</dd></div>
+                </dl>
+                <footer>
+                    <a asp-controller="Resource" asp-action="Download" asp-route-id="@resource.Id" asp-route-inline="true"
+                       class="prototype-button"><i class="ti ti-eye"></i>View</a>
+                    <a asp-controller="Resource" asp-action="Download" asp-route-id="@resource.Id"
+                       class="prototype-button secondary"><i class="ti ti-download"></i>Download</a>
+                    @if (canManage)
                     {
-                        <div class="ims-staff-resource-card">
-                            <div class="ims-staff-doc-icon">
-                                <i data-lucide="@resource.Icon" style="width:24px;height:24px;"></i>
-                            </div>
-                            <h4 class="ims-staff-resource-title">@resource.ResourceTitle</h4>
-                            <p class="ims-staff-resource-description">@resource.Description</p>
-                            <div class="ims-staff-resource-meta">Uploaded: @resource.UploadedAt.ToString("dd MMM yyyy")</div>
-                            <div class="ims-staff-resource-actions">
-                                <a asp-controller="Resource" asp-action="Download" asp-route-id="@resource.Id" asp-route-inline="true" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-primary">View</a>
-                                <a asp-controller="Resource" asp-action="Download" asp-route-id="@resource.Id" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Download</a>
-                            </div>
-                        </div>
+                        <form asp-controller="Resource" asp-action="Deactivate" method="post" data-loading>
+                            <input type="hidden" name="id" value="@resource.Id" />
+                            <button type="submit" class="prototype-button secondary danger"
+                                    data-confirm="Delete @resource.ResourceTitle from the resource library?">
+                                <i class="ti ti-trash"></i>Delete
+                            </button>
+                        </form>
                     }
-                </div>
-
-                <!-- Pagination -->
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="ims-staff-pagination">
-                        @if (Model.CurrentPage > 1)
-                        {
-                            <a asp-controller="Resource" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
-                        }
-                        @for (int i = 1; i <= Model.TotalPages; i++)
-                        {
-                            <a asp-controller="Resource" asp-action="Index" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
-                        }
-                        @if (Model.CurrentPage < Model.TotalPages)
-                        {
-                            <a asp-controller="Resource" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
-                        }
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="ims-staff-empty-state">
-                    <i data-lucide="book-open" style="width:48px;height:48px;color:#ccc;"></i>
-                    <h3>No resources found</h3>
-                    <p>Try adjusting your search or filter criteria.</p>
-                </div>
-            }
-        </main>
+                </footer>
+            </article>
+        }
     </div>
 
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-        </script>
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Resource pages" class="category-pagination">
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <a asp-action="Index"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-categoryFilter="@Model.CategoryFilter"
+                   asp-route-page="@pageNumber"
+                   class="@(pageNumber == Model.CurrentPage ? "active" : "")">
+                    @pageNumber
+                </a>
+            }
+        </nav>
     }
-</body>
+}

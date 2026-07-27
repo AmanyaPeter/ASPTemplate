@@ -78,6 +78,43 @@ namespace Template.Core.Services.AdAuthentication
         }
 
         [SupportedOSPlatform("windows")]
+        public (bool Success, string ErrorMessage) ResetPassword(string username, string newPassword)
+        {
+            try
+            {
+                using var context = new PrincipalContext(ContextType.Domain, _ldapServer, _ldapContainer);
+                using var user = UserPrincipal.FindByIdentity(
+                    context,
+                    IdentityType.SamAccountName,
+                    username);
+                if (user == null)
+                {
+                    return (false, $"Active Directory user '{username}' was not found.");
+                }
+
+                user.SetPassword(newPassword);
+                user.ExpirePasswordNow();
+                user.Save();
+                return (true, null);
+            }
+            catch (PrincipalServerDownException ex)
+            {
+                _logger.LogError(ex, "Active Directory is unavailable while resetting {Username}.", username);
+                return (false, "Active Directory is currently unavailable.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, "The application is not permitted to reset {Username}.", username);
+                return (false, "The application does not have permission to reset this Active Directory password.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Active Directory password reset failed for {Username}.", username);
+                return (false, "Active Directory rejected the password reset.");
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
         public AdUserResult IsExistsOnAd(ApplicationUserViewModel model)
         {
             try

@@ -3,111 +3,88 @@
     ViewData["Title"] = "Notifications";
 }
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+<div class="prototype-heading">
     <div>
-        <h2 class="mb-1">Notifications</h2>
-        <div class="text-muted">@Model.UnreadCount unread notification(s)</div>
+        <h1>Notifications</h1>
+        <p>@Model.UnreadCount unread notification@(Model.UnreadCount == 1 ? "" : "s")</p>
     </div>
     @if (Model.UnreadCount > 0)
     {
-        <form asp-controller="Notification" asp-action="MarkAllRead" method="post">
-            <button type="submit" class="btn btn-outline-primary">
-                <i class="ti ti-checks me-1"></i>Mark all as read
+        <form asp-controller="Notification" asp-action="MarkAllRead" asp-route-filter="@Model.Filter" method="post" data-loading>
+            <button type="submit" class="prototype-button secondary">
+                <i class="ti ti-checks"></i>
+                Mark all as read
             </button>
         </form>
     }
 </div>
 
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-      
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            <div class="ims-staff-card">
-                <!-- Tabs -->
-                <div class="ims-staff-notification-tabs">
-                    <a asp-controller="Notification" asp-action="Index" asp-route-filter="all" class="ims-staff-tab @(Model.Filter == "all" ? "ims-staff-tab-active" : "")">All</a>
-                    <a asp-controller="Notification" asp-action="Index" asp-route-filter="unread" class="ims-staff-tab @(Model.Filter == "unread" ? "ims-staff-tab-active" : "")">
-                        Unread
-                        @if (Model.UnreadCount > 0)
-                        {
-                            <span class="ims-staff-tab-badge">@Model.UnreadCount</span>
-                        }
-                    </a>
-                    <a asp-controller="Notification" asp-action="Index" asp-route-filter="read" class="ims-staff-tab @(Model.Filter == "read" ? "ims-staff-tab-active" : "")">Read</a>
-                    @if (Model.UnreadCount > 0)
-                    {
-                        <form method="post" asp-action="MarkAllRead" asp-route-filter="@Model.Filter" style="display:inline">
-                            <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary ims-staff-mark-all-read">Mark All as Read</button>
-                        </form>
-                    }
-                </div>
+<section class="prototype-card notification-center">
+    <nav class="notification-tabs" aria-label="Notification filters">
+        <a asp-action="Index" asp-route-filter="all" class="@(Model.Filter == "all" ? "active" : "")">All</a>
+        <a asp-action="Index" asp-route-filter="unread" class="@(Model.Filter == "unread" ? "active" : "")">
+            Unread
+            @if (Model.UnreadCount > 0)
+            {
+                <span>@Model.UnreadCount</span>
+            }
+        </a>
+        <a asp-action="Index" asp-route-filter="read" class="@(Model.Filter == "read" ? "active" : "")">Read</a>
+    </nav>
 
-                <!-- Notification Items -->
-                @if (Model.Notifications.Any())
-                {
-                    @foreach (var notification in Model.Notifications)
-                    {
-                        <div class="ims-staff-notification-item @(!notification.IsRead ? "ims-staff-notification-unread" : "")">
-                            <div class="ims-staff-notif-icon">
-                                <i data-lucide="@notification.Icon" style="width:18px;height:18px;"></i>
-                            </div>
-                            <div class="ims-staff-notif-content">
-                                <div class="ims-staff-notif-title">@notification.Subject</div>
-                                <div class="ims-staff-notif-desc">@notification.Message</div>
-                                <div class="ims-staff-notif-time">@notification.TimeAgo</div>
-                            </div>
-                            @if (!notification.IsRead)
-                            {
-                                <div class="ims-staff-unread-dot"></div>
-                                <form method="post" asp-action="MarkRead" asp-route-id="@notification.Id" asp-route-filter="@Model.Filter">
-                                    <button type="submit" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary ims-staff-mark-read-btn">Mark as read</button>
-                                </form>
-                            }
-                        </div>
-                    }
-
-                    <!-- Pagination -->
-                    @if (Model.TotalPages > 1)
-                    {
-                        <div class="ims-staff-pagination">
-                            @if (Model.CurrentPage > 1)
-                            {
-                                <a asp-controller="Notification" asp-action="Index" asp-route-filter="@Model.Filter" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
-                            }
-                            @for (int i = 1; i <= Model.TotalPages; i++)
-                            {
-                                <a asp-controller="Notification" asp-action="Index" asp-route-filter="@Model.Filter" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
-                            }
-                            @if (Model.CurrentPage < Model.TotalPages)
-                            {
-                                <a asp-controller="Notification" asp-action="Index" asp-route-filter="@Model.Filter" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
-                            }
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="ims-staff-empty-state">
-                        <i data-lucide="bell-off" style="width:48px;height:48px;color:#ccc;"></i>
-                        <h3>No notifications</h3>
-                        <p>You're all caught up! Check back later for updates.</p>
-                    </div>
-                }
-            </div>
-        }
-    </div>
-    @if (Model.TotalPages > 1)
+    @if (Model.Notifications.Count == 0)
     {
-        <div class="card-footer d-flex justify-content-center">
-            <ul class="pagination mb-0">
-                @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
-                {
-                    <li class="page-item @(pageNumber == Model.CurrentPage ? "active" : string.Empty)">
-                        <a asp-controller="Notification" asp-action="Index" asp-route-filter="@Model.Filter" asp-route-page="@pageNumber" class="page-link">@pageNumber</a>
-                    </li>
-                }
-            </ul>
+        <div class="admin-empty-state">
+            <i class="ti ti-bell-off"></i>
+            <h2>No notifications</h2>
+            <p>You are all caught up. New workflow and support updates will appear here.</p>
         </div>
     }
-</div>
+    else
+    {
+        <div class="notification-list">
+            @foreach (var notification in Model.Notifications)
+            {
+                <article class="notification-row @(!notification.IsRead ? "unread" : "")">
+                    <span class="notification-row-icon"><i class="ti ti-@notification.Icon"></i></span>
+                    <div>
+                        <h2>@notification.Subject</h2>
+                        <p>@notification.Message</p>
+                        <time>@notification.TimeAgo</time>
+                    </div>
+                    <div class="notification-row-actions">
+                        @if (!string.IsNullOrWhiteSpace(notification.LinkUrl))
+                        {
+                            <a href="@notification.LinkUrl" class="prototype-button secondary">
+                                <i class="ti ti-arrow-up-right"></i>Open
+                            </a>
+                        }
+                        @if (!notification.IsRead)
+                        {
+                            <form asp-action="MarkRead" asp-route-id="@notification.Id" asp-route-filter="@Model.Filter" method="post" data-loading>
+                                <button type="submit" class="prototype-button secondary">
+                                    <i class="ti ti-check"></i>Mark read
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Notification pages" class="category-pagination">
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <a asp-action="Index"
+                   asp-route-filter="@Model.Filter"
+                   asp-route-page="@pageNumber"
+                   class="@(pageNumber == Model.CurrentPage ? "active" : "")">
+                    @pageNumber
+                </a>
+            }
+        </nav>
+    }
+</section>

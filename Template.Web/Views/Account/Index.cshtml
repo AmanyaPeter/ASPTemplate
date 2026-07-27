@@ -1,83 +1,164 @@
 @model ApplicationUserListPageViewModel
 @{
     ViewData["Title"] = "User Management";
+    var activeUsers = Model.Users.Count(user => user.IsActive);
+    var lockedUsers = Model.Users.Count(user =>
+        user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow);
 }
 
-
-
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-            <h2>Users</h2>
-            <p class="card-subtitle text-muted mb-0">Manage application users and their roles</p>
-        </div>
-        <permission name="@SystemPermissions.Account.CreateApplicationUser">
-            <a asp-action="Create" class="btn btn-success btn-md">
-                <i class="ti ti-user-plus ti-light"></i> Create User
-            </a>
-        </permission>
+<div class="prototype-heading">
+    <div>
+        <h1>User accounts</h1>
+        <p>Create users, assign access, lock accounts, and reset passwords.</p>
     </div>
-    <div class="card-body">
-        <table id="usersTable" class="table table-hover table-striped align-middle w-100 datatable">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">Username</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Business Unit</th>
-                    <th>Job Title</th>
-                    <th>Station</th>
-                    <th>Age Bracket</th>
-                    <th>Gender</th>
-                    <th>Status</th>
-                    <th>Last Login</th>
-                    <th scope="col" class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var user in Model.Users)
-                {
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <i class="ti ti-user ti-light me-2 text-muted"></i>
-                                <span>@user.UserName</span>
-                            </div>
-                        </td>
-                        <td>@user.FullName</td>
-                        <td>@user.Email</td>
-                        <td>@user.BusinessUnit</td>
-                        <td>@user.JobTitle</td>
-                        <td>@user.Station</td>
-                        <td>@user.AgeBracket</td>
-                        <td>@user.Gender</td>
-                        <td>@(user.IsActive ? "Active" : "Disabled")</td>
-                        <td>@(user.LastLoginDate?.ToString("dd MMM yyyy HH:mm") ?? "Never")</td>
-                        <td class="text-end">
-                            <div class="btn-group" role="group">
-                                <permission name="@SystemPermissions.Account.EditApplicationUser">
-                                    <a asp-action="Update" asp-route-userId="@user.Id" class="btn btn-outline-primary btn-sm" title="Edit User">
-                                        <i class="ti ti-edit"></i>
-                                        <span class="d-none d-md-inline ms-1">Edit</span>
-                                    </a>
-                                </permission>
-                                <permission name="@SystemPermissions.Roles.EditRole">
-                                    <a asp-action="ManageRoles" asp-route-userId="@user.Id" class="btn btn-outline-info btn-sm" title="Manage Roles">
-                                        <i class="ti ti-users"></i>
-                                        <span class="d-none d-md-inline ms-1">Roles</span>
-                                    </a>
-                                </permission>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    <permission name="@SystemPermissions.Account.CreateApplicationUser">
+        <a asp-action="Create" class="prototype-button">
+            <i class="ti ti-user-plus"></i>
+            Create user
+        </a>
+    </permission>
 </div>
-@if (!Model.Users.Any())
-{
-    <div class="card-footer text-center text-muted">
-        <i class="ti ti-mood-empty me-2"></i> No users found
+
+<section class="admin-user-stats" aria-label="User account summary">
+    <div class="prototype-card">
+        <i class="ti ti-users"></i>
+        <span><strong>@Model.Users.Count</strong><small>Total users</small></span>
     </div>
+    <div class="prototype-card">
+        <i class="ti ti-user-check"></i>
+        <span><strong>@activeUsers</strong><small>Active users</small></span>
+    </div>
+    <div class="prototype-card">
+        <i class="ti ti-lock"></i>
+        <span><strong>@lockedUsers</strong><small>Locked users</small></span>
+    </div>
+</section>
+
+<div class="prototype-card admin-user-toolbar">
+    <label for="userSearch" class="visually-hidden">Search user accounts</label>
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input id="userSearch" type="search" placeholder="Search by name, username, email, or business unit" />
+</div>
+
+@if (Model.Users.Count == 0)
+{
+    <div class="prototype-card admin-empty-state">
+        <i class="ti ti-users-off"></i>
+        <h2>No user accounts</h2>
+        <p>Create the first account to get started.</p>
+    </div>
+}
+else
+{
+    <div class="admin-user-grid" id="userGrid">
+        @foreach (var user in Model.Users.OrderBy(user => user.FullName))
+        {
+            var isLocked = user.LockoutEnd.HasValue &&
+                user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+            var searchableText = $"{user.FullName} {user.UserName} {user.Email} {user.BusinessUnit} {user.JobTitle}".ToLowerInvariant();
+
+            <article class="prototype-card admin-user-card" data-user-search="@searchableText">
+                <header>
+                    <div class="admin-user-avatar">
+                        @(string.IsNullOrWhiteSpace(user.FullName)
+                            ? user.UserName?.Substring(0, 1).ToUpperInvariant()
+                            : user.FullName.Substring(0, 1).ToUpperInvariant())
+                    </div>
+                    <div class="admin-user-identity">
+                        <h2>@(string.IsNullOrWhiteSpace(user.FullName) ? user.UserName : user.FullName)</h2>
+                        <p>@@@user.UserName</p>
+                    </div>
+                    @if (isLocked)
+                    {
+                        <span class="admin-status locked"><i class="ti ti-lock"></i>Locked</span>
+                    }
+                    else if (!user.IsActive)
+                    {
+                        <span class="admin-status inactive"><i class="ti ti-user-off"></i>Inactive</span>
+                    }
+                    else
+                    {
+                        <span class="admin-status active"><i class="ti ti-circle-check"></i>Active</span>
+                    }
+                </header>
+
+                <dl class="admin-user-details">
+                    <div><dt>Email</dt><dd>@(user.Email ?? "Not provided")</dd></div>
+                    <div><dt>Business unit</dt><dd>@(string.IsNullOrWhiteSpace(user.BusinessUnit) ? "Not assigned" : user.BusinessUnit)</dd></div>
+                    <div><dt>Job title</dt><dd>@(string.IsNullOrWhiteSpace(user.JobTitle) ? user.Title : user.JobTitle)</dd></div>
+                    <div><dt>Station</dt><dd>@(string.IsNullOrWhiteSpace(user.Station) ? "Not assigned" : user.Station)</dd></div>
+                    <div><dt>Last login</dt><dd>@(user.LastLoginDate?.ToString("dd MMM yyyy HH:mm") ?? "Never")</dd></div>
+                    <div><dt>Account end date</dt><dd>@(user.EndDate?.ToString("dd MMM yyyy") ?? "No expiry")</dd></div>
+                </dl>
+
+                @if (isLocked && !string.IsNullOrWhiteSpace(user.LockReason))
+                {
+                    <p class="admin-lock-reason"><i class="ti ti-info-circle"></i>@user.LockReason</p>
+                }
+
+                <footer class="admin-user-actions">
+                    <permission name="@SystemPermissions.Account.EditApplicationUser">
+                        <a asp-action="Update" asp-route-userId="@user.Id" class="prototype-button secondary">
+                            <i class="ti ti-edit"></i>Edit
+                        </a>
+                    </permission>
+                    <permission name="@SystemPermissions.Roles.EditRole">
+                        <a asp-action="ManageRoles" asp-route-userId="@user.Id" class="prototype-button secondary">
+                            <i class="ti ti-shield-check"></i>Roles
+                        </a>
+                    </permission>
+                    <permission name="@SystemPermissions.Account.EditApplicationUser">
+                        @if (isLocked)
+                        {
+                            <form asp-action="Unlock" method="post" data-loading>
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="prototype-button secondary" data-confirm="Unlock @user.UserName?">
+                                    <i class="ti ti-lock-open"></i>Unlock
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Lock" method="post" data-loading>
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="prototype-button secondary danger" data-confirm="Lock @user.UserName?">
+                                    <i class="ti ti-lock"></i>Lock
+                                </button>
+                            </form>
+                        }
+                        <a asp-action="ResetPassword" asp-route-userId="@user.Id" class="prototype-button secondary danger">
+                            <i class="ti ti-key"></i>Reset password
+                        </a>
+                    </permission>
+                </footer>
+            </article>
+        }
+    </div>
+    <div class="prototype-card admin-empty-state d-none" id="userSearchEmpty">
+        <i class="ti ti-user-search"></i>
+        <h2>No matching users</h2>
+        <p>Try another name, username, email, or business unit.</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const input = document.getElementById('userSearch');
+            const cards = [...document.querySelectorAll('[data-user-search]')];
+            const empty = document.getElementById('userSearchEmpty');
+            if (!input || cards.length === 0) return;
+
+            input.addEventListener('input', () => {
+                const query = input.value.trim().toLowerCase();
+                let visible = 0;
+                cards.forEach(card => {
+                    const matches = !query || card.dataset.userSearch.includes(query);
+                    card.classList.toggle('d-none', !matches);
+                    if (matches) visible++;
+                });
+                empty?.classList.toggle('d-none', visible !== 0);
+            });
+        })();
+    </script>
 }

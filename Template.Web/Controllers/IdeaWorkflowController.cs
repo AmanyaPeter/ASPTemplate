@@ -239,9 +239,10 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
             return NotFound();
         }
 
+        var commentId = Guid.NewGuid();
         context.Comments.Add(new Comment
         {
-            Id = Guid.NewGuid(),
+            Id = commentId,
             IdeaId = idea.Id,
             Idea = idea,
             UserId = reviewer.Id,
@@ -258,10 +259,32 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
             Type = NotificationType.CommentAdded,
             Subject = "New review comment",
             Message = $"A reviewer commented on {idea.ReferenceNumber}.",
+            LinkUrl = $"/Idea/Details/{idea.Id}",
             CreatedDate = DateTime.UtcNow
         });
+        if (!string.IsNullOrWhiteSpace(idea.Submitter.Email))
+        {
+            context.EmailOutbox.Add(new EmailOutbox
+            {
+                Id = Guid.NewGuid(),
+                IdempotencyKey = $"review-comment:{commentId}",
+                Recipient = idea.Submitter.Email,
+                Subject = $"New comment on {idea.ReferenceNumber}",
+                Body = $"The Innovation Team commented on your idea \"{idea.Title}\":\n\n{newComment.Trim()}\n\nSign in to the Innovation Management System to respond.",
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
 
         await context.SaveChangesAsync();
+        await hub.Clients.Group($"user:{idea.SubmitterId}").SendAsync(
+            "notificationChanged",
+            new
+            {
+                ideaId = idea.Id,
+                type = NotificationType.CommentAdded.ToString(),
+                subject = "New review comment"
+            },
+            HttpContext.RequestAborted);
         return RedirectToAction(nameof(Review), new { id });
     }
 

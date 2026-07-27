@@ -32,7 +32,8 @@ public class ResourceController(ApplicationDbContext db, IDatabaseFileService fi
             .Select(r => new ResourceItemViewModel
             {
                 Id = r.Id, ResourceTitle = r.ResourceTitle, Description = r.Description,
-                UploadedAt = r.UploadedAt, Icon = "file-text"
+                Category = r.Category, FileName = r.FileName, FileSizeBytes = r.FileSizeBytes,
+                DownloadCount = r.DownloadCount, UploadedAt = r.UploadedAt, Icon = "file-text"
             }).ToListAsync();
         return View(new ResourcesModel
         {
@@ -79,6 +80,7 @@ public class ResourceController(ApplicationDbContext db, IDatabaseFileService fi
         if (resource == null) return NotFound();
         resource.IsActive = false;
         await db.SaveChangesAsync(cancellationToken);
+        TempData["SuccessMessage"] = $"{resource.ResourceTitle} was deleted from the resource library.";
         return RedirectToAction(nameof(Index));
     }
 

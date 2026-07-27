@@ -56,6 +56,11 @@ namespace Template.Core.Repository.Accounts
                 user.DisableDate = model.DisableDate;
                 user.EndDate = model.EndDate;
                 user.Title = model.Title;
+                user.BusinessUnit = model.BusinessUnit;
+                user.JobTitle = model.JobTitle;
+                user.Station = model.Station;
+                user.AgeBracket = model.AgeBracket;
+                user.Gender = model.Gender;
 
                 var result = await _userManager.UpdateAsync(user);
                 if (result.Succeeded)

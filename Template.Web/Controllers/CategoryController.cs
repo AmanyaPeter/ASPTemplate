@@ -13,7 +13,42 @@ public class CategoryController(ApplicationDbContext db) : Controller
     private const int PageSize = 10;
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, int page = 1)
+    public async Task<IActionResult> Index(
+        string? searchTerm,
+        string? statusFilter,
+        int page = 1,
+        int? editId = null)
+    {
+        CategoryFormViewModel? form = null;
+        if (editId.HasValue)
+        {
+            form = await db.Categories
+                .AsNoTracking()
+                .Where(category => category.Id == editId.Value)
+                .Select(category => new CategoryFormViewModel
+                {
+                    Id = category.Id,
+                    Name = category.Name,
+                    Description = category.Description ?? string.Empty,
+                    IsActive = category.IsActive
+                })
+                .FirstOrDefaultAsync();
+
+            if (form == null)
+            {
+                TempData["ErrorMessage"] = "Category not found.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        return View(await BuildPageModelAsync(searchTerm, statusFilter, page, form));
+    }
+
+    private async Task<CategoriesModel> BuildPageModelAsync(
+        string? searchTerm,
+        string? statusFilter,
+        int page,
+        CategoryFormViewModel? form = null)
     {
         page = Math.Max(page, 1);
         var query = db.Categories.AsNoTracking().AsQueryable();
@@ -28,11 +63,12 @@ public class CategoryController(ApplicationDbContext db) : Controller
                 Id = c.Id, Name = c.Name, Description = c.Description,
                 IsActive = c.IsActive, CreatedDate = c.CreatedDate
             }).ToListAsync();
-        return View(new CategoriesModel
+        return new CategoriesModel
         {
             SearchTerm = searchTerm, StatusFilter = statusFilter, Categories = items,
-            CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize))
-        });
+            CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize)),
+            Category = form ?? new CategoryFormViewModel()
+        };
     }
 
     [HttpPost]
@@ -40,7 +76,8 @@ public class CategoryController(ApplicationDbContext db) : Controller
     public async Task<IActionResult> Save(CategoriesModel model)
     {
         if (!ModelState.IsValid)
-            return await Index(model.SearchTerm, model.StatusFilter);
+            return View(nameof(Index), await BuildPageModelAsync(
+                model.SearchTerm, model.StatusFilter, Math.Max(model.CurrentPage, 1), model.Category));
 
         var duplicate = await db.Categories.AnyAsync(c =>
             c.Name == model.Category.Name && c.Id != model.Category.Id);
@@ -64,6 +101,9 @@ public class CategoryController(ApplicationDbContext db) : Controller
         entity.Description = model.Category.Description?.Trim();
         entity.IsActive = model.Category.IsActive;
         await db.SaveChangesAsync();
+        TempData["SuccessMessage"] = model.Category.Id == 0
+            ? "Category created successfully."
+            : "Category updated successfully.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -75,6 +115,7 @@ public class CategoryController(ApplicationDbContext db) : Controller
         if (category == null) return NotFound();
         category.IsActive = false;
         await db.SaveChangesAsync();
+        TempData["SuccessMessage"] = $"{category.Name} was removed from active categories.";
         return RedirectToAction(nameof(Index));
     }
 }

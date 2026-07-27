@@ -11,6 +11,7 @@ namespace Template.Common.Enums
         DeadlineReminder,
         AccountCreated,
         PasswordReset,
-        SystemAnnouncement
+        SystemAnnouncement,
+        SupportRequest
     }
 }

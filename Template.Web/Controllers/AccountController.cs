@@ -5,8 +5,11 @@ using Template.Core.Services.AdAuthentication;
 using Template.Core.Services.Authorization;
 using Template.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using SmartBreadcrumbs.Attributes;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace Template.Web.Controllers;
 
@@ -15,6 +18,8 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
     , IAuthService _authService
     , IAccountRepository _accountRepo
     , IRoleRepository _roleRepo
+    , UserManager<ApplicationUser> userManager
+    , IHostEnvironment environment
     ) : Controller
 {
     [RequirePermission(SystemPermissions.Account.ViewApplicationUsers)]
@@ -73,7 +78,9 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
     {
         var model = new ApplicationUserViewModel
         {
-            Id = string.Empty
+            Id = string.Empty,
+            EndDate = DateTime.UtcNow.Date.AddYears(1),
+            IsActive = true
         };
 
         return View(model);
@@ -85,6 +92,12 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
     [RequirePermission(SystemPermissions.Account.CreateApplicationUser)]
     public async Task<IActionResult> Create(ApplicationUserViewModel model)
     {
+        if (model.EndDate.HasValue && model.EndDate.Value.Date < DateTime.UtcNow.Date)
+        {
+            ModelState.AddModelError(nameof(model.EndDate), "The account end date cannot be in the past.");
+            return View(model);
+        }
+
         var adUserResult = _adAuthService.IsExistsOnAd(model);
 
         if (!adUserResult.IsSuccess)
@@ -118,10 +131,29 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
             return View(model);
         }
 
-        // Map from AD to domain model
-        //var userDomain = _mapper.Map<ApplicationUser>(adUserResult.AppUser);
+        var newUser = adUserResult.AppUser;
+        newUser.FullName = string.Join(" ", new[]
+            {
+                newUser.FirstName,
+                newUser.MiddleName,
+                newUser.LastName
+            }
+            .Where(part => !string.IsNullOrWhiteSpace(part)));
+        newUser.Title = model.Title?.Trim() ?? string.Empty;
+        newUser.BusinessUnit = model.BusinessUnit?.Trim() ?? string.Empty;
+        newUser.JobTitle = model.JobTitle?.Trim() ?? string.Empty;
+        newUser.Station = model.Station?.Trim() ?? string.Empty;
+        newUser.AgeBracket = model.AgeBracket ?? string.Empty;
+        newUser.Gender = model.Gender ?? string.Empty;
+        newUser.EndDate = model.EndDate;
+        newUser.IsActive = model.IsActive;
+        newUser.LockoutEnabled = true;
+        newUser.CreatedDate = DateTime.UtcNow;
+        newUser.CreatedBy = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var creatorId)
+            ? creatorId
+            : Guid.Empty;
 
-        var result = await _accountRepo.Create(adUserResult.AppUser);
+        var result = await _accountRepo.Create(newUser);
 
         if (result)
         {
@@ -283,5 +315,143 @@ public class AccountController(IMapper _mapper, ILogger<AccountController> _logg
         HttpContext.Session.Clear();
         _logger.LogInformation("Logout successful");
         return RedirectToAction("Login", "Account", new { ReturnUrl = returnUrl });
+    }
+
+    [HttpGet]
+    [RequirePermission(SystemPermissions.Account.EditApplicationUser)]
+    public async Task<IActionResult> ResetPassword(string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User not found.";
+            return RedirectToAction("Index");
+        }
+
+        var model = _mapper.Map<ApplicationUserViewModel>(user);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ActionName(nameof(ResetPassword))]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(SystemPermissions.Account.EditApplicationUser)]
+    public async Task<IActionResult> ResetPasswordConfirmed(string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User not found.";
+            return RedirectToAction("Index");
+        }
+
+        var tempPassword = CreateTemporaryPassword();
+
+        var resetSucceeded = false;
+        string? resetError = null;
+        if (environment.IsDevelopment() || user.IsBreakGlassAccount)
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await userManager.ResetPasswordAsync(user, token, tempPassword);
+            resetSucceeded = result.Succeeded;
+            resetError = result.Succeeded
+                ? null
+                : string.Join(", ", result.Errors.Select(error => error.Description));
+        }
+        else
+        {
+            var result = _adAuthService.ResetPassword(user.UserName!, tempPassword);
+            resetSucceeded = result.Success;
+            resetError = result.ErrorMessage;
+        }
+
+        if (resetSucceeded)
+        {
+            // Force password change on next login
+            user.PasswordResetRequired = true;
+            await userManager.UpdateSecurityStampAsync(user);
+            await userManager.UpdateAsync(user);
+
+            TempData["SuccessMessage"] = $"Password for {user.UserName} has been reset. Temporary password: {tempPassword}";
+            _logger.LogInformation("Password reset for user {Username}", user.UserName);
+        }
+        else
+        {
+            TempData["ErrorMessage"] = $"Failed to reset password: {resetError}";
+            _logger.LogError("Password reset failed for user {Username}", user.UserName);
+        }
+
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(SystemPermissions.Account.EditApplicationUser)]
+    public async Task<IActionResult> Lock(string userId, string? reason)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User not found.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId) &&
+            currentUserId == user.Id)
+        {
+            TempData["ErrorMessage"] = "You cannot lock your own account.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        user.LockReason = string.IsNullOrWhiteSpace(reason)
+            ? "Locked by an administrator."
+            : reason.Trim();
+        user.IsLoggedIn = false;
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.MaxValue;
+        var lockResult = await userManager.UpdateAsync(user);
+        if (!lockResult.Succeeded)
+        {
+            TempData["ErrorMessage"] = $"Could not lock the account: {string.Join(", ", lockResult.Errors.Select(error => error.Description))}";
+            return RedirectToAction(nameof(Index));
+        }
+        await userManager.UpdateSecurityStampAsync(user);
+
+        TempData["SuccessMessage"] = $"{user.UserName} has been locked.";
+        _logger.LogWarning("Administrator locked user {Username}. Reason: {Reason}", user.UserName, user.LockReason);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(SystemPermissions.Account.EditApplicationUser)]
+    public async Task<IActionResult> Unlock(string userId)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            TempData["ErrorMessage"] = "User not found.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        user.LockReason = null;
+        user.LockoutEnd = null;
+        user.AccessFailedCount = 0;
+        var unlockResult = await userManager.UpdateAsync(user);
+        if (!unlockResult.Succeeded)
+        {
+            TempData["ErrorMessage"] = $"Could not unlock the account: {string.Join(", ", unlockResult.Errors.Select(error => error.Description))}";
+            return RedirectToAction(nameof(Index));
+        }
+
+        TempData["SuccessMessage"] = $"{user.UserName} has been unlocked.";
+        _logger.LogInformation("Administrator unlocked user {Username}", user.UserName);
+        return RedirectToAction(nameof(Index));
+    }
+
+    private static string CreateTemporaryPassword()
+    {
+        var randomDigit = RandomNumberGenerator.GetInt32(0, 10);
+        return $"Tmp!{Guid.NewGuid():N}"[..20] + randomDigit;
     }
 }

@@ -1,0 +1,174 @@
+@model IdeaPipelineModel
+@{
+    ViewData["Title"] = "Idea Pipeline";
+
+    string StageClass(IdeaStage stage) => stage switch
+    {
+        IdeaStage.Submitted => "submitted",
+        IdeaStage.ConceptDevelopment => "concept",
+        IdeaStage.Experimentation => "experiment",
+        IdeaStage.Deployment => "deployment",
+        IdeaStage.Closed => "closed",
+        _ => "submitted"
+    };
+
+    string StatusClass(IdeaStatus status) => status switch
+    {
+        IdeaStatus.Approved => "approved",
+        IdeaStatus.Declined => "declined",
+        IdeaStatus.PendingInformation => "pending",
+        _ => "review"
+    };
+
+    string StatusName(IdeaStatus status) => status switch
+    {
+        IdeaStatus.PendingInformation => "Pending Information",
+        IdeaStatus.UnderReview => "Under Review",
+        _ => status.ToString()
+    };
+}
+
+<div class="prototype-heading pipeline-heading">
+    <div>
+        <h1>Idea Pipeline</h1>
+        <p>Track every active idea as it moves from submission through delivery and closure.</p>
+    </div>
+    <a asp-controller="Idea" asp-action="AllIdeas" class="prototype-button secondary">
+        <i class="ti ti-list-details"></i>
+        View all ideas
+    </a>
+</div>
+
+<section class="pipeline-stats" aria-label="Pipeline summary">
+    <div class="prototype-card pipeline-stat">
+        <span class="pipeline-stat-icon total"><i class="ti ti-bulb-filled"></i></span>
+        <div>
+            <small>Ideas shown</small>
+            <strong>@Model.TotalIdeas</strong>
+        </div>
+    </div>
+    <div class="prototype-card pipeline-stat">
+        <span class="pipeline-stat-icon review"><i class="ti ti-eye"></i></span>
+        <div>
+            <small>Under review</small>
+            <strong>@Model.PendingReviewIdeas</strong>
+        </div>
+    </div>
+    <div class="prototype-card pipeline-stat">
+        <span class="pipeline-stat-icon approved"><i class="ti ti-circle-check"></i></span>
+        <div>
+            <small>Approved</small>
+            <strong>@Model.ApprovedIdeas</strong>
+        </div>
+    </div>
+    <div class="prototype-card pipeline-stat">
+        <span class="pipeline-stat-icon overdue"><i class="ti ti-clock-exclamation"></i></span>
+        <div>
+            <small>Overdue</small>
+            <strong>@Model.OverdueIdeas</strong>
+        </div>
+    </div>
+</section>
+
+<form asp-controller="Idea" asp-action="Pipeline" method="get" class="prototype-card pipeline-filters">
+    <label class="pipeline-search">
+        <span class="visually-hidden">Search ideas</span>
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input asp-for="SearchTerm" type="search" placeholder="Search by title, reference or submitter" />
+    </label>
+    <label>
+        <span class="visually-hidden">Filter by status</span>
+        <select asp-for="StatusFilter">
+            <option value="">All statuses</option>
+            <option value="@IdeaStatus.UnderReview">Under Review</option>
+            <option value="@IdeaStatus.PendingInformation">Pending Information</option>
+            <option value="@IdeaStatus.Approved">Approved</option>
+            <option value="@IdeaStatus.Declined">Declined</option>
+        </select>
+    </label>
+    <label>
+        <span class="visually-hidden">Filter by category</span>
+        <select asp-for="CategoryFilter">
+            <option value="">All categories</option>
+            @foreach (var category in Model.CategoryOptions)
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+    </label>
+    <button type="submit" class="prototype-button"><i class="ti ti-adjustments-horizontal"></i>Apply filters</button>
+    <a asp-controller="Idea" asp-action="Pipeline" class="prototype-button secondary">Clear</a>
+</form>
+
+<div class="pipeline-board-scroll" tabindex="0" aria-label="Idea pipeline board">
+    <div class="pipeline-board">
+        @foreach (var column in Model.Columns)
+        {
+            var stageClass = StageClass(column.Stage);
+            <section class="pipeline-column pipeline-stage-@stageClass" aria-labelledby="pipeline-@stageClass-title">
+                <header class="pipeline-column-header">
+                    <span class="pipeline-stage-marker" aria-hidden="true"></span>
+                    <div>
+                        <h2 id="pipeline-@stageClass-title">@column.Name</h2>
+                        <p>@column.Description</p>
+                    </div>
+                    <span class="pipeline-count" aria-label="@column.Ideas.Count ideas">@column.Ideas.Count</span>
+                </header>
+
+                <div class="pipeline-card-list">
+                    @if (column.Ideas.Count == 0)
+                    {
+                        <div class="pipeline-empty">
+                            <i class="ti ti-inbox" aria-hidden="true"></i>
+                            <span>No ideas in this stage</span>
+                        </div>
+                    }
+
+                    @foreach (var idea in column.Ideas)
+                    {
+                        <article class="pipeline-idea-card">
+                            <div class="pipeline-card-topline">
+                                <span class="pipeline-reference">@idea.ReferenceNumber</span>
+                                <span class="pipeline-status pipeline-status-@StatusClass(idea.Status)">@StatusName(idea.Status)</span>
+                            </div>
+
+                            <h3>
+                                <a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@idea.Id">
+                                    @idea.Title
+                                </a>
+                            </h3>
+
+                            <span class="pipeline-category">@idea.CategoryName</span>
+
+                            <dl class="pipeline-meta">
+                                <div>
+                                    <dt><i class="ti ti-user" aria-hidden="true"></i><span class="visually-hidden">Submitter</span></dt>
+                                    <dd>@idea.Submitter</dd>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(idea.Department))
+                                {
+                                    <div>
+                                        <dt><i class="ti ti-building" aria-hidden="true"></i><span class="visually-hidden">Department</span></dt>
+                                        <dd>@idea.Department</dd>
+                                    </div>
+                                }
+                                <div>
+                                    <dt><i class="ti ti-calendar-event" aria-hidden="true"></i><span class="visually-hidden">Submitted</span></dt>
+                                    <dd>Submitted @idea.SubmissionDate.ToString("dd MMM yyyy")</dd>
+                                </div>
+                            </dl>
+
+                            <footer class="pipeline-card-footer">
+                                <span class="pipeline-age">@idea.DaysInStage day@(idea.DaysInStage == 1 ? "" : "s") in stage</span>
+                                <span class="pipeline-deadline @(idea.IsOverdue ? "is-overdue" : "")">
+                                    <i class="ti @(idea.IsOverdue ? "ti-alert-triangle" : "ti-clock")" aria-hidden="true"></i>
+                                    @idea.DeadlineLabel
+                                </span>
+                            </footer>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</div>

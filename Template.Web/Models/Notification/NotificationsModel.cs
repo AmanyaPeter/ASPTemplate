@@ -16,6 +16,7 @@ namespace Template.Web.Models.Notification
         public required string Message { get; set; }
         public string? Icon { get; set; }
         public string? TimeAgo { get; set; }
+        public string? LinkUrl { get; set; }
         public bool IsRead { get; set; }
     }
 }

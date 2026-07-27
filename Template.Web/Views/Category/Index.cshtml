@@ -1,233 +1,170 @@
 @model CategoriesModel
 @{
-    ViewData["Title"] = "Categories - Innovation Management System";
+    ViewData["Title"] = "Idea Categories";
+    var isEditing = Model.Category.Id != 0;
 }
 
-<body class="ims-staff-dashboard">
-    <!-- Sidebar -->
-    <aside class="ims-staff-sidebar">
-        <div class="ims-staff-sidebar-brand">
-            <div class="ims-staff-brand-logo"><img src="~/boulogo.ico" alt="BOU"></div>
-            <div class="ims-staff-brand-text">Bank of Uganda<span>Innovation Management</span></div>
+<div class="prototype-heading">
+    <div>
+        <h1>Idea categories</h1>
+        <p>Maintain the classifications staff use when submitting innovation ideas.</p>
+    </div>
+    <a href="#category-form" class="prototype-button">
+        <i class="ti ti-category-plus"></i>
+        Add category
+    </a>
+</div>
+
+<section class="prototype-card category-form-card" id="category-form">
+    <div class="admin-form-section-heading">
+        <span><i class="ti ti-@(isEditing ? "edit" : "plus")"></i></span>
+        <div>
+            <h2>@(isEditing ? "Edit category" : "Add a category")</h2>
+            <p>@(isEditing
+                ? "Update the category name, description, or availability."
+                : "Create a category that can be selected on new idea submissions.")</p>
         </div>
-        <ul class="ims-staff-sidebar-nav">
-            <li><a asp-page="/Admin/Dashboard"><span class="ims-staff-nav-icon"><i data-lucide="layout-dashboard" style="width:18px;height:18px;"></i></span><span>Dashboard</span></a></li>
-            <li><a asp-page="/Admin/SubmittedIdeas"><span class="ims-staff-nav-icon"><i data-lucide="list" style="width:18px;height:18px;"></i></span><span>Submitted Ideas</span></a></li>
-            <li><a asp-page="/Admin/Categories" class="ims-staff-nav-active"><span class="ims-staff-nav-icon"><i data-lucide="folder-tree" style="width:18px;height:18px;"></i></span><span>Categories</span></a></li>
-            <li><a asp-page="/Staff/Resources"><span class="ims-staff-nav-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span><span>Resources</span></a></li>
-            <li><a asp-page="/Admin/Reports"><span class="ims-staff-nav-icon"><i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i></span><span>Reports</span></a></li>
-            <li><a asp-page="/Admin/Permissions"><span class="ims-staff-nav-icon"><i data-lucide="shield" style="width:18px;height:18px;"></i></span><span>Permissions</span></a></li>
-        </ul>
-        <div class="ims-staff-sidebar-footer">BOU Innovation System v1.0</div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-        <!-- Header -->
-        <header class="ims-staff-top-header">
-            <div class="ims-staff-header-left">
-                <h2>Innovation Categories</h2>
-            </div>
-            <div class="ims-staff-header-right">
-                <button class="ims-staff-notification-btn"><i data-lucide="bell" style="width:20px;height:20px;"></i><span class="ims-staff-badge-dot"></span></button>
-                <div class="ims-staff-user-profile">
-                    <div class="ims-staff-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
-                    <span class="ims-staff-user-name">@(User.Identity?.Name ?? "User")</span>
-                </div>
-                <button class="ims-staff-logout-btn">Log out</button>
-            </div>
-        </header>
-
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            <!-- Toolbar -->
-            <div class="ims-staff-toolbar">
-                <div class="ims-staff-filters-bar" style="margin-bottom:0;flex:1;">
-                    <input type="text" class="ims-staff-form-control ims-staff-search-input" placeholder="Search categories..." asp-for="SearchTerm">
-                    <select class="ims-staff-form-control" asp-for="StatusFilter" style="min-width:150px;">
-                        <option value="">All Statuses</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
-                    <button class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm" asp-page-handler="ApplyFilters">Apply</button>
-                </div>
-                <button class="ims-staff-btn ims-staff-btn-primary ims-staff-add-category-btn" onclick="openAddCategoryModal()">
-                    <i data-lucide="plus" style="width:16px;height:16px;"></i> Add Category
-                </button>
-            </div>
-
-            <!-- Categories Table -->
-            <div class="ims-staff-card ims-staff-table-card">
-                <div class="ims-staff-table-container">
-                    <table class="ims-staff-data-table">
-                        <thead>
-                            <tr>
-                                <th>Category Name</th>
-                                <th>Description</th>
-                                <th>Created Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var category in Model.Categories)
-                            {
-                                <tr>
-                                    <td><strong>@category.Name</strong></td>
-                                    <td>@category.Description</td>
-                                    <td>@category.CreatedDate.ToString("dd MMM yyyy")</td>
-                                    <td>
-                                        <span class="ims-staff-badge @(category.IsActive ? "ims-staff-badge-success" : "ims-staff-badge-inactive")">
-                                            @(category.IsActive ? "Active" : "Inactive")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="ims-staff-actions">
-                                            <button type="button" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary" onclick='editCategory(@category.Id, @Html.Raw(Json.Serialize(category.Name)), @Html.Raw(Json.Serialize(category.Description)), @Json.Serialize(category.IsActive))'>Edit</button>
-                                            <button class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-danger" onclick="deleteCategory(@category.Id, '@category.Name')">Delete</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="ims-staff-pagination">
-                        @if (Model.CurrentPage > 1)
-                        {
-                            <a asp-controller="Category" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
-                        }
-                        @for (int i = 1; i <= Model.TotalPages; i++)
-                        {
-                            <a asp-controller="Category" asp-action="Index" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
-                        }
-                        @if (Model.CurrentPage < Model.TotalPages)
-                        {
-                            <a asp-controller="Category" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
-                        }
-                    </div>
-                }
-            </div>
-        </main>
+        @if (isEditing)
+        {
+            <a asp-action="Index" class="prototype-button secondary">
+                <i class="ti ti-x"></i>Cancel edit
+            </a>
+        }
     </div>
 
-    <!-- Add/Edit Category Modal -->
-    <div class="ims-staff-modal" id="categoryModal" style="display:none;">
-        <div class="ims-staff-modal-overlay" onclick="closeCategoryModal()"></div>
-        <div class="ims-staff-modal-content">
-            <div class="ims-staff-modal-header">
-                <h3 id="categoryModalTitle">Add New Category</h3>
-                <button class="ims-staff-modal-close" onclick="closeCategoryModal()">&times;</button>
-            </div>
-            <form method="post" asp-controller="Category" asp-action="Save">
-                <input type="hidden" asp-for="Category.Id" id="categoryId">
-                <div class="ims-staff-modal-body">
-                    <div class="ims-staff-form-group">
-                        <label for="CategoryName">Category Name *</label>
-                        <input type="text" id="CategoryName" class="ims-staff-form-control" asp-for="Category.Name" placeholder="Enter category name">
-                        <span asp-validation-for="Category.Name" class="ims-staff-validation-feedback"></span>
-                    </div>
-                    <div class="ims-staff-form-group">
-                        <label for="CategoryDescription">Description *</label>
-                        <textarea id="CategoryDescription" class="ims-staff-form-control" rows="3" asp-for="Category.Description" placeholder="Enter category description"></textarea>
-                        <span asp-validation-for="Category.Description" class="ims-staff-validation-feedback"></span>
-                    </div>
-                    <div class="ims-staff-form-group">
-                        <label for="CategoryIsActive">Active</label>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="CategoryIsActive" asp-for="Category.IsActive" role="switch" style="width:3em;height:1.5em;">
-                        </div>
-                    </div>
-                </div>
-                <div class="ims-staff-modal-footer">
-                    <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="closeCategoryModal()">Cancel</button>
-                    <button type="submit" class="ims-staff-btn ims-staff-btn-primary" id="categorySaveBtn">Save Category</button>
-                </div>
-            </form>
+    <form asp-controller="Category" asp-action="Save" method="post" class="category-editor" data-loading>
+        <input type="hidden" asp-for="Category.Id" />
+        <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+        <input type="hidden" name="StatusFilter" value="@Model.StatusFilter" />
+        <input type="hidden" name="CurrentPage" value="@Model.CurrentPage" />
+        <div>
+            <label asp-for="Category.Name">Category name *</label>
+            <input asp-for="Category.Name" required maxlength="150" placeholder="e.g. Process Improvement" />
+            <span asp-validation-for="Category.Name" class="text-danger"></span>
+        </div>
+        <div class="category-description-field">
+            <label asp-for="Category.Description">Description</label>
+            <input asp-for="Category.Description" maxlength="1000" placeholder="Describe the ideas that belong in this category" />
+            <span asp-validation-for="Category.Description" class="text-danger"></span>
+        </div>
+        <label class="category-active-check">
+            <input asp-for="Category.IsActive" type="checkbox" />
+            <span>Available for new ideas</span>
+        </label>
+        <button type="submit" class="prototype-button">
+            <i class="ti ti-device-floppy"></i>
+            @(isEditing ? "Save changes" : "Create category")
+        </button>
+    </form>
+</section>
+
+<form asp-controller="Category" asp-action="Index" method="get" class="prototype-card category-filters">
+    <label class="category-search">
+        <span class="visually-hidden">Search categories</span>
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input asp-for="SearchTerm" type="search" placeholder="Search categories" />
+    </label>
+    <label>
+        <span class="visually-hidden">Filter category status</span>
+        <select asp-for="StatusFilter">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
+    </label>
+    <button type="submit" class="prototype-button"><i class="ti ti-adjustments"></i>Apply</button>
+    <a asp-action="Index" class="prototype-button secondary">Clear</a>
+</form>
+
+<section class="prototype-card category-list-card">
+    <div class="category-list-heading">
+        <div>
+            <h2>Categories</h2>
+            <p>@Model.Categories.Count category record(s) on this page</p>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="ims-staff-modal" id="deleteModal" style="display:none;">
-        <div class="ims-staff-modal-overlay" onclick="closeDeleteModal()"></div>
-        <div class="ims-staff-modal-content" style="max-width:400px;">
-            <div class="ims-staff-modal-header">
-                <h3>Confirm Delete</h3>
-                <button class="ims-staff-modal-close" onclick="closeDeleteModal()">&times;</button>
-            </div>
-            <div class="ims-staff-modal-body">
-                <p>Are you sure you want to delete the category <strong id="deleteCategoryName"></strong>?</p>
-                <p style="font-size:13px;color:#888;margin-top:8px;">This action cannot be undone.</p>
-            </div>
-            <div class="ims-staff-modal-footer">
-                <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <form method="post" asp-controller="Category" asp-action="Delete">
-                    <input type="hidden" name="id" id="deleteCategoryId" />
-                    <button type="submit" class="ims-staff-btn ims-staff-btn-danger">Delete</button>
-                </form>
-            </div>
+    @if (Model.Categories.Count == 0)
+    {
+        <div class="admin-empty-state">
+            <i class="ti ti-category-off"></i>
+            <h2>No categories found</h2>
+            <p>Change the filters or add a new category.</p>
         </div>
-    </div>
-
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-
-            let deleteId = null;
-
-            function openAddCategoryModal() {
-                document.getElementById('categoryModalTitle').textContent = 'Add New Category';
-                document.getElementById('categoryId').value = '';
-                document.getElementById('CategoryName').value = '';
-                document.getElementById('CategoryDescription').value = '';
-                document.getElementById('CategoryIsActive').checked = true;
-                document.getElementById('categorySaveBtn').textContent = 'Save Category';
-                document.getElementById('categoryModal').style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }
-
-            function editCategory(id, name, description, isActive) {
-                document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-                document.getElementById('categoryId').value = id;
-                document.getElementById('CategoryName').value = name;
-                document.getElementById('CategoryDescription').value = description || '';
-                document.getElementById('CategoryIsActive').checked = isActive;
-                document.getElementById('categorySaveBtn').textContent = 'Update Category';
-                document.getElementById('categoryModal').style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }
-
-            function deleteCategory(id, name) {
-                deleteId = id;
-                document.getElementById('deleteCategoryId').value = id;
-                document.getElementById('deleteCategoryName').textContent = name;
-                document.getElementById('deleteModal').style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeCategoryModal() {
-                document.getElementById('categoryModal').style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-
-            function closeDeleteModal() {
-                document.getElementById('deleteModal').style.display = 'none';
-                document.body.style.overflow = 'auto';
-                deleteId = null;
-            }
-
-            // Close modals on ESC key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeCategoryModal();
-                    closeDeleteModal();
-                }
-            });
-        </script>
     }
-</body>
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Created</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <tr>
+                            <td><strong>@category.Name</strong></td>
+                            <td class="category-description-cell">@(string.IsNullOrWhiteSpace(category.Description) ? "No description" : category.Description)</td>
+                            <td>@category.CreatedDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <span class="admin-status @(category.IsActive ? "active" : "inactive")">
+                                    <i class="ti ti-@(category.IsActive ? "circle-check" : "circle-minus")"></i>
+                                    @(category.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="category-row-actions">
+                                    <a asp-action="Index"
+                                       asp-route-editId="@category.Id"
+                                       asp-route-searchTerm="@Model.SearchTerm"
+                                       asp-route-statusFilter="@Model.StatusFilter"
+                                       asp-route-page="@Model.CurrentPage"
+                                       class="prototype-button secondary">
+                                        <i class="ti ti-edit"></i>Edit
+                                    </a>
+                                    @if (category.IsActive)
+                                    {
+                                        <form asp-action="Delete" method="post" data-loading>
+                                            <input type="hidden" name="id" value="@category.Id" />
+                                            <button type="submit" class="prototype-button secondary danger"
+                                                    data-confirm="Remove @category.Name from active categories?">
+                                                <i class="ti ti-trash"></i>Delete
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Category pages" class="category-pagination">
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <a asp-action="Index"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-statusFilter="@Model.StatusFilter"
+                   asp-route-page="@pageNumber"
+                   class="@(pageNumber == Model.CurrentPage ? "active" : "")"
+                   aria-current="@(pageNumber == Model.CurrentPage ? "page" : null)">
+                    @pageNumber
+                </a>
+            }
+        </nav>
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Template.Data.Configurations;
 using Template.Web.Models.Notification;
+using Template.Common.Enums;
 
 namespace Template.Web.Controllers;
 
@@ -46,8 +47,9 @@ public class NotificationController(ApplicationDbContext context) : Controller
                     Id = notification.Id,
                     Subject = notification.Subject,
                     Message = notification.Message,
-                    Icon = notification.Type.ToString(),
+                    Icon = NotificationIcon(notification.Type),
                     TimeAgo = notification.CreatedDate.ToString("dd MMM yyyy HH:mm"),
+                    LinkUrl = notification.LinkUrl,
                     IsRead = notification.IsRead
                 })
                 .ToListAsync()
@@ -100,6 +102,36 @@ public class NotificationController(ApplicationDbContext context) : Controller
         return RedirectToAction(nameof(Index), new { filter });
     }
 
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> UnreadCount()
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var count = await context.Notifications
+            .AsNoTracking()
+            .CountAsync(notification => notification.UserId == userId && !notification.IsRead);
+        return Json(new { count });
+    }
+
     private bool TryGetCurrentUserId(out Guid userId) =>
         Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+
+    private static string NotificationIcon(NotificationType type) => type switch
+    {
+        NotificationType.IdeaSubmitted => "bulb",
+        NotificationType.StageChanged => "timeline-event",
+        NotificationType.StatusChanged => "status-change",
+        NotificationType.InformationRequested => "message-question",
+        NotificationType.CommentAdded => "message-circle",
+        NotificationType.ApprovalDecision => "circle-check",
+        NotificationType.DeadlineReminder => "clock-exclamation",
+        NotificationType.AccountCreated => "user-plus",
+        NotificationType.PasswordReset => "key",
+        NotificationType.SupportRequest => "lifebuoy",
+        _ => "speakerphone"
+    };
 }

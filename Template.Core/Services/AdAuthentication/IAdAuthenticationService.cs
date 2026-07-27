@@ -6,6 +6,7 @@ namespace Template.Core.Services.AdAuthentication
     {
         bool ValidateCredentials(string username, string password);
         bool ValidateUserCredentials(string username, string password);
+        (bool Success, string ErrorMessage) ResetPassword(string username, string newPassword);
 
         AdUserResult IsExistsOnAd(ApplicationUserViewModel model);
 

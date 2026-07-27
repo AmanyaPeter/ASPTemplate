@@ -1,8 +1,89 @@
-@{ ViewData["Title"] = "Help & Support"; }
-<div class="prototype-heading"><div><h1>Help & support</h1><p>Quick guidance for common tasks in the Innovation Management System.</p></div></div>
-<div class="prototype-grid">
-    <a class="prototype-card prototype-settings-card" asp-controller="Idea" asp-action="Submit"><i class="ti ti-bulb"></i><strong>Submit an idea</strong><span>Start a new innovation proposal.</span></a>
-    <a class="prototype-card prototype-settings-card" asp-controller="Resource" asp-action="Index"><i class="ti ti-books"></i><strong>Resources</strong><span>Browse guidance and reference materials.</span></a>
-    <a class="prototype-card prototype-settings-card" asp-controller="Notification" asp-action="Index"><i class="ti ti-bell"></i><strong>Notifications</strong><span>Review updates and requested actions.</span></a>
-    <a class="prototype-card prototype-settings-card" asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><strong>Your profile</strong><span>Review your account details.</span></a>
+@model Template.Web.Models.Settings.SupportRequestViewModel
+@{
+    ViewData["Title"] = "Help & Support";
+}
+
+<div class="prototype-heading">
+    <div>
+        <h1>Help & support</h1>
+        <p>Find common destinations or send a support request directly to the system administrators.</p>
+    </div>
 </div>
+
+<section class="support-layout">
+    <div>
+        <div class="support-quick-links">
+            <a class="prototype-card prototype-settings-card" asp-controller="Idea" asp-action="Submit">
+                <i class="ti ti-bulb"></i>
+                <strong>Submit an idea</strong>
+                <span>Start a new innovation proposal.</span>
+            </a>
+            <a class="prototype-card prototype-settings-card" asp-controller="Resource" asp-action="Index">
+                <i class="ti ti-books"></i>
+                <strong>Resources</strong>
+                <span>Browse policies, guidance, and templates.</span>
+            </a>
+            <a class="prototype-card prototype-settings-card" asp-controller="Notification" asp-action="Index">
+                <i class="ti ti-bell"></i>
+                <strong>Notifications</strong>
+                <span>Review updates and requested actions.</span>
+            </a>
+            <a class="prototype-card prototype-settings-card" asp-controller="Profile" asp-action="Index">
+                <i class="ti ti-user-circle"></i>
+                <strong>Your profile</strong>
+                <span>Review your account and organisational details.</span>
+            </a>
+        </div>
+
+        <div class="prototype-card support-guidance">
+            <h2><i class="ti ti-info-circle"></i>Before sending a request</h2>
+            <ul>
+                <li>Include the page or idea reference where the issue occurred.</li>
+                <li>Describe what you expected and what happened instead.</li>
+                <li>Do not include passwords or other confidential credentials.</li>
+            </ul>
+        </div>
+    </div>
+
+    <form asp-action="SendSupportRequest" method="post" class="prototype-card support-request-form" data-loading>
+        <div class="support-form-heading">
+            <span><i class="ti ti-lifebuoy"></i></span>
+            <div>
+                <h2>Message an administrator</h2>
+                <p>The administrators will receive an in-app notification and email.</p>
+            </div>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div>
+            <label asp-for="Subject">Subject *</label>
+            <input asp-for="Subject" required maxlength="150" placeholder="Briefly describe what you need help with" />
+            <span asp-validation-for="Subject" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Priority">Priority *</label>
+            <select asp-for="Priority">
+                <option value="Low">Low</option>
+                <option value="Normal">Normal</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+            </select>
+            <span asp-validation-for="Priority" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Message">How can we help? *</label>
+            <textarea asp-for="Message" required minlength="10" maxlength="2000" rows="8"
+                      placeholder="Describe the issue, page, idea reference, and any steps already tried"></textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+        </div>
+        <button type="submit" class="prototype-button">
+            <i class="ti ti-send"></i>
+            Send to administrators
+        </button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

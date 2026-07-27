@@ -17,6 +17,10 @@ namespace Template.Web.Models.Resource
         public int Id { get; set; }
         public required string ResourceTitle { get; set; }
         public string? Description { get; set; }
+        public ResourceCategory Category { get; set; }
+        public string FileName { get; set; } = string.Empty;
+        public long FileSizeBytes { get; set; }
+        public int DownloadCount { get; set; }
         public DateTime UploadedAt { get; set; }
         public string? Icon { get; set; }
     }

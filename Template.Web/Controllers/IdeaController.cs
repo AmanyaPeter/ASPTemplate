@@ -227,6 +227,101 @@ public class IdeaController(
     }
 
     [Authorize(Roles = RoleConstants.InnovationTeam)]
+    public async Task<IActionResult> Pipeline(
+        string? searchTerm,
+        string? statusFilter,
+        string? categoryFilter)
+    {
+        var query = context.InnovationIdeas
+            .AsNoTracking()
+            .Where(idea => !idea.IsDeleted && !idea.IsRetracted);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearch = searchTerm.Trim();
+            query = query.Where(idea =>
+                idea.Title.Contains(normalizedSearch) ||
+                idea.ReferenceNumber.Contains(normalizedSearch) ||
+                idea.Submitter.FullName.Contains(normalizedSearch));
+        }
+
+        if (!string.IsNullOrWhiteSpace(statusFilter) &&
+            Enum.TryParse<IdeaStatus>(statusFilter, true, out var parsedStatus))
+        {
+            query = query.Where(idea => idea.CurrentStatus == parsedStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(categoryFilter))
+        {
+            query = query.Where(idea =>
+                idea.Category != null && idea.Category.Name == categoryFilter);
+        }
+
+        var ideas = await query
+            .OrderBy(idea => idea.CurrentStage)
+            .ThenBy(idea => idea.Timeline
+                .Where(entry => entry.ActualCompletionDate == null)
+                .Select(entry => (DateTime?)entry.DeadlineDate)
+                .FirstOrDefault())
+            .ThenByDescending(idea => idea.SubmissionDate)
+            .Select(idea => new IdeaPipelineCardViewModel
+            {
+                Id = idea.Id,
+                ReferenceNumber = idea.ReferenceNumber,
+                Title = idea.Title,
+                Submitter = idea.Submitter.FullName,
+                Department = idea.Submitter.BusinessUnit,
+                CategoryName = idea.Category != null ? idea.Category.Name : "Uncategorized",
+                Stage = idea.CurrentStage,
+                Status = idea.CurrentStatus,
+                SubmissionDate = idea.SubmissionDate,
+                StageStartDate = idea.Timeline
+                    .Where(entry =>
+                        entry.Stage == idea.CurrentStage &&
+                        entry.ActualCompletionDate == null)
+                    .OrderByDescending(entry => entry.StartDate)
+                    .Select(entry => (DateTime?)entry.StartDate)
+                    .FirstOrDefault(),
+                DeadlineDate = idea.Timeline
+                    .Where(entry =>
+                        entry.Stage == idea.CurrentStage &&
+                        entry.ActualCompletionDate == null)
+                    .OrderBy(entry => entry.DeadlineDate)
+                    .Select(entry => (DateTime?)entry.DeadlineDate)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        var model = new IdeaPipelineModel
+        {
+            SearchTerm = searchTerm,
+            StatusFilter = statusFilter,
+            CategoryFilter = categoryFilter,
+            CategoryOptions = await context.Categories
+                .AsNoTracking()
+                .Where(category => category.IsActive)
+                .OrderBy(category => category.Name)
+                .Select(category => category.Name)
+                .ToListAsync(),
+            TotalIdeas = ideas.Count,
+            PendingReviewIdeas = ideas.Count(idea => idea.Status == IdeaStatus.UnderReview),
+            ApprovedIdeas = ideas.Count(idea => idea.Status == IdeaStatus.Approved),
+            OverdueIdeas = ideas.Count(idea => idea.IsOverdue),
+            Columns = Enum.GetValues<IdeaStage>()
+                .Select(stage => new IdeaPipelineColumnViewModel
+                {
+                    Stage = stage,
+                    Name = StageName(stage),
+                    Description = StageDescription(stage),
+                    Ideas = ideas.Where(idea => idea.Stage == stage).ToList()
+                })
+                .ToList()
+        };
+
+        return View(model);
+    }
+
+    [Authorize(Roles = RoleConstants.InnovationTeam)]
     public async Task<IActionResult> AllIdeas(
         string? searchTerm,
         string? statusFilter,
@@ -368,4 +463,20 @@ public class IdeaController(
 
         return await context.Users.FirstOrDefaultAsync(user => user.Id == userId);
     }
+
+    private static string StageName(IdeaStage stage) => stage switch
+    {
+        IdeaStage.ConceptDevelopment => "Concept Development",
+        _ => stage.ToString()
+    };
+
+    private static string StageDescription(IdeaStage stage) => stage switch
+    {
+        IdeaStage.Submitted => "New ideas awaiting initial review",
+        IdeaStage.ConceptDevelopment => "Ideas being shaped and assessed",
+        IdeaStage.Experimentation => "Concepts being tested and validated",
+        IdeaStage.Deployment => "Approved ideas moving into operation",
+        IdeaStage.Closed => "Ideas with a completed workflow",
+        _ => string.Empty
+    };
 }
