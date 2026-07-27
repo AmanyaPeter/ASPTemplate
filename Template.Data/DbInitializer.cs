@@ -175,15 +175,15 @@ public static class DbInitializer
         return permissions;
     }
 
-    private static async Task ResetLoggedInStateAsync(UserManager<ApplicationUser> userManager)
+   private static async Task ResetLoggedInStateAsync(UserManager<ApplicationUser> userManager)
+{
+    var loggedInUsers = await userManager.Users.Where(u => u.IsLoggedIn).ToListAsync();
+    foreach (var user in loggedInUsers)
     {
-        foreach (var user in userManager.Users.Where(u => u.IsLoggedIn))
-        {
-            user.IsLoggedIn = false;
-            await userManager.UpdateAsync(user);
-        }
+        user.IsLoggedIn = false;
+        await userManager.UpdateAsync(user);
     }
-
+}
     private static async Task SeedCategoriesAsync(ApplicationDbContext context)
     {
         var defaults = new[]
