@@ -6,33 +6,55 @@
 <div class="prototype-heading">
     <div>
         <h1>Help & support</h1>
-        <p>Find common destinations or send a support request directly to the system administrators.</p>
+        <p>Follow the guidance below or send a message directly to the system administrators.</p>
     </div>
 </div>
 
 <section class="support-layout">
     <div>
-        <div class="support-quick-links">
-            <a class="prototype-card prototype-settings-card" asp-controller="Idea" asp-action="Submit">
-                <i class="ti ti-bulb"></i>
-                <strong>Submit an idea</strong>
-                <span>Start a new innovation proposal.</span>
-            </a>
-            <a class="prototype-card prototype-settings-card" asp-controller="Resource" asp-action="Index">
-                <i class="ti ti-books"></i>
-                <strong>Resources</strong>
-                <span>Browse policies, guidance, and templates.</span>
-            </a>
-            <a class="prototype-card prototype-settings-card" asp-controller="Notification" asp-action="Index">
-                <i class="ti ti-bell"></i>
-                <strong>Notifications</strong>
-                <span>Review updates and requested actions.</span>
-            </a>
-            <a class="prototype-card prototype-settings-card" asp-controller="Profile" asp-action="Index">
-                <i class="ti ti-user-circle"></i>
-                <strong>Your profile</strong>
-                <span>Review your account and organisational details.</span>
-            </a>
+        <div class="support-guides">
+            <article class="prototype-card support-guide">
+                <header>
+                    <span><i class="ti ti-bulb"></i></span>
+                    <div>
+                        <h2>How to submit an idea</h2>
+                        <p>Prepare and send an innovation proposal to the Innovation Team.</p>
+                    </div>
+                </header>
+                <ol>
+                    <li>Open <strong>Submit an idea</strong> from the sidebar and confirm whether you are submitting individually or as a team.</li>
+                    <li>Complete the innovator details, idea description, strategic alignment, benefits, and implementation sections.</li>
+                    <li>Attach any supporting evidence or documents, then review the required fields before submitting.</li>
+                    <li>Select <strong>Submit Idea</strong>. A confirmation will appear and the Innovation Team will be notified automatically.</li>
+                </ol>
+                @if (!User.IsInRole("Admin") && !User.IsInRole("InnovationTeam"))
+                {
+                    <a class="prototype-button secondary" asp-controller="Idea" asp-action="Submit">
+                        <i class="ti ti-arrow-right"></i>
+                        Go to Submit Idea
+                    </a>
+                }
+            </article>
+
+            <article class="prototype-card support-guide">
+                <header>
+                    <span><i class="ti ti-books"></i></span>
+                    <div>
+                        <h2>How to use Resources</h2>
+                        <p>Find guidance, policies, templates, and reference documents.</p>
+                    </div>
+                </header>
+                <ol>
+                    <li>Open <strong>Resources</strong> from the sidebar.</li>
+                    <li>Use search and the category filter to narrow the available documents.</li>
+                    <li>Select <strong>View</strong> to open a resource or <strong>Download</strong> to save a copy.</li>
+                    <li>Use the relevant templates and guidance while preparing or reviewing an idea.</li>
+                </ol>
+                <a class="prototype-button secondary" asp-controller="Resource" asp-action="Index">
+                    <i class="ti ti-arrow-right"></i>
+                    Browse Resources
+                </a>
+            </article>
         </div>
 
         <div class="prototype-card support-guidance">
@@ -43,6 +65,30 @@
                 <li>Do not include passwords or other confidential credentials.</li>
             </ul>
         </div>
+
+        <section class="prototype-card support-faq">
+            <h2><i class="ti ti-help-circle"></i> Frequently asked questions</h2>
+            <details>
+                <summary>What happens after I submit an idea?</summary>
+                <p>You will see a submission confirmation. The Innovation Team receives a new notification and can begin reviewing the idea through the idea pipeline.</p>
+            </details>
+            <details>
+                <summary>Can I track the progress of my submitted idea?</summary>
+                <p>Yes. Open My Ideas from the sidebar to see the current status and stage, then open an idea to view its timeline and feedback.</p>
+            </details>
+            <details>
+                <summary>Where can I find templates and guidance documents?</summary>
+                <p>Open Resources from the sidebar. Search by name or filter the library by category to locate the document you need.</p>
+            </details>
+            <details>
+                <summary>How will I know when the Innovation Team responds?</summary>
+                <p>A notification will appear in your Notifications page when the team comments, requests information, or updates your idea.</p>
+            </details>
+            <details>
+                <summary>What should I do if I cannot submit or open a resource?</summary>
+                <p>Use the Message an administrator form on this page. Include the page, idea reference where applicable, and what happened. Never send your password.</p>
+            </details>
+        </section>
     </div>
 
     <form asp-action="SendSupportRequest" method="post" class="prototype-card support-request-form" data-loading>
@@ -50,7 +96,7 @@
             <span><i class="ti ti-lifebuoy"></i></span>
             <div>
                 <h2>Message an administrator</h2>
-                <p>The administrators will receive an in-app notification and email.</p>
+                <p>Send a support message to all active system administrators.</p>
             </div>
         </div>
 
@@ -79,7 +125,7 @@
         </div>
         <button type="submit" class="prototype-button">
             <i class="ti ti-send"></i>
-            Send to administrators
+            Send message to administrators
         </button>
     </form>
 </section>

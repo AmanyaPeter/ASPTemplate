@@ -9,6 +9,18 @@
   document.querySelectorAll("[data-alert-close]").forEach(x =>
     x.addEventListener("click", () => x.closest(".prototype-alert")?.remove())
   );
+  document.querySelectorAll("[data-popup]").forEach(popup => {
+    const closePopup = () => popup.remove();
+    popup.querySelectorAll("[data-popup-close]").forEach(button =>
+      button.addEventListener("click", closePopup)
+    );
+    popup.addEventListener("click", event => {
+      if (event.target === popup) closePopup();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && popup.isConnected) closePopup();
+    });
+  });
   document.querySelectorAll("[data-confirm]").forEach(x => x.addEventListener("click", event => {
     if (!window.confirm(x.dataset.confirm || "Are you sure?")) event.preventDefault();
   }));

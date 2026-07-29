@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Template.Common.Enums;
@@ -17,6 +18,7 @@ namespace Template.Web.Controllers;
 public class IdeaController(
     ApplicationDbContext context,
     IDatabaseFileService fileService,
+    UserManager<ApplicationUser> userManager,
     IHubContext<ImtsHub> hub) : Controller
 {
     [Authorize(Roles = RoleConstants.Staff)]
@@ -135,6 +137,26 @@ public class IdeaController(
             Message = $"{idea.ReferenceNumber} was submitted for review.",
             CreatedDate = DateTime.UtcNow
         });
+
+        var innovationTeamMembers = (await userManager.GetUsersInRoleAsync(RoleConstants.InnovationTeam))
+            .Where(member => member.IsActive)
+            .ToList();
+        foreach (var teamMember in innovationTeamMembers)
+        {
+            context.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = teamMember.Id,
+                IdeaId = idea.Id,
+                Idea = idea,
+                Type = NotificationType.IdeaSubmitted,
+                Subject = "New idea submitted",
+                Message = $"{user.FullName} submitted {idea.ReferenceNumber}: {idea.Title}.",
+                LinkUrl = $"/Idea/Details/{idea.Id}",
+                CreatedDate = DateTime.UtcNow
+            });
+        }
+
         context.EmailOutbox.Add(new EmailOutbox
         {
             Id = Guid.NewGuid(), IdempotencyKey = $"idea-submitted:{idea.Id}",
@@ -158,7 +180,17 @@ public class IdeaController(
         await hub.Clients.Group($"user:{user.Id}").SendAsync(
             "notificationChanged", new { ideaId = idea.Id, type = "IdeaSubmitted" },
             HttpContext.RequestAborted);
-        TempData["SuccessMessage"] = $"Idea {idea.ReferenceNumber} submitted successfully.";
+        await hub.Clients.Group($"role:{RoleConstants.InnovationTeam}").SendAsync(
+            "notificationChanged",
+            new
+            {
+                ideaId = idea.Id,
+                type = NotificationType.IdeaSubmitted.ToString(),
+                subject = "New idea submitted"
+            },
+            HttpContext.RequestAborted);
+        TempData["IdeaSubmissionSuccess"] =
+            $"Idea {idea.ReferenceNumber} has been submitted to the Innovation Team for review.";
         return RedirectToAction(nameof(MyIdeas));
     }
 

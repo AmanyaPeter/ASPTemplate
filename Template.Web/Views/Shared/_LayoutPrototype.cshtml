@@ -11,19 +11,24 @@
         (actionName == null || action.Equals(actionName, StringComparison.OrdinalIgnoreCase))
             ? "active"
             : "";
-    var displayName = string.IsNullOrWhiteSpace(User.Identity?.Name) ? "User" : User.Identity.Name;
     var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    var unreadNotificationCount = Guid.TryParse(userIdValue, out var layoutUserId)
+    var hasLayoutUserId = Guid.TryParse(userIdValue, out var layoutUserId);
+    var storedFullName = hasLayoutUserId
+        ? await LayoutDb.Users.AsNoTracking()
+            .Where(user => user.Id == layoutUserId)
+            .Select(user => user.FullName)
+            .SingleOrDefaultAsync()
+        : null;
+    var displayName = !string.IsNullOrWhiteSpace(storedFullName)
+        ? storedFullName
+        : !string.IsNullOrWhiteSpace(User.Identity?.Name)
+            ? User.Identity!.Name!
+            : "User";
+    var roleDisplayName = isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff";
+    var unreadNotificationCount = hasLayoutUserId
         ? await LayoutDb.Notifications.AsNoTracking()
             .CountAsync(notification => notification.UserId == layoutUserId && !notification.IsRead)
         : 0;
-    var pageIcon = controller switch
-    {
-        "Home" => "layout-dashboard", "Idea" => "bulb", "Notification" => "bell",
-        "Resource" => "books", "Report" => "chart-bar", "Category" => "category",
-        "Account" => "users", "Role" => "shield-lock", "AuditLog" => "history",
-        "Profile" => "user-circle", "Settings" => "settings", _ => "building-bank"
-    };
 }
 <!doctype html>
 <html lang="en">
@@ -36,6 +41,7 @@
     <link rel="stylesheet" href="~/css/staff.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/adminpages.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/prototype.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/workflow-enhancements.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="prototype-shell">
@@ -46,11 +52,20 @@
             <span><strong>Innovation</strong><small>Management System</small></span>
         </a>
         <nav class="prototype-nav">
-            <a class="@Active("Home")" asp-controller="Home" asp-action="Index"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+            <a class="@Active("Home")" asp-controller="Home" asp-action="Index">
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-layout-dashboard"></i></span>
+                <span>Dashboard</span>
+            </a>
             @if (!isAdmin && !isTeam)
             {
-                <a class="@Active("Idea")" asp-controller="Idea" asp-action="Submit"><i class="ti ti-bulb"></i>Submit an idea</a>
-                <a class="@Active("Idea")" asp-controller="Idea" asp-action="MyIdeas"><i class="ti ti-list-check"></i>My ideas</a>
+                <a class="@Active("Idea", "Submit")" asp-controller="Idea" asp-action="Submit">
+                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-bulb"></i></span>
+                    <span>Submit Idea</span>
+                </a>
+                <a class="@Active("Idea", "MyIdeas")" asp-controller="Idea" asp-action="MyIdeas">
+                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-list-check"></i></span>
+                    <span>My Ideas</span>
+                </a>
             }
             @if (isAdmin || isTeam)
             {
@@ -61,10 +76,13 @@
                 <a class="@Active("Category")" asp-controller="Category" asp-action="Index"><i class="ti ti-category"></i>Categories</a>
                 <a class="@Active("Report")" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i>Reports</a>
             }
-            <a class="@Active("Resource")" asp-controller="Resource" asp-action="Index"><i class="ti ti-books"></i>Resources</a>
+            <a class="@Active("Resource")" asp-controller="Resource" asp-action="Index">
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-books"></i></span>
+                <span>Resources</span>
+            </a>
             <a class="@Active("Notification")" asp-controller="Notification" asp-action="Index">
-                <i class="ti ti-bell"></i>
-                Notifications
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-bell"></i></span>
+                <span>Notifications</span>
                 <span class="prototype-nav-badge @(unreadNotificationCount == 0 ? "d-none" : "")" data-notification-count>@unreadNotificationCount</span>
             </a>
             @if (isAdmin)
@@ -76,35 +94,39 @@
                 <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i>Audit logs</a>
                 <a class="@Active("Settings", "Index")" asp-controller="Settings" asp-action="Index"><i class="ti ti-settings"></i>System settings</a>
             }
-            <span class="prototype-nav-label">Help</span>
-            <a class="@Active("Settings", "Support")" asp-controller="Settings" asp-action="Support"><i class="ti ti-help-circle"></i>Help & support</a>
+            <a class="@Active("Settings", "Support")" asp-controller="Settings" asp-action="Support">
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-help-circle"></i></span>
+                <span>Help</span>
+            </a>
         </nav>
         <div class="prototype-sidebar-foot">
-            <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@(isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff")</small></span></a>
+            <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@roleDisplayName</small></span></a>
             <a asp-controller="Account" asp-action="Logout" title="Sign out and return to login" aria-label="Sign out"><i class="ti ti-logout"></i></a>
         </div>
     </aside>
     <div class="prototype-page">
         <header class="prototype-topbar">
             <button class="prototype-icon-button prototype-menu" type="button" data-sidebar-open aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
-            @if (controller.Equals("Home", StringComparison.OrdinalIgnoreCase))
-            {
-                <a class="prototype-header-logo" asp-controller="Home" asp-action="Index" aria-label="Bank of Uganda dashboard">
-                    <img src="~/img/bou.png" alt="Bank of Uganda" />
-                </a>
-            }
-            else
-            {
-                <span class="prototype-page-icon"><i class="ti ti-@pageIcon"></i></span>
-            }
-            <div><small>Bank of Uganda</small><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
+            <a class="prototype-header-logo" asp-controller="Home" asp-action="Index" aria-label="Bank of Uganda dashboard">
+                <img src="~/img/bou.png" alt="Bank of Uganda coat of arms" />
+            </a>
+            <div class="prototype-topbar-title"><small>Bank of Uganda</small><strong>@(ViewData["Title"] ?? "Innovation Management")</strong></div>
             <div class="prototype-top-actions">
                 <a class="prototype-icon-button prototype-notification-link" asp-controller="Notification" asp-action="Index"
                    aria-label="Notifications, @unreadNotificationCount unread">
                     <i class="ti ti-bell"></i>
                     <span class="prototype-notification-badge @(unreadNotificationCount == 0 ? "d-none" : "")" data-notification-count>@unreadNotificationCount</span>
                 </a>
-                <a class="prototype-avatar" asp-controller="Profile" asp-action="Index" aria-label="Open profile" title="Profile">@displayName.Substring(0, 1).ToUpperInvariant()</a>
+                <a class="prototype-user-profile" asp-controller="Profile" asp-action="Index"
+                   aria-label="Open profile for @displayName, @roleDisplayName"
+                   title="@displayName – @roleDisplayName">
+                    <span class="prototype-avatar" aria-hidden="true">@displayName.Substring(0, 1).ToUpperInvariant()</span>
+                    <span class="prototype-user-label">@displayName <span aria-hidden="true">–</span> @roleDisplayName</span>
+                </a>
+                <a class="prototype-logout" asp-controller="Account" asp-action="Logout" title="Sign out and return to login">
+                    <i class="ti ti-logout"></i>
+                    <span>Log out</span>
+                </a>
             </div>
         </header>
         <main class="prototype-content">
@@ -120,6 +142,17 @@
         </main>
         <footer class="prototype-footer">BOU Innovation Management System · Working prototype</footer>
     </div>
+    @if (TempData["IdeaSubmissionSuccess"] is string submissionSuccess)
+    {
+        <div class="prototype-popup-backdrop" data-popup role="presentation">
+            <section class="prototype-popup" role="dialog" aria-modal="true" aria-labelledby="idea-submission-popup-title">
+                <span class="prototype-popup-icon"><i class="ti ti-circle-check"></i></span>
+                <h2 id="idea-submission-popup-title">Idea submitted</h2>
+                <p>@submissionSuccess</p>
+                <button type="button" class="prototype-button" data-popup-close autofocus>Continue</button>
+            </section>
+        </div>
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/tabler.min.js" asp-append-version="true"></script>
     <script src="~/js/prototype.js" asp-append-version="true"></script>
