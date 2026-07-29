@@ -43,3 +43,63 @@ body.prototype-shell{display:block}
 .prototype-user-profile .prototype-avatar{flex:0 0 38px}
 .prototype-user-label{font-size:13px;font-weight:700;white-space:nowrap}
 @media(max-width:760px){.prototype-topbar-title{min-width:0}.prototype-topbar-title strong{display:block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prototype-user-label{display:none}.prototype-user-profile{padding:0}.prototype-top-actions{gap:8px}}
+
+/* User-management action pills */
+.admin-user-actions .prototype-button.secondary,
+.admin-user-actions .prototype-button.secondary.danger {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    color: #1f2937;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.admin-user-actions .prototype-button.secondary:hover,
+.admin-user-actions .prototype-button.secondary.danger:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #111827;
+}
+
+.admin-user-actions .prototype-button.secondary:active,
+.admin-user-actions .prototype-button.secondary.active,
+.admin-user-actions .prototype-button.secondary[aria-current="true"],
+.admin-user-actions .prototype-button.secondary[aria-pressed="true"],
+.admin-user-actions .prototype-button.secondary.danger:active,
+.admin-user-actions .prototype-button.secondary.danger.active,
+.admin-user-actions .prototype-button.secondary.danger[aria-current="true"],
+.admin-user-actions .prototype-button.secondary.danger[aria-pressed="true"] {
+    background: var(--ims-crimson);
+    border-color: var(--ims-crimson);
+    color: #fff;
+}
+
+.admin-user-actions .prototype-button.secondary:focus-visible {
+    outline: 3px solid rgba(179, 27, 52, .2);
+    outline-offset: 2px;
+}
+
+/* Sidebar account actions */
+.prototype-sidebar-foot {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.prototype-sidebar-foot a:first-child {
+    flex: none;
+}
+
+.prototype-sidebar-logout {
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.prototype-sidebar-logout:hover {
+    background: rgba(247, 145, 0, .16);
+}
+
+.prototype-sidebar-logout:hover .prototype-nav-icon {
+    color: var(--ims-orange);
+}

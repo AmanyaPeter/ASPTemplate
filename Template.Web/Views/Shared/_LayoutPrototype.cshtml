@@ -53,18 +53,18 @@
         </a>
         <nav class="prototype-nav">
             <a class="@Active("Home")" asp-controller="Home" asp-action="Index">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-layout-dashboard"></i></span>
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-home"></i></span>
                 <span>Dashboard</span>
             </a>
             @if (!isAdmin && !isTeam)
             {
                 <a class="@Active("Idea", "Submit")" asp-controller="Idea" asp-action="Submit">
-                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-bulb"></i></span>
-                    <span>Submit Idea</span>
+                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-sparkles"></i></span>
+                    <span>Submit an idea</span>
                 </a>
                 <a class="@Active("Idea", "MyIdeas")" asp-controller="Idea" asp-action="MyIdeas">
-                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-list-check"></i></span>
-                    <span>My Ideas</span>
+                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-clipboard-list"></i></span>
+                    <span>My ideas</span>
                 </a>
             }
             @if (isAdmin || isTeam)
@@ -95,13 +95,16 @@
                 <a class="@Active("Settings", "Index")" asp-controller="Settings" asp-action="Index"><i class="ti ti-settings"></i>System settings</a>
             }
             <a class="@Active("Settings", "Support")" asp-controller="Settings" asp-action="Support">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-help-circle"></i></span>
-                <span>Help</span>
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-lifebuoy"></i></span>
+                <span>Help &amp; support</span>
             </a>
         </nav>
         <div class="prototype-sidebar-foot">
-            <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@roleDisplayName</small></span></a>
-            <a asp-controller="Account" asp-action="Logout" title="Sign out and return to login" aria-label="Sign out"><i class="ti ti-logout"></i></a>
+            <a class="prototype-sidebar-profile" asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@roleDisplayName</small></span></a>
+            <a class="prototype-sidebar-logout" asp-controller="Account" asp-action="Logout" title="Sign out and return to login">
+                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-power"></i></span>
+                <span>Log out</span>
+            </a>
         </div>
     </aside>
     <div class="prototype-page">
@@ -124,7 +127,7 @@
                     <span class="prototype-user-label">@displayName <span aria-hidden="true">–</span> @roleDisplayName</span>
                 </a>
                 <a class="prototype-logout" asp-controller="Account" asp-action="Logout" title="Sign out and return to login">
-                    <i class="ti ti-logout"></i>
+                    <i class="ti ti-power"></i>
                     <span>Log out</span>
                 </a>
             </div>
