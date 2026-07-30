@@ -108,7 +108,7 @@ else
                     {
                         <form asp-controller="Resource" asp-action="Deactivate" method="post" data-loading>
                             <input type="hidden" name="id" value="@resource.Id" />
-                            <button type="submit" class="prototype-button secondary danger"
+                            <button type="submit" class="prototype-button secondary resource-delete-action"
                                     data-confirm="Delete @resource.ResourceTitle from the resource library?">
                                 <i class="ti ti-trash"></i>Delete
                             </button>

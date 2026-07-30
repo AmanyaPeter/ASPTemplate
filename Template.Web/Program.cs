@@ -203,7 +203,7 @@ app.MapIdentityApi<ApplicationUser>();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}/{param1?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}/{param1?}");
 
 app.MapBlazorHub();
 app.MapHub<ImtsHub>("/hubs/imts");
