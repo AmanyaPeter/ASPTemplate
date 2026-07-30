@@ -182,11 +182,11 @@ app.Use(async (context, next) =>
     context.TraceIdentifier = context.Request.Headers["X-Correlation-ID"].FirstOrDefault()
         ?? Guid.NewGuid().ToString("N");
     context.Response.Headers["X-Correlation-ID"] = context.TraceIdentifier;
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    context.Response.Headers.XFrameOptions = "DENY";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
-    context.Response.Headers["Content-Security-Policy"] =
+    context.Response.Headers.ContentSecurityPolicy =
         "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' wss:";
     await next();
 });
