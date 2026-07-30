@@ -103,6 +103,14 @@ public class IdeaController(
             SummaryDescription = model.Idea.SummaryDescription.Trim(),
             ProblemStatement = model.Idea.ProblemStatement.Trim(),
             ProposedSolution = model.Idea.ProposedSolution.Trim(),
+            ExpectedBenefits = model.Idea.ExpectedBenefits?.Trim(),
+            KeyEnablers = model.Idea.KeyEnablers?.Trim(),
+            ImplementationApproach = model.Idea.ImplementationApproach?.Trim(),
+            ImpactIndicators = model.Idea.ImpactIndicators?.Trim(),
+            StrategicObjective = model.Idea.StrategicObjective?.Trim(),
+            TeamMemberNames = model.SubmissionType == "team"
+                ? model.Innovator.TeamMemberNames?.Trim()
+                : null,
             CategoryId = category?.Id,
             SubmitterAgeBracket = user.AgeBracket,
             CurrentStage = IdeaStage.Submitted,
@@ -123,7 +131,7 @@ public class IdeaController(
             StartDate = idea.SubmissionDate,
             DeadlineDate = idea.SubmissionDate.AddDays(30),
             CreatedDate = DateTime.UtcNow,
-            CreatedBy = user.Id.ToString().ToString()
+            CreatedBy = user.Id.ToString()
         });
 
         context.Notifications.Add(new Notification
@@ -220,7 +228,7 @@ public class IdeaController(
 
         if (!string.IsNullOrWhiteSpace(statusFilter))
         {
-            if (Enum.TryParse<IdeaStatus>(statusFilter, true, out var parsedStatus))
+            if (Enum.TryParse<IdeaStatus>(statusFilter.Replace(" ", string.Empty), true, out var parsedStatus))
                 query = query.Where(idea => idea.CurrentStatus == parsedStatus);
         }
 
@@ -278,7 +286,7 @@ public class IdeaController(
         }
 
         if (!string.IsNullOrWhiteSpace(statusFilter) &&
-            Enum.TryParse<IdeaStatus>(statusFilter, true, out var parsedStatus))
+            Enum.TryParse<IdeaStatus>(statusFilter.Replace(" ", string.Empty), true, out var parsedStatus))
         {
             query = query.Where(idea => idea.CurrentStatus == parsedStatus);
         }
@@ -345,7 +353,20 @@ public class IdeaController(
                     Stage = stage,
                     Name = StageName(stage),
                     Description = StageDescription(stage),
-                    Ideas = ideas.Where(idea => idea.Stage == stage).ToList()
+                    Ideas = ideas.Where(idea => idea.Stage == stage).ToList(),
+                    MoveCandidates = stage == IdeaStage.Submitted
+                        ? []
+                        : ideas
+                            .Where(idea =>
+                                (int)idea.Stage == (int)stage - 1 &&
+                                idea.Status != IdeaStatus.Declined)
+                            .Select(idea => new PipelineMoveCandidateViewModel
+                            {
+                                Id = idea.Id,
+                                ReferenceNumber = idea.ReferenceNumber,
+                                Title = idea.Title
+                            })
+                            .ToList()
                 })
                 .ToList()
         };
@@ -375,7 +396,7 @@ public class IdeaController(
         }
         if (!string.IsNullOrWhiteSpace(statusFilter))
         {
-            if (Enum.TryParse<IdeaStatus>(statusFilter, true, out var parsedStatus))
+            if (Enum.TryParse<IdeaStatus>(statusFilter.Replace(" ", string.Empty), true, out var parsedStatus))
                 query = query.Where(idea => idea.CurrentStatus == parsedStatus);
         }
         if (!string.IsNullOrWhiteSpace(categoryFilter))

@@ -105,7 +105,7 @@ else if (User.IsInRole(RoleConstants.InnovationTeam))
                 @foreach (var idea in Model.InnovationTeam.ReviewQueue)
                 {
                     <tr>
-                        <td><div class="fw-semibold"><a asp-controller="Idea" asp-action="Details" asp-route-id="@idea.Id">@idea.ReferenceNumber</a></div><div class="text-muted small">@idea.Title</div></td>
+                        <td><div class="fw-semibold"><a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@idea.Id">@idea.ReferenceNumber</a></div><div class="text-muted small">@idea.Title</div></td>
                         <td><div>@idea.SubmitterName</div><div class="text-muted small">@idea.SubmitterDepartment</div></td>
                         <td>@idea.Category</td>
                         <td><span class="badge bg-blue-lt">@idea.Stage</span> <span class="badge bg-secondary-lt">@idea.Status</span></td>
@@ -153,9 +153,7 @@ else if (User.IsInRole(RoleConstants.Staff))
         <div class="col-sm-6 col-xl-3"><div class="card"><div class="card-body"><div class="text-muted">Completed / closed</div><div class="h1 text-primary mb-0">@Model.Staff.CompletedIdeas</div></div></div></div>
     </div>
 
-    <div class="row row-cards">
-        <div class="col-lg-8">
-            <div class="card h-100">
+    <div class="card">
                 <div class="card-header"><h3 class="card-title">My recent ideas</h3></div>
                 <div class="table-responsive">
                     <table class="table table-vcenter card-table">
@@ -177,27 +175,6 @@ else if (User.IsInRole(RoleConstants.Staff))
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header"><h3 class="card-title">My notifications</h3></div>
-                <div class="list-group list-group-flush">
-                    @if (Model.Staff.RecentNotifications.Count == 0)
-                    {
-                        <div class="text-center text-muted py-4">No notifications.</div>
-                    }
-                    @foreach (var notification in Model.Staff.RecentNotifications)
-                    {
-                        <div class="list-group-item @(notification.IsRead ? string.Empty : "bg-blue-lt")">
-                            <div class="fw-semibold">@notification.Subject</div>
-                            <div class="small text-muted">@notification.Message</div>
-                            <div class="small text-muted mt-1">@notification.CreatedDate.ToString("dd MMM yyyy HH:mm")</div>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
     </div>
 }
 else

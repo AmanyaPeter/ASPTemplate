@@ -19,7 +19,14 @@
             }
             <!-- Back Button -->
             <div class="ims-staff-back-link">
-                <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
+                @if (User.IsInRole(RoleConstants.InnovationTeam))
+                {
+                    <a asp-controller="Idea" asp-action="AllIdeas" class="ims-staff-back-link-anchor">&larr; Back to Submitted Ideas</a>
+                }
+                else
+                {
+                    <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-back-link-anchor">&larr; Back to My Ideas</a>
+                }
             </div>
 
             <!-- Detail Grid -->
@@ -87,15 +94,25 @@
                                 </div>
                             }
                         </div>
-                        <form asp-controller="IdeaStaffActions"
-                              asp-action="AddComment"
-                              asp-route-id="@Model.Idea.Id"
-                              method="post"
-                              class="ims-staff-comment-box">
-                            <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
-                            <textarea asp-for="NewComment" class="ims-staff-form-control" rows="2" placeholder="Write a comment..."></textarea>
-                            <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
-                        </form>
+                        @if (User.IsInRole(RoleConstants.InnovationTeam))
+                        {
+                            <a asp-controller="IdeaWorkflow" asp-action="Review" asp-route-id="@Model.Idea.Id"
+                               class="ims-staff-btn ims-staff-btn-primary">
+                                Open review controls
+                            </a>
+                        }
+                        else
+                        {
+                            <form asp-controller="IdeaStaffActions"
+                                  asp-action="AddComment"
+                                  asp-route-id="@Model.Idea.Id"
+                                  method="post"
+                                  class="ims-staff-comment-box">
+                                <div class="ims-staff-comment-box-avatar">@(User.Identity?.Name?.Substring(0, 1) ?? "?")</div>
+                                <textarea asp-for="NewComment" class="ims-staff-form-control" rows="2" placeholder="Write a comment..."></textarea>
+                                <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-btn-sm ims-staff-comment-submit-btn">Send</button>
+                            </form>
+                        }
                     </div>
                 </div>
 
@@ -135,10 +152,3 @@
             </div>
         </main>
     </div>
-
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-        </script>
-    }

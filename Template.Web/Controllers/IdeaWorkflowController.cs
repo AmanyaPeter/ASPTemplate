@@ -36,10 +36,17 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
                     SummaryDescription = idea.SummaryDescription,
                     ProblemStatement = idea.ProblemStatement,
                     ProposedSolution = idea.ProposedSolution,
+                    ExpectedBenefits = idea.ExpectedBenefits,
+                    KeyEnablers = idea.KeyEnablers,
+                    ImplementationApproach = idea.ImplementationApproach,
+                    ImpactIndicators = idea.ImpactIndicators,
+                    StrategicObjective = idea.StrategicObjective,
+                    Category = idea.Category != null ? idea.Category.Name : "Uncategorised",
                     Attachments = idea.Attachments
                         .Where(file => !file.IsDeleted)
                         .Select(file => new AttachmentReviewViewModel
                         {
+                            Id = file.Id,
                             FileName = file.FileName,
                             Icon = "paperclip"
                         }).ToList()
@@ -65,7 +72,7 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
                     {
                         Avatar = comment.User.FullName.Substring(0, 1),
                         Author = comment.User.FullName,
-                        Role = comment.IsInternal ? "Innovation Team" : "Staff",
+                        Role = comment.UserId == idea.SubmitterId ? "Staff" : "Innovation Team",
                         TimeAgo = comment.CreatedDate.ToString("dd MMM yyyy HH:mm"),
                         Text = comment.CommentText
                     }).ToList()
@@ -195,6 +202,7 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
                 : NotificationType.StatusChanged,
             Subject = "Idea review updated",
             Message = $"{idea.ReferenceNumber} is now {idea.CurrentStage} / {idea.CurrentStatus}.",
+            LinkUrl = $"/Idea/Details/{idea.Id}",
             CreatedDate = DateTime.UtcNow
         });
         if (!string.IsNullOrWhiteSpace(idea.Submitter.Email))
@@ -217,8 +225,125 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
         }
         await hub.Clients.Group($"user:{idea.SubmitterId}").SendAsync(
             "ideaChanged", new { ideaId = idea.Id, stage = idea.CurrentStage.ToString(), status = idea.CurrentStatus.ToString() });
+        await hub.Clients.Group($"user:{idea.SubmitterId}").SendAsync(
+            "notificationChanged",
+            new
+            {
+                ideaId = idea.Id,
+                type = previousStage != idea.CurrentStage
+                    ? NotificationType.StageChanged.ToString()
+                    : NotificationType.StatusChanged.ToString(),
+                subject = "Idea review updated"
+            });
         TempData["SuccessMessage"] = "Review saved and the submitter was notified.";
         return RedirectToAction(nameof(Review), new { id });
+    }
+
+    [HttpPost("Pipeline/Advance")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdvanceFromPipeline(
+        Guid ideaId,
+        IdeaStage targetStage,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        if (targetStage == IdeaStage.Submitted)
+        {
+            TempData["ErrorMessage"] = "New submissions enter the pipeline from the staff submission form.";
+            return RedirectToAction("Pipeline", "Idea");
+        }
+
+        var snapshot = await context.InnovationIdeas
+            .AsNoTracking()
+            .Where(idea => idea.Id == ideaId && !idea.IsDeleted && !idea.IsRetracted)
+            .Select(idea => new
+            {
+                idea.Id,
+                idea.ReferenceNumber,
+                idea.SubmitterId,
+                SubmitterEmail = idea.Submitter.Email,
+                idea.CurrentStage,
+                idea.CurrentStatus,
+                idea.RowVersion
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (snapshot == null)
+        {
+            TempData["ErrorMessage"] = "The selected idea is no longer available.";
+            return RedirectToAction("Pipeline", "Idea");
+        }
+
+        if (!workflow.CanTransition(
+                snapshot.CurrentStage,
+                snapshot.CurrentStatus,
+                targetStage,
+                IdeaStatus.Approved))
+        {
+            TempData["ErrorMessage"] =
+                $"Move the idea through the next pipeline stage first. It is currently in {snapshot.CurrentStage}.";
+            return RedirectToAction("Pipeline", "Idea");
+        }
+
+        try
+        {
+            await workflow.TransitionAsync(
+                snapshot.Id,
+                targetStage,
+                IdeaStatus.Approved,
+                GetCurrentUserId(),
+                string.IsNullOrWhiteSpace(reason) ? $"Moved to {targetStage} from the idea pipeline." : reason.Trim(),
+                null,
+                snapshot.RowVersion,
+                cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            TempData["ErrorMessage"] = "Another reviewer changed this idea. Reload the pipeline and try again.";
+            return RedirectToAction("Pipeline", "Idea");
+        }
+        catch (InvalidOperationException)
+        {
+            TempData["ErrorMessage"] = "The idea can no longer be moved to that stage. Reload the pipeline and review its latest status.";
+            return RedirectToAction("Pipeline", "Idea");
+        }
+
+        context.Notifications.Add(new Notification
+        {
+            Id = Guid.NewGuid(),
+            UserId = snapshot.SubmitterId,
+            IdeaId = snapshot.Id,
+            Type = NotificationType.StageChanged,
+            Subject = "Idea moved to a new stage",
+            Message = $"{snapshot.ReferenceNumber} moved to {targetStage}.",
+            LinkUrl = $"/Idea/Details/{snapshot.Id}",
+            CreatedDate = DateTime.UtcNow
+        });
+        if (!string.IsNullOrWhiteSpace(snapshot.SubmitterEmail))
+        {
+            context.EmailOutbox.Add(new EmailOutbox
+            {
+                Id = Guid.NewGuid(),
+                IdempotencyKey = $"pipeline:{snapshot.Id}:{targetStage}:{DateTime.UtcNow.Ticks}",
+                Recipient = snapshot.SubmitterEmail,
+                Subject = $"Your idea moved to {targetStage}",
+                Body = $"{snapshot.ReferenceNumber} moved to the {targetStage} stage.",
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        await hub.Clients.Group($"user:{snapshot.SubmitterId}").SendAsync(
+            "notificationChanged",
+            new
+            {
+                ideaId = snapshot.Id,
+                type = NotificationType.StageChanged.ToString(),
+                subject = "Idea moved to a new stage"
+            },
+            cancellationToken);
+
+        TempData["SuccessMessage"] = $"{snapshot.ReferenceNumber} was moved to {targetStage}.";
+        return RedirectToAction("Pipeline", "Idea");
     }
 
     [HttpPost("Review/{id:guid}/Comment")]
@@ -232,6 +357,7 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
 
         var reviewerId = GetCurrentUserId();
         var idea = await context.InnovationIdeas
+            .Include(item => item.Submitter)
             .FirstOrDefaultAsync(item => item.Id == id && !item.IsDeleted && !item.IsRetracted);
         var reviewer = await context.Users.FindAsync(reviewerId);
         if (idea == null || reviewer == null)
@@ -285,6 +411,8 @@ public class IdeaWorkflowController(ApplicationDbContext context, IHubContext<Im
                 subject = "New review comment"
             },
             HttpContext.RequestAborted);
+        TempData["CommentSentSuccess"] =
+            $"Your comment was sent to {idea.Submitter.FullName}. The submitter has been notified.";
         return RedirectToAction(nameof(Review), new { id });
     }
 

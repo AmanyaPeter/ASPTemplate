@@ -26,7 +26,8 @@ public sealed class AttachmentOptions
 {
     public const string SectionName = "Attachments";
     [Range(1, 10)] public int MaximumSizeMb { get; set; } = 10;
-    public string[] AllowedExtensions { get; set; } = [".pdf", ".docx"];
+    public string[] AllowedExtensions { get; set; } =
+        [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg"];
 }
 
 public sealed class ReminderOptions

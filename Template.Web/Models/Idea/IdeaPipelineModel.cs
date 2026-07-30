@@ -21,6 +21,14 @@ public sealed class IdeaPipelineColumnViewModel
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public List<IdeaPipelineCardViewModel> Ideas { get; set; } = [];
+    public List<PipelineMoveCandidateViewModel> MoveCandidates { get; set; } = [];
+}
+
+public sealed class PipelineMoveCandidateViewModel
+{
+    public Guid Id { get; set; }
+    public string ReferenceNumber { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
 }
 
 public sealed class IdeaPipelineCardViewModel

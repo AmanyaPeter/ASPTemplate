@@ -16,7 +16,6 @@ public class StaffDashboardViewModel
     public int ApprovedIdeas { get; set; }
     public int CompletedIdeas { get; set; }
     public List<DashboardIdeaViewModel> RecentIdeas { get; set; } = [];
-    public List<DashboardNotificationViewModel> RecentNotifications { get; set; } = [];
 }
 
 public class InnovationTeamDashboardViewModel
@@ -52,16 +51,6 @@ public class DashboardIdeaViewModel
     public bool IsRetracted { get; set; }
     public string SubmitterName { get; set; } = string.Empty;
     public string SubmitterDepartment { get; set; } = string.Empty;
-}
-
-public class DashboardNotificationViewModel
-{
-    public Guid Id { get; set; }
-    public NotificationType Type { get; set; }
-    public string Subject { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public bool IsRead { get; set; }
-    public DateTime CreatedDate { get; set; }
 }
 
 public class StageDeadlineViewModel

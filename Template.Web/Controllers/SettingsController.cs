@@ -23,7 +23,10 @@ public class SettingsController(
 
     [HttpGet]
     [Breadcrumb("Help & Support", FromAction = nameof(Index), FromController = typeof(HomeController))]
-    public IActionResult Support() => View(new SupportRequestViewModel());
+    public IActionResult Support() =>
+        User.IsInRole(RoleConstants.ItAdmin)
+            ? Forbid()
+            : View(new SupportRequestViewModel());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -31,6 +34,11 @@ public class SettingsController(
         SupportRequestViewModel model,
         CancellationToken cancellationToken)
     {
+        if (User.IsInRole(RoleConstants.ItAdmin))
+        {
+            return Forbid();
+        }
+
         if (!new[] { "Low", "Normal", "High", "Urgent" }.Contains(model.Priority))
         {
             ModelState.AddModelError(nameof(model.Priority), "Select a valid priority.");

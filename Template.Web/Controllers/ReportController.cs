@@ -16,16 +16,40 @@ public class ReportController(ApplicationDbContext db) : Controller
     private const int PageSize = 25;
 
     [HttpGet]
-    public Task<IActionResult> Index(int page = 1) => BuildReport(new ReportFilterViewModel(), page);
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public Task<IActionResult> Index(ReportsModel model, int page = 1) => BuildReport(model.Filters, page);
+    public Task<IActionResult> Index(
+        DateTime? startDate,
+        DateTime? endDate,
+        string? department,
+        string? category,
+        string? status,
+        int page = 1) =>
+        BuildReport(new ReportFilterViewModel
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            Department = department,
+            Category = category,
+            Status = status
+        }, page);
 
     [HttpGet]
-    public async Task<IActionResult> Export(string format = "csv")
+    public async Task<IActionResult> Export(
+        string format = "csv",
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        string? department = null,
+        string? category = null,
+        string? status = null)
     {
-        var rows = await Query(new ReportFilterViewModel()).OrderByDescending(i => i.SubmissionDate)
+        var filters = new ReportFilterViewModel
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            Department = department,
+            Category = category,
+            Status = status
+        };
+        var rows = await Query(filters).OrderByDescending(i => i.SubmissionDate)
             .Select(i => new { i.Title, Submitter = i.Submitter.FullName, Department = i.Submitter.BusinessUnit,
                 Category = i.Category != null ? i.Category.Name : "", Status = i.CurrentStatus.ToString(), i.SubmissionDate })
             .ToListAsync();
@@ -36,7 +60,7 @@ public class ReportController(ApplicationDbContext db) : Controller
                 $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.pdf");
         if (format.Equals("excel", StringComparison.OrdinalIgnoreCase))
             return File(ReportExportBuilder.BuildExcel(exportRows), "application/vnd.ms-excel",
-                $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.xml");
+                $"innovation-report-{DateTime.UtcNow:yyyyMMdd}.xls");
         var text = new StringBuilder("Idea Title,Submitter,Department,Category,Status,Date\r\n");
         foreach (var row in exportRows)
             text.AppendLine(string.Join(",", new[] { row.Title, row.Submitter, row.Department, row.Category, row.Status,
@@ -50,6 +74,8 @@ public class ReportController(ApplicationDbContext db) : Controller
         page = Math.Max(page, 1);
         var query = Query(filters);
         var all = await query.OrderByDescending(i => i.SubmissionDate).ToListAsync();
+        var totalPages = Math.Max(1, (int)Math.Ceiling(all.Count / (double)PageSize));
+        page = Math.Min(page, totalPages);
         var paged = all.Skip((page - 1) * PageSize).Take(PageSize).Select(i => new ReportIdeaItemViewModel
         {
             Title = i.Title, Submitter = i.Submitter.FullName, Department = i.Submitter.BusinessUnit,
@@ -73,7 +99,7 @@ public class ReportController(ApplicationDbContext db) : Controller
             CategoryChartData = byCategory.Select(g => g.Count()).ToList(),
             TrendChartLabels = byMonth.Select(g => g.Key.ToString("MMM yyyy")).ToList(),
             TrendChartData = byMonth.Select(g => g.Count()).ToList(),
-            CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(all.Count / (double)PageSize))
+            CurrentPage = page, TotalPages = totalPages
         });
     }
 
@@ -88,7 +114,7 @@ public class ReportController(ApplicationDbContext db) : Controller
         if (!string.IsNullOrWhiteSpace(filters.Category))
             query = query.Where(i => i.Category != null && i.Category.Name == filters.Category);
         if (!string.IsNullOrWhiteSpace(filters.Status) &&
-            Enum.TryParse<IdeaStatus>(filters.Status, true, out var parsedStatus))
+            Enum.TryParse<IdeaStatus>(filters.Status.Replace(" ", string.Empty), true, out var parsedStatus))
             query = query.Where(i => i.CurrentStatus == parsedStatus);
         return query;
     }

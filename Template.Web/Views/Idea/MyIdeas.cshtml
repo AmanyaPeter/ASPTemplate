@@ -107,22 +107,3 @@
             </div>
         </main>
     </div>
-
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script>
-            lucide.createIcons();
-
-            function retractIdea(id) {
-                if (confirm('Are you sure you want to retract this idea?')) {
-                    window.location.href = `/Staff/MyIdeas?handler=Retract&id=${id}`;
-                }
-            }
-
-            function cancelIdea(id) {
-                if (confirm('Are you sure you want to cancel this idea? This action cannot be undone.')) {
-                    window.location.href = `/Staff/MyIdeas?handler=Cancel&id=${id}`;
-                }
-            }
-        </script>
-    }

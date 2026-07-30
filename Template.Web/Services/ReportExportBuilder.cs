@@ -32,40 +32,71 @@ public static class ReportExportBuilder
 
     public static byte[] BuildPdf(IEnumerable<ReportExportRow> rows)
     {
-        var lines = new List<string> { "BANK OF UGANDA", "Innovation Management System - Ideas Report",
-            $"Generated (UTC): {DateTime.UtcNow:dd MMM yyyy HH:mm}", "" };
-        lines.AddRange(rows.Take(42).Select(x =>
-            $"{x.SubmissionDate:yyyy-MM-dd} | {x.Status} | {x.Title} | {x.Department}"));
-        var content = new StringBuilder("BT /F1 10 Tf 45 790 Td 13 TL ");
-        foreach (var line in lines)
-            content.Append('(').Append(EscapePdf(line)).Append(") Tj T* ");
-        content.Append("ET");
-        var stream = Encoding.ASCII.GetBytes(content.ToString());
-        var objects = new[]
+        const int rowsPerPage = 42;
+        var reportRows = rows.ToList();
+        var pages = reportRows.Count == 0
+            ? [Array.Empty<ReportExportRow>()]
+            : reportRows.Chunk(rowsPerPage).ToArray();
+        var fontObjectNumber = 3 + pages.Length * 2;
+        var pageReferences = string.Join(" ",
+            Enumerable.Range(0, pages.Length).Select(index => $"{3 + index * 2} 0 R"));
+        var objects = new List<string>
         {
             "<< /Type /Catalog /Pages 2 0 R >>",
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
-            $"<< /Length {stream.Length} >>\nstream\n{Encoding.ASCII.GetString(stream)}\nendstream",
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+            $"<< /Type /Pages /Kids [{pageReferences}] /Count {pages.Length} >>"
         };
+        for (var pageIndex = 0; pageIndex < pages.Length; pageIndex++)
+        {
+            var pageObjectNumber = 3 + pageIndex * 2;
+            var contentObjectNumber = pageObjectNumber + 1;
+            var lines = new List<string>
+            {
+                "BANK OF UGANDA",
+                "Innovation Management System - Ideas Report",
+                $"Generated (UTC): {DateTime.UtcNow:dd MMM yyyy HH:mm} | Page {pageIndex + 1} of {pages.Length}",
+                ""
+            };
+            lines.AddRange(pages[pageIndex].Select(row =>
+                $"{row.SubmissionDate:yyyy-MM-dd} | {Compact(row.Status, 18)} | {Compact(row.Title, 48)} | {Compact(row.Department, 22)}"));
+
+            var content = new StringBuilder("BT /F1 9 Tf 35 805 Td 12 TL ");
+            foreach (var line in lines)
+                content.Append('(').Append(EscapePdf(line)).Append(") Tj T* ");
+            content.Append("ET");
+            var stream = Encoding.ASCII.GetBytes(content.ToString());
+
+            objects.Add(
+                $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 {fontObjectNumber} 0 R >> >> /Contents {contentObjectNumber} 0 R >>");
+            objects.Add(
+                $"<< /Length {stream.Length} >>\nstream\n{Encoding.ASCII.GetString(stream)}\nendstream");
+        }
+        objects.Add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
         using var output = new MemoryStream();
         using var writer = new StreamWriter(output, Encoding.ASCII, 1024, true) { NewLine = "\n" };
         writer.Write("%PDF-1.4\n");
         writer.Flush();
         var offsets = new List<long> { 0 };
-        for (var index = 0; index < objects.Length; index++)
+        for (var index = 0; index < objects.Count; index++)
         {
             offsets.Add(output.Position);
             writer.Write($"{index + 1} 0 obj\n{objects[index]}\nendobj\n");
             writer.Flush();
         }
         var xref = output.Position;
-        writer.Write($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        writer.Write($"xref\n0 {objects.Count + 1}\n0000000000 65535 f \n");
         foreach (var offset in offsets.Skip(1)) writer.Write($"{offset:0000000000} 00000 n \n");
-        writer.Write($"trailer << /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
+        writer.Write($"trailer << /Size {objects.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
         writer.Flush();
         return output.ToArray();
+    }
+
+    private static string Compact(string? value, int maximumLength)
+    {
+        var text = value ?? string.Empty;
+        return text.Length <= maximumLength
+            ? text
+            : $"{text[..(maximumLength - 3)]}...";
     }
 
     private static void WriteExcelRow(XmlWriter writer, IEnumerable<string> values)

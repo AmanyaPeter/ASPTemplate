@@ -288,12 +288,16 @@
                         </div>
                         <div class="ims-staff-form-group">
                             <label>Attachments</label>
-                            <div class="ims-staff-file-upload-area" onclick="document.getElementById('fileInput').click()">
-                                <input type="file" id="fileInput" asp-for="Attachments" style="display:none;" multiple>
+                            <div class="ims-staff-file-upload-area" id="attachmentDropZone" role="button" tabindex="0"
+                                 aria-controls="fileInput" aria-describedby="attachmentHelp">
+                                <input type="file" id="fileInput" asp-for="Attachments" class="visually-hidden"
+                                       accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" multiple>
                                 <div class="ims-staff-upload-icon"><i data-lucide="paperclip" style="width:32px;height:32px;"></i></div>
                                 <p>Drag & drop files here or click to browse</p>
-                                <p class="ims-staff-upload-hint">PDF, DOC, XLS, PNG (max 10MB)</p>
+                                <p class="ims-staff-upload-hint" id="attachmentHelp">PDF, Word, Excel, PNG or JPEG (max 10MB per file)</p>
                             </div>
+                            <div id="attachmentFileList" class="attachment-file-list" aria-live="polite"></div>
+                            <span asp-validation-for="Attachments" class="ims-staff-validation-feedback"></span>
                         </div>
                         <div class="ims-staff-form-actions ims-staff-form-actions-between">
                             <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="prevStep(2)">Back</button>
@@ -444,14 +448,63 @@
                 alert('Draft saved successfully!');
             }
 
-            // File upload click handler
-            document.querySelector('.ims-staff-file-upload-area')?.addEventListener('click', function(e) {
-                if (e.target.tagName !== 'INPUT') {
-                    document.getElementById('fileInput').click();
+            const fileInput = document.getElementById('fileInput');
+            const attachmentDropZone = document.getElementById('attachmentDropZone');
+            const attachmentFileList = document.getElementById('attachmentFileList');
+
+            function showSelectedAttachments() {
+                const files = [...fileInput.files];
+                attachmentFileList.replaceChildren();
+                if (!files.length) return;
+
+                files.forEach(file => {
+                    const item = document.createElement('div');
+                    item.className = 'attachment-file-item';
+                    const size = file.size < 1024 * 1024
+                        ? `${Math.max(1, Math.round(file.size / 1024))} KB`
+                        : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                    const icon = document.createElement('i');
+                    icon.className = 'ti ti-paperclip';
+                    icon.setAttribute('aria-hidden', 'true');
+                    const name = document.createElement('span');
+                    name.textContent = file.name;
+                    const sizeLabel = document.createElement('small');
+                    sizeLabel.textContent = size;
+                    item.append(icon, name, sizeLabel);
+                    attachmentFileList.appendChild(item);
+                });
+
+                window.renderAppIcons?.(attachmentFileList);
+            }
+
+            attachmentDropZone.addEventListener('click', () => fileInput.click());
+            attachmentDropZone.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    fileInput.click();
                 }
             });
+            ['dragenter', 'dragover'].forEach(eventName =>
+                attachmentDropZone.addEventListener(eventName, event => {
+                    event.preventDefault();
+                    attachmentDropZone.classList.add('is-dragging');
+                })
+            );
+            ['dragleave', 'drop'].forEach(eventName =>
+                attachmentDropZone.addEventListener(eventName, event => {
+                    event.preventDefault();
+                    attachmentDropZone.classList.remove('is-dragging');
+                })
+            );
+            attachmentDropZone.addEventListener('drop', event => {
+                if (!event.dataTransfer?.files.length) return;
+                fileInput.files = event.dataTransfer.files;
+                showSelectedAttachments();
+            });
+            fileInput.addEventListener('change', showSelectedAttachments);
 
             // Initialize
             toggleSubmissionType();
+            showSelectedAttachments();
         </script>
     }

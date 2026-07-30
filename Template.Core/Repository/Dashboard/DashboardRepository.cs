@@ -36,21 +36,6 @@ public class DashboardRepository(ApplicationDbContext context) : IDashboardRepos
                     SubmissionDate = idea.SubmissionDate,
                     IsRetracted = idea.IsRetracted
                 })
-                .ToListAsync(),
-            RecentNotifications = await context.Notifications
-                .AsNoTracking()
-                .Where(notification => notification.UserId == userId)
-                .OrderByDescending(notification => notification.CreatedDate)
-                .Take(5)
-                .Select(notification => new DashboardNotificationViewModel
-                {
-                    Id = notification.Id,
-                    Type = notification.Type,
-                    Subject = notification.Subject,
-                    Message = notification.Message,
-                    IsRead = notification.IsRead,
-                    CreatedDate = notification.CreatedDate
-                })
                 .ToListAsync()
         };
     }

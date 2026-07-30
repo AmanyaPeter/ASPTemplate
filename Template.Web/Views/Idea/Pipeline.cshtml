@@ -115,6 +115,44 @@
                     <span class="pipeline-count" aria-label="@column.Ideas.Count ideas">@column.Ideas.Count</span>
                 </header>
 
+                @if (column.Stage != IdeaStage.Submitted)
+                {
+                    <details class="pipeline-stage-add">
+                        <summary>
+                            <i class="ti ti-plus"></i>
+                            Add idea to @column.Name
+                        </summary>
+                        @if (column.MoveCandidates.Count == 0)
+                        {
+                            <p>No ideas in the previous stage are ready to move here.</p>
+                        }
+                        else
+                        {
+                            <form asp-controller="IdeaWorkflow" asp-action="AdvanceFromPipeline" method="post" data-loading>
+                                <input type="hidden" name="targetStage" value="@column.Stage" />
+                                <label>
+                                    <span>Select idea</span>
+                                    <select name="ideaId" required>
+                                        <option value="">Choose an idea</option>
+                                        @foreach (var candidate in column.MoveCandidates)
+                                        {
+                                            <option value="@candidate.Id">@candidate.ReferenceNumber — @candidate.Title</option>
+                                        }
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Movement note</span>
+                                    <textarea name="reason" rows="2" maxlength="500" placeholder="Why is this idea ready for @column.Name?"></textarea>
+                                </label>
+                                <button type="submit" class="prototype-button">
+                                    <i class="ti ti-arrow-right"></i>
+                                    Move idea
+                                </button>
+                            </form>
+                        }
+                    </details>
+                }
+
                 <div class="pipeline-card-list">
                     @if (column.Ideas.Count == 0)
                     {

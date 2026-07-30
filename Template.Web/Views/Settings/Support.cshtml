@@ -1,17 +1,22 @@
 @model Template.Web.Models.Settings.SupportRequestViewModel
 @{
-    ViewData["Title"] = "Help & Support";
+    var isInnovationTeam = User.IsInRole(RoleConstants.InnovationTeam);
+    ViewData["Title"] = isInnovationTeam ? "Contact Administrator" : "Help & Support";
 }
 
 <div class="prototype-heading">
     <div>
-        <h1>Help & support</h1>
-        <p>Follow the guidance below or send a message directly to the system administrators.</p>
+        <h1>@(isInnovationTeam ? "Contact an administrator" : "Help & support")</h1>
+        <p>@(isInnovationTeam
+            ? "Send an operational or technical request directly to the system administrators."
+            : "Follow the guidance below or send a message directly to the system administrators.")</p>
     </div>
 </div>
 
-<section class="support-layout">
-    <div>
+<section class="support-layout @(isInnovationTeam ? "support-layout-team" : null)">
+    @if (!isInnovationTeam)
+    {
+        <div>
         <div class="support-guides">
             <article class="prototype-card support-guide">
                 <header>
@@ -89,14 +94,15 @@
                 <p>Use the Message an administrator form on this page. Include the page, idea reference where applicable, and what happened. Never send your password.</p>
             </details>
         </section>
-    </div>
+        </div>
+    }
 
     <form asp-action="SendSupportRequest" method="post" class="prototype-card support-request-form" data-loading>
         <div class="support-form-heading">
             <span><i class="ti ti-lifebuoy"></i></span>
             <div>
-                <h2>Message an administrator</h2>
-                <p>Send a support message to all active system administrators.</p>
+                <h2>@(isInnovationTeam ? "Send request to administrator" : "Message an administrator")</h2>
+                <p>Your request will be sent to all active system administrators.</p>
             </div>
         </div>
 

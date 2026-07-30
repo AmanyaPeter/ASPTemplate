@@ -1,6 +1,4 @@
 ﻿@model Template.Core.Models.Account.LoginViewModel
-@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
-@using Microsoft.Extensions.Hosting
 @{
     Layout = "_LayoutLogin";
 }
@@ -21,13 +19,6 @@
             <div class="sign-in-header mb-4">
                 <p class="display-5 mb-2">Sign In</p>
             </div>
-            @if (HostEnvironment.IsDevelopment())
-            {
-                <div class="alert alert-info small" role="alert">
-                    <strong>Development login:</strong>
-                    <code>admin</code> / <code>Admin@123</code>
-                </div>
-            }
             <form asp-action="Login" method="post" class="form">
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="form-floating">

@@ -24,6 +24,14 @@
         : !string.IsNullOrWhiteSpace(User.Identity?.Name)
             ? User.Identity!.Name!
             : "User";
+    var displayNameParts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var avatarInitials = string.Concat(displayNameParts
+        .Take(2)
+        .Select(namePart => char.ToUpperInvariant(namePart[0])));
+    if (string.IsNullOrWhiteSpace(avatarInitials))
+    {
+        avatarInitials = "U";
+    }
     var roleDisplayName = isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff";
     var unreadNotificationCount = hasLayoutUserId
         ? await LayoutDb.Notifications.AsNoTracking()
@@ -45,6 +53,73 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="prototype-shell">
+    <svg class="prototype-icon-sprite" aria-hidden="true">
+        <symbol id="sidebar-icon-home" viewBox="0 0 24 24">
+            <path d="M3 11.5 12 4l9 7.5" />
+            <path d="M5 10v10h14V10M9 20v-6h6v6" />
+        </symbol>
+        <symbol id="sidebar-icon-sparkles" viewBox="0 0 24 24">
+            <path d="m12 3 1.4 3.6L17 8l-3.6 1.4L12 13l-1.4-3.6L7 8l3.6-1.4L12 3Z" />
+            <path d="m5.5 14 .9 2.1 2.1.9-2.1.9L5.5 20l-.9-2.1-2.1-.9 2.1-.9.9-2.1ZM18.5 13l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8.8-1.7Z" />
+        </symbol>
+        <symbol id="sidebar-icon-clipboard" viewBox="0 0 24 24">
+            <path d="M9 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-3" />
+            <rect x="9" y="3" width="6" height="4" rx="1" />
+            <path d="M8 12h8M8 16h6" />
+        </symbol>
+        <symbol id="sidebar-icon-bulb" viewBox="0 0 24 24">
+            <path d="M9 17h6M10 21h4" />
+            <path d="M8.2 14.2A6 6 0 1 1 15.8 14.2c-.7.6-.8 1.2-.8 2.8H9c0-1.6-.1-2.2-.8-2.8Z" />
+        </symbol>
+        <symbol id="sidebar-icon-category" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            <circle cx="17.5" cy="17.5" r="3.5" />
+        </symbol>
+        <symbol id="sidebar-icon-chart" viewBox="0 0 24 24">
+            <path d="M4 20V10h4v10M10 20V4h4v16M16 20v-7h4v7M3 20h18" />
+        </symbol>
+        <symbol id="sidebar-icon-books" viewBox="0 0 24 24">
+            <path d="M4 5h5v14H4zM9 7h5v12H9zM15 5l4-1 3 14-4 1z" />
+            <path d="M5.5 8h2M10.5 10h2" />
+        </symbol>
+        <symbol id="sidebar-icon-bell" viewBox="0 0 24 24">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" />
+        </symbol>
+        <symbol id="sidebar-icon-users" viewBox="0 0 24 24">
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5.2a3 3 0 0 1 0 5.6M17 14a5 5 0 0 1 4 4.9V20" />
+        </symbol>
+        <symbol id="sidebar-icon-user-plus" viewBox="0 0 24 24">
+            <circle cx="9" cy="8" r="3" />
+            <path d="M3 20v-2a6 6 0 0 1 12 0v2M18 8v6M15 11h6" />
+        </symbol>
+        <symbol id="sidebar-icon-shield" viewBox="0 0 24 24">
+            <path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3Z" />
+            <rect x="9" y="10" width="6" height="5" rx="1" />
+            <path d="M10.5 10V8.5a1.5 1.5 0 0 1 3 0V10" />
+        </symbol>
+        <symbol id="sidebar-icon-history" viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 4v4h4M12 7v5l3 2" />
+        </symbol>
+        <symbol id="sidebar-icon-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+        </symbol>
+        <symbol id="sidebar-icon-help" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="4" />
+            <path d="m5.6 5.6 3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6" />
+        </symbol>
+        <symbol id="sidebar-icon-power" viewBox="0 0 24 24">
+            <path d="M12 3v9M7.1 5.8a8 8 0 1 0 9.8 0" />
+        </symbol>
+        <symbol id="sidebar-icon-menu" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+        </symbol>
+    </svg>
     <div class="prototype-overlay" data-sidebar-close></div>
     <aside class="prototype-sidebar" id="prototype-sidebar">
         <a class="prototype-brand" asp-controller="Home" asp-action="Index">
@@ -53,17 +128,17 @@
         </a>
         <nav class="prototype-nav">
             <a class="@Active("Home")" asp-controller="Home" asp-action="Index">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-home"></i></span>
+                <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-home"></use></svg></span>
                 <span>Dashboard</span>
             </a>
             @if (!isAdmin && !isTeam)
             {
                 <a class="@Active("Idea", "Submit")" asp-controller="Idea" asp-action="Submit">
-                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-sparkles"></i></span>
+                    <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-sparkles"></use></svg></span>
                     <span>Submit an idea</span>
                 </a>
                 <a class="@Active("Idea", "MyIdeas")" asp-controller="Idea" asp-action="MyIdeas">
-                    <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-clipboard-list"></i></span>
+                    <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-clipboard"></use></svg></span>
                     <span>My ideas</span>
                 </a>
             }
@@ -71,45 +146,51 @@
             {
                 @if (isTeam)
                 {
-                    <a class="@Active("Idea")" asp-controller="Idea" asp-action="Pipeline"><i class="ti ti-bulb-filled"></i>Idea pipeline</a>
+                    <a class="@Active("Idea")" asp-controller="Idea" asp-action="Pipeline"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-bulb"></use></svg></span><span>Idea pipeline</span></a>
                 }
-                <a class="@Active("Category")" asp-controller="Category" asp-action="Index"><i class="ti ti-category"></i>Categories</a>
-                <a class="@Active("Report")" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i>Reports</a>
+                <a class="@Active("Category")" asp-controller="Category" asp-action="Index"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-category"></use></svg></span><span>Categories</span></a>
+                <a class="@Active("Report")" asp-controller="Report" asp-action="Index"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-chart"></use></svg></span><span>Reports</span></a>
             }
             <a class="@Active("Resource")" asp-controller="Resource" asp-action="Index">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-books"></i></span>
+                <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-books"></use></svg></span>
                 <span>Resources</span>
             </a>
             <a class="@Active("Notification")" asp-controller="Notification" asp-action="Index">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-bell"></i></span>
+                <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-bell"></use></svg></span>
                 <span>Notifications</span>
                 <span class="prototype-nav-badge @(unreadNotificationCount == 0 ? "d-none" : "")" data-notification-count>@unreadNotificationCount</span>
             </a>
             @if (isAdmin)
             {
                 <span class="prototype-nav-label">Administration</span>
-                <a class="@Active("Account", "Index")" asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i>User accounts</a>
-                <a class="@Active("Account", "Create")" asp-controller="Account" asp-action="Create"><i class="ti ti-user-plus"></i>Create user</a>
-                <a class="@Active("Role")" asp-controller="Role" asp-action="Index"><i class="ti ti-shield-lock"></i>Roles & permissions</a>
-                <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i>Audit logs</a>
-                <a class="@Active("Settings", "Index")" asp-controller="Settings" asp-action="Index"><i class="ti ti-settings"></i>System settings</a>
+                <a class="@Active("Account", "Index")" asp-controller="Account" asp-action="Index"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-users"></use></svg></span><span>User accounts</span></a>
+                <a class="@Active("Account", "Create")" asp-controller="Account" asp-action="Create"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-user-plus"></use></svg></span><span>Create user</span></a>
+                <a class="@Active("Role")" asp-controller="Role" asp-action="Index"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-shield"></use></svg></span><span>Roles &amp; permissions</span></a>
+                <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-history"></use></svg></span><span>Audit logs</span></a>
+                <a class="@Active("Settings", "Index")" asp-controller="Settings" asp-action="Index"><span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-settings"></use></svg></span><span>System settings</span></a>
             }
-            <a class="@Active("Settings", "Support")" asp-controller="Settings" asp-action="Support">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-lifebuoy"></i></span>
-                <span>Help &amp; support</span>
-            </a>
+            @if (!isAdmin)
+            {
+                <a class="@Active("Settings", "Support")" asp-controller="Settings" asp-action="Support">
+                    <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-help"></use></svg></span>
+                    <span>@(isTeam ? "Contact administrator" : "Help & support")</span>
+                </a>
+            }
         </nav>
         <div class="prototype-sidebar-foot">
-            <a class="prototype-sidebar-profile" asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@roleDisplayName</small></span></a>
+            <a class="prototype-sidebar-profile" asp-controller="Profile" asp-action="Index" aria-label="Open profile for @displayName, @roleDisplayName">
+                <span class="prototype-avatar prototype-sidebar-avatar" aria-hidden="true">@avatarInitials</span>
+                <span>@displayName<small>@roleDisplayName</small></span>
+            </a>
             <a class="prototype-sidebar-logout" asp-controller="Account" asp-action="Logout" title="Sign out and return to login">
-                <span class="prototype-nav-icon" aria-hidden="true"><i class="ti ti-power"></i></span>
+                <span class="prototype-nav-icon" aria-hidden="true"><svg class="prototype-svg-icon"><use href="#sidebar-icon-power"></use></svg></span>
                 <span>Log out</span>
             </a>
         </div>
     </aside>
     <div class="prototype-page">
         <header class="prototype-topbar">
-            <button class="prototype-icon-button prototype-menu" type="button" data-sidebar-open aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
+            <button class="prototype-icon-button prototype-menu" type="button" data-sidebar-open aria-label="Open menu"><svg class="prototype-svg-icon" aria-hidden="true"><use href="#sidebar-icon-menu"></use></svg></button>
             <a class="prototype-header-logo" asp-controller="Home" asp-action="Index" aria-label="Bank of Uganda dashboard">
                 <img src="~/img/bou.png" alt="Bank of Uganda coat of arms" />
             </a>
@@ -117,17 +198,17 @@
             <div class="prototype-top-actions">
                 <a class="prototype-icon-button prototype-notification-link" asp-controller="Notification" asp-action="Index"
                    aria-label="Notifications, @unreadNotificationCount unread">
-                    <i class="ti ti-bell"></i>
+                    <svg class="prototype-svg-icon" aria-hidden="true"><use href="#sidebar-icon-bell"></use></svg>
                     <span class="prototype-notification-badge @(unreadNotificationCount == 0 ? "d-none" : "")" data-notification-count>@unreadNotificationCount</span>
                 </a>
                 <a class="prototype-user-profile" asp-controller="Profile" asp-action="Index"
                    aria-label="Open profile for @displayName, @roleDisplayName"
                    title="@displayName – @roleDisplayName">
-                    <span class="prototype-avatar" aria-hidden="true">@displayName.Substring(0, 1).ToUpperInvariant()</span>
+                    <span class="prototype-avatar" aria-hidden="true">@avatarInitials</span>
                     <span class="prototype-user-label">@displayName <span aria-hidden="true">–</span> @roleDisplayName</span>
                 </a>
                 <a class="prototype-logout" asp-controller="Account" asp-action="Logout" title="Sign out and return to login">
-                    <i class="ti ti-power"></i>
+                    <svg class="prototype-svg-icon" aria-hidden="true"><use href="#sidebar-icon-power"></use></svg>
                     <span>Log out</span>
                 </a>
             </div>
@@ -153,6 +234,17 @@
                 <h2 id="idea-submission-popup-title">Idea submitted</h2>
                 <p>@submissionSuccess</p>
                 <button type="button" class="prototype-button" data-popup-close autofocus>Continue</button>
+            </section>
+        </div>
+    }
+    @if (TempData["CommentSentSuccess"] is string commentSuccess)
+    {
+        <div class="prototype-popup-backdrop" data-popup role="presentation">
+            <section class="prototype-popup" role="dialog" aria-modal="true" aria-labelledby="comment-sent-popup-title">
+                <span class="prototype-popup-icon"><i class="ti ti-send"></i></span>
+                <h2 id="comment-sent-popup-title">Comment sent</h2>
+                <p>@commentSuccess</p>
+                <button type="button" class="prototype-button" data-popup-close autofocus>Continue reviewing</button>
             </section>
         </div>
     }

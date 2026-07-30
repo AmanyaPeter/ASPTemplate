@@ -20,9 +20,13 @@ namespace Template.Web.Models.Idea
         public string? SummaryDescription { get; set; }
         public string? ProblemStatement { get; set; }
         public string? ProposedSolution { get; set; }
+        public string? ExpectedBenefits { get; set; }
+        public string? KeyEnablers { get; set; }
+        public string? ImplementationApproach { get; set; }
+        public string? ImpactIndicators { get; set; }
+        public string? Category { get; set; }
         public List<AttachmentReviewViewModel> Attachments { get; set; } = new();
         public string? StrategicObjective { get; set; }
-        public string? SDGContribution { get; set; }
     }
 
     public class AttachmentReviewViewModel

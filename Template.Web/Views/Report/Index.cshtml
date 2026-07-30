@@ -1,254 +1,227 @@
 @model ReportsModel
 @{
-    ViewData["Title"] = "Reports - Innovation Management System";
+    ViewData["Title"] = "Reports";
     string BadgeClass(string? value) => (value ?? "unknown").Replace(" ", "-").ToLowerInvariant();
+    var maxCategoryCount = Math.Max(1, Model.CategoryChartData.DefaultIfEmpty(0).Max());
+    var maxTrendCount = Math.Max(1, Model.TrendChartData.DefaultIfEmpty(0).Max());
+    var hasFilters = Model.Filters.StartDate.HasValue ||
+        Model.Filters.EndDate.HasValue ||
+        !string.IsNullOrWhiteSpace(Model.Filters.Department) ||
+        !string.IsNullOrWhiteSpace(Model.Filters.Category) ||
+        !string.IsNullOrWhiteSpace(Model.Filters.Status);
 }
 
-<body class="ims-staff-dashboard">
-    <!-- Main Content -->
-    <div class="ims-staff-main-wrapper">
-        <!-- Main Content Area -->
-        <main class="ims-staff-main-content">
-            <!-- Report Filters -->
-            <div class="ims-staff-card">
-                <div class="ims-staff-section-header">
-                    <h3>Report Filters</h3>
-                </div>
-                <form method="post" asp-controller="Report" asp-action="Index">
-                    <div class="ims-staff-filters-bar ims-staff-report-filters">
-                        <div class="ims-staff-form-group">
-                            <label>Date Range</label>
-                            <div class="ims-staff-date-range">
-                                <input type="date" class="ims-staff-form-control" asp-for="Filters.StartDate">
-                                <span class="ims-staff-date-separator">to</span>
-                                <input type="date" class="ims-staff-form-control" asp-for="Filters.EndDate">
-                            </div>
-                        </div>
-                        <div class="ims-staff-form-group">
-                            <label>Department</label>
-                            <select class="ims-staff-form-control" asp-for="Filters.Department">
-                                <option value="">All Departments</option>
-                                @foreach (var dept in Model.Departments)
-                                {
-                                    <option value="@dept">@dept</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="ims-staff-form-group">
-                            <label>Category</label>
-                            <select class="ims-staff-form-control" asp-for="Filters.Category">
-                                <option value="">All Categories</option>
-                                @foreach (var cat in Model.Categories)
-                                {
-                                    <option value="@cat">@cat</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="ims-staff-form-group">
-                            <label>Status</label>
-                            <select class="ims-staff-form-control" asp-for="Filters.Status">
-                                <option value="">All Statuses</option>
-                                <option value="Submitted">Submitted</option>
-                                <option value="Under Review">Under Review</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Declined">Declined</option>
-                            </select>
-                        </div>
-                        <div class="ims-staff-form-group ims-staff-filter-actions">
-                            <button type="submit" class="ims-staff-btn ims-staff-btn-primary ims-staff-generate-report-btn">Generate Report</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+<div class="prototype-heading">
+    <div>
+        <h1>Idea reports</h1>
+        <p>Generate a live report, review category and monthly trends, then export the same filtered results.</p>
+    </div>
+</div>
 
-            <!-- Summary Cards -->
-            <div class="ims-staff-two-col-grid">
-                <div class="ims-staff-card">
-                    <div class="ims-staff-section-header">
-                        <h3>Summary</h3>
-                    </div>
-                    <div class="ims-staff-summary-stats">
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Total Ideas</div>
-                            <div class="ims-staff-stat-value">@Model.ReportSummary.TotalIdeas</div>
-                        </div>
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Approved</div>
-                            <div class="ims-staff-stat-value ims-staff-stat-success">@Model.ReportSummary.Approved</div>
-                        </div>
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Under Review</div>
-                            <div class="ims-staff-stat-value ims-staff-stat-warning">@Model.ReportSummary.UnderReview</div>
-                        </div>
-                        <div class="ims-staff-stat-item">
-                            <div class="ims-staff-stat-label">Declined</div>
-                            <div class="ims-staff-stat-value ims-staff-stat-danger">@Model.ReportSummary.Declined</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ims-staff-card">
-                    <div class="ims-staff-section-header">
-                        <h3>Ideas by Category</h3>
-                    </div>
-                    <div class="ims-staff-chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Monthly Trend -->
-            <div class="ims-staff-card">
-                <div class="ims-staff-section-header">
-                    <h3>Monthly Submission Trend</h3>
-                </div>
-                <div class="ims-staff-chart-container">
-                    <canvas id="trendChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Detailed Report -->
-            <div class="ims-staff-card ims-staff-table-card">
-                <div class="ims-staff-section-header">
-                    <h3>Detailed Report</h3>
-                    <div class="ims-staff-export-actions">
-                        <a asp-controller="Report" asp-action="Export" asp-route-format="excel" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export Excel</a>
-                        <a asp-controller="Report" asp-action="Export" asp-route-format="pdf" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export PDF</a>
-                        <a asp-controller="Report" asp-action="Export" asp-route-format="csv" class="ims-staff-btn ims-staff-btn-sm ims-staff-btn-secondary">Export CSV</a>
-                    </div>
-                </div>
-                <div class="ims-staff-table-container">
-                    <table class="ims-staff-data-table" id="reportTable">
-                        <thead>
-                            <tr>
-                                <th>Idea Title</th>
-                                <th>Submitter</th>
-                                <th>Department</th>
-                                <th>Category</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var idea in Model.ReportIdeas)
-                            {
-                                <tr>
-                                    <td>@idea.Title</td>
-                                    <td>@idea.Submitter</td>
-                                    <td>@idea.Department</td>
-                                    <td>@idea.Category</td>
-                                    <td>
-                                        <span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Status)">
-                                            @idea.Status
-                                        </span>
-                                    </td>
-                                    <td>@idea.Date.ToString("dd MMM yyyy")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                @if (Model.TotalPages > 1)
+<section class="prototype-card report-filter-card">
+    <div class="ims-staff-section-header">
+        <h2>Report filters</h2>
+        @if (hasFilters)
+        {
+            <a asp-action="Index" class="prototype-button secondary">Clear filters</a>
+        }
+    </div>
+    <form method="get" asp-controller="Report" asp-action="Index" class="report-filter-grid" data-loading>
+        <div>
+            <label for="startDate">From date</label>
+            <input id="startDate" name="startDate" type="date" value="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label for="endDate">To date</label>
+            <input id="endDate" name="endDate" type="date" value="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label for="department">Department</label>
+            <select id="department" name="department">
+                <option value="">All departments</option>
+                @foreach (var department in Model.Departments)
                 {
-                    <div class="ims-staff-pagination">
-                        @if (Model.CurrentPage > 1)
-                        {
-                            <a asp-controller="Report" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="ims-staff-pagination-link">&laquo; Previous</a>
-                        }
-                        @for (int i = 1; i <= Model.TotalPages; i++)
-                        {
-                            <a asp-controller="Report" asp-action="Index" asp-route-page="@i" class="ims-staff-pagination-link @(i == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@i</a>
-                        }
-                        @if (Model.CurrentPage < Model.TotalPages)
-                        {
-                            <a asp-controller="Report" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="ims-staff-pagination-link">Next &raquo;</a>
-                        }
+                    <option value="@department" selected="@(department == Model.Filters.Department ? "selected" : null)">@department</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="category">Idea category</label>
+            <select id="category" name="category">
+                <option value="">All categories</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category" selected="@(category == Model.Filters.Category ? "selected" : null)">@category</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">All statuses</option>
+                <option value="PendingInformation" selected="@(Model.Filters.Status is "PendingInformation" or "Pending Information" ? "selected" : null)">Pending Information</option>
+                <option value="UnderReview" selected="@(Model.Filters.Status is "UnderReview" or "Under Review" ? "selected" : null)">Under Review</option>
+                <option value="Approved" selected="@(Model.Filters.Status == "Approved" ? "selected" : null)">Approved</option>
+                <option value="Declined" selected="@(Model.Filters.Status == "Declined" ? "selected" : null)">Declined</option>
+            </select>
+        </div>
+        <button type="submit" class="prototype-button report-generate-button">
+            <i class="ti ti-report"></i>
+            Generate report
+        </button>
+    </form>
+</section>
+
+@if (hasFilters)
+{
+    <div class="prototype-alert success" role="status">
+        <i class="ti ti-circle-check"></i>
+        <span>Report generated with @Model.ReportSummary.TotalIdeas matching idea(s).</span>
+    </div>
+}
+
+<section class="report-summary-grid" aria-label="Report summary">
+    <article class="prototype-card report-summary-card">
+        <small>Total ideas</small>
+        <strong>@Model.ReportSummary.TotalIdeas</strong>
+    </article>
+    <article class="prototype-card report-summary-card approved">
+        <small>Approved</small>
+        <strong>@Model.ReportSummary.Approved</strong>
+    </article>
+    <article class="prototype-card report-summary-card review">
+        <small>Under review</small>
+        <strong>@Model.ReportSummary.UnderReview</strong>
+    </article>
+    <article class="prototype-card report-summary-card declined">
+        <small>Declined</small>
+        <strong>@Model.ReportSummary.Declined</strong>
+    </article>
+</section>
+
+<section class="report-chart-grid">
+    <article class="prototype-card">
+        <div class="report-card-heading">
+            <div>
+                <h2>Ideas by category</h2>
+                <p>Distribution of ideas in the generated report.</p>
+            </div>
+            <i class="ti ti-category"></i>
+        </div>
+        @if (Model.CategoryChartLabels.Count == 0)
+        {
+            <div class="report-empty">No category data matches these filters.</div>
+        }
+        else
+        {
+            <div class="report-category-chart">
+                @for (var index = 0; index < Model.CategoryChartLabels.Count; index++)
+                {
+                    var count = Model.CategoryChartData[index];
+                    var width = Math.Max(4, count * 100 / maxCategoryCount);
+                    <div class="report-bar-row">
+                        <div><span>@Model.CategoryChartLabels[index]</span><strong>@count</strong></div>
+                        <span class="report-bar-track"><span style="width:@width%"></span></span>
                     </div>
                 }
             </div>
-        </main>
+        }
+    </article>
+
+    <article class="prototype-card">
+        <div class="report-card-heading">
+            <div>
+                <h2>Monthly submission trend</h2>
+                <p>Ideas received each month in the selected period.</p>
+            </div>
+            <i class="ti ti-chart-bar"></i>
+        </div>
+        @if (Model.TrendChartLabels.Count == 0)
+        {
+            <div class="report-empty">No monthly data matches these filters.</div>
+        }
+        else
+        {
+            <div class="report-trend-chart" aria-label="Monthly submission trend">
+                @for (var index = 0; index < Model.TrendChartLabels.Count; index++)
+                {
+                    var count = Model.TrendChartData[index];
+                    var height = Math.Max(8, count * 100 / maxTrendCount);
+                    <div class="report-trend-column">
+                        <strong>@count</strong>
+                        <span class="report-trend-bar"><span style="height:@height%"></span></span>
+                        <small>@Model.TrendChartLabels[index]</small>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+</section>
+
+<section class="prototype-card report-detail-card">
+    <div class="report-card-heading report-detail-heading">
+        <div>
+            <h2>Detailed report</h2>
+            <p>@Model.ReportSummary.TotalIdeas idea(s) match the current report filters.</p>
+        </div>
+        <form asp-controller="Report" asp-action="Export" method="get" class="report-export-actions">
+            <input type="hidden" name="startDate" value="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="endDate" value="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="department" value="@Model.Filters.Department" />
+            <input type="hidden" name="category" value="@Model.Filters.Category" />
+            <input type="hidden" name="status" value="@Model.Filters.Status" />
+            <button type="submit" name="format" value="excel" class="prototype-button secondary"><i class="ti ti-file-spreadsheet"></i>Excel</button>
+            <button type="submit" name="format" value="pdf" class="prototype-button secondary"><i class="ti ti-file-type-pdf"></i>PDF</button>
+            <button type="submit" name="format" value="csv" class="prototype-button secondary"><i class="ti ti-download"></i>CSV</button>
+        </form>
     </div>
 
-    @section Scripts {
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script src="https://unpkg.com/chart.js@latest"></script>
-        <script>
-            lucide.createIcons();
-
-            // Chart data from server
-            const categoryLabels = @Html.Raw(Json.Serialize(Model.CategoryChartLabels));
-            const categoryData = @Html.Raw(Json.Serialize(Model.CategoryChartData));
-            const trendLabels = @Html.Raw(Json.Serialize(Model.TrendChartLabels));
-            const trendData = @Html.Raw(Json.Serialize(Model.TrendChartData));
-
-            // Category Chart
-            const ctx1 = document.getElementById('categoryChart').getContext('2d');
-            new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: categoryLabels,
-                    datasets: [{
-                        data: categoryData,
-                        backgroundColor: ['#0078d4', '#27ae60', '#f39c12', '#9b59b6', '#e74c3c', '#3498db'],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 12,
-                                font: { size: 12 }
-                            }
-                        }
-                    }
+    <div class="table-responsive">
+        <table class="table table-vcenter">
+            <thead>
+                <tr>
+                    <th>Idea title</th>
+                    <th>Submitter</th>
+                    <th>Department</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ReportIdeas.Count == 0)
+                {
+                    <tr><td colspan="6" class="report-empty">No ideas match the selected filters.</td></tr>
                 }
-            });
-
-            // Trend Chart
-            const ctx2 = document.getElementById('trendChart').getContext('2d');
-            new Chart(ctx2, {
-                type: 'line',
-                data: {
-                    labels: trendLabels,
-                    datasets: [{
-                        label: 'Submissions',
-                        data: trendData,
-                        borderColor: '#0078d4',
-                        backgroundColor: 'rgba(0, 120, 212, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#0078d4',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
+                @foreach (var idea in Model.ReportIdeas)
+                {
+                    <tr>
+                        <td><strong>@idea.Title</strong></td>
+                        <td>@idea.Submitter</td>
+                        <td>@idea.Department</td>
+                        <td>@(string.IsNullOrWhiteSpace(idea.Category) ? "Uncategorised" : idea.Category)</td>
+                        <td><span class="ims-staff-badge ims-staff-badge-@BadgeClass(idea.Status)">@idea.Status</span></td>
+                        <td>@idea.Date.ToString("dd MMM yyyy")</td>
+                    </tr>
                 }
-            });
+            </tbody>
+        </table>
+    </div>
 
-        </script>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="ims-staff-pagination" aria-label="Report pages">
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@pageNumber"
+                   asp-route-startDate="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")"
+                   asp-route-endDate="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")"
+                   asp-route-department="@Model.Filters.Department"
+                   asp-route-category="@Model.Filters.Category"
+                   asp-route-status="@Model.Filters.Status"
+                   class="ims-staff-pagination-link @(pageNumber == Model.CurrentPage ? "ims-staff-pagination-active" : "")">@pageNumber</a>
+            }
+        </nav>
     }
-</body>
+</section>
