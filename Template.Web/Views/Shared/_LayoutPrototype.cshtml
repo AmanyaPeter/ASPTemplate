@@ -32,31 +32,32 @@
             <span><strong>Innovation</strong><small>Management System</small></span>
         </a>
         <nav class="prototype-nav">
-            <a class="@Active("Home")" asp-controller="Home" asp-action="Index"><i class="ti ti-layout-dashboard"></i>Dashboard</a>
+            <a class="@Active("Home")" asp-controller="Home" asp-action="Index"><i class="ti ti-layout-dashboard"></i>Home</a>
             @if (!isAdmin && !isTeam)
             {
-                <a class="@Active("Idea")" asp-controller="Idea" asp-action="Submit"><i class="ti ti-bulb"></i>Submit an idea</a>
                 <a class="@Active("Idea")" asp-controller="Idea" asp-action="MyIdeas"><i class="ti ti-list-check"></i>My ideas</a>
             }
-            @if (isAdmin || isTeam)
+            @if (isTeam)
             {
                 <a class="@Active("Idea")" asp-controller="Idea" asp-action="AllIdeas"><i class="ti ti-bulb-filled"></i>Idea pipeline</a>
                 <a class="@Active("Category")" asp-controller="Category" asp-action="Index"><i class="ti ti-category"></i>Categories</a>
                 <a class="@Active("Report")" asp-controller="Report" asp-action="Index"><i class="ti ti-chart-bar"></i>Reports</a>
             }
-            <a class="@Active("Resource")" asp-controller="Resource" asp-action="Index"><i class="ti ti-books"></i>Resources</a>
-            <a class="@Active("Notification")" asp-controller="Notification" asp-action="Index"><i class="ti ti-bell"></i>Notifications</a>
+            @if (!isAdmin)
+            {
+                <a class="@Active("Resource")" asp-controller="Resource" asp-action="Index"><i class="ti ti-books"></i>Resources</a>
+                <a class="@Active("Notification")" asp-controller="Notification" asp-action="Index"><i class="ti ti-bell"></i>Notifications</a>
+            }
             @if (isAdmin)
             {
                 <span class="prototype-nav-label">Administration</span>
                 <a class="@Active("Account")" asp-controller="Account" asp-action="Index"><i class="ti ti-users"></i>User accounts</a>
                 <a asp-controller="Account" asp-action="Create"><i class="ti ti-user-plus"></i>Create user</a>
-                <a class="@Active("Role")" asp-controller="Role" asp-action="Index"><i class="ti ti-shield-lock"></i>Roles & permissions</a>
-                <a class="@Active("AuditLog")" asp-controller="AuditLog" asp-action="Index"><i class="ti ti-history"></i>Audit log</a>
-                <a class="@Active("Settings")" asp-controller="Settings" asp-action="Index"><i class="ti ti-settings"></i>System settings</a>
             }
-            <span class="prototype-nav-label">Help</span>
-            <a class="@Active("Settings")" asp-controller="Settings" asp-action="Support"><i class="ti ti-help-circle"></i>Help & support</a>
+            @if (!isAdmin)
+            {
+                <!-- Help & support removed from sidebar per request -->
+            }
         </nav>
         <div class="prototype-sidebar-foot">
             <a asp-controller="Profile" asp-action="Index"><i class="ti ti-user-circle"></i><span>@displayName<small>@(isAdmin ? "Administrator" : isTeam ? "Innovation Team" : "Staff")</small></span></a>

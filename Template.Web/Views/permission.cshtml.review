@@ -27,8 +27,8 @@
 
             <!-- Permissions Table -->
             <div class="ims-staff-card ims-staff-table-card">
-                <div class="ims-staff-table-container">
-                    <table class="ims-staff-data-table">
+                <div class="ims-staff-table-container table-responsive-container">
+                    <table class="ims-staff-data-table responsive-table">
                         <thead>
                             <tr>
                                 <th>Name</th>

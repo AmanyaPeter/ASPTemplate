@@ -1,6 +1,6 @@
 @model DashboardPageViewModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Home";
 }
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
@@ -23,8 +23,8 @@
         <div class="col-lg-7">
             <div class="card h-100">
                 <div class="card-header"><h3 class="card-title">Recently created users</h3></div>
-                <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
+                <div class="table-responsive table-responsive-container">
+                    <table class="table table-vcenter card-table responsive-table">
                         <thead><tr><th>User</th><th>Status</th><th>Last access</th></tr></thead>
                         <tbody>
                         @if (Model.ItAdmin.RecentUsers.Count == 0)
@@ -94,8 +94,8 @@ else if (User.IsInRole(RoleConstants.InnovationTeam))
 
     <div class="card mb-4">
         <div class="card-header"><h3 class="card-title">Review queue</h3></div>
-        <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+        <div class="table-responsive table-responsive-container">
+            <table class="table table-vcenter card-table responsive-table">
                 <thead><tr><th>Idea</th><th>Submitter</th><th>Category</th><th>Stage / status</th><th>Submitted</th></tr></thead>
                 <tbody>
                 @if (Model.InnovationTeam.ReviewQueue.Count == 0)
@@ -119,8 +119,8 @@ else if (User.IsInRole(RoleConstants.InnovationTeam))
 
     <div class="card">
         <div class="card-header"><h3 class="card-title">Upcoming and overdue stage deadlines</h3></div>
-        <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+        <div class="table-responsive table-responsive-container">
+            <table class="table table-vcenter card-table responsive-table">
                 <thead><tr><th>Idea</th><th>Stage</th><th>Deadline</th><th>State</th></tr></thead>
                 <tbody>
                 @if (Model.InnovationTeam.StageDeadlines.Count == 0)
@@ -157,8 +157,8 @@ else if (User.IsInRole(RoleConstants.Staff))
         <div class="col-lg-8">
             <div class="card h-100">
                 <div class="card-header"><h3 class="card-title">My recent ideas</h3></div>
-                <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
+                <div class="table-responsive table-responsive-container">
+                    <table class="table table-vcenter card-table responsive-table">
                         <thead><tr><th>Idea</th><th>Category</th><th>Stage / status</th><th>Submitted</th></tr></thead>
                         <tbody>
                         @if (Model.Staff.RecentIdeas.Count == 0)

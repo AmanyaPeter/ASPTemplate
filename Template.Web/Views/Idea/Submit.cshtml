@@ -1,207 +1,466 @@
 @model SubmitIdeaModel
 @{
-    ViewData["Title"] = "Submit Idea";
+    ViewData["Title"] = "Submit Innovation Idea";
 }
 
 <div class="submission-intro">
     <span class="submission-intro-icon"><i class="ti ti-bulb"></i></span>
-    <div><h1>Idea Submission Form</h1><p>Complete the four stages below. Fields marked <strong>*</strong> are required.</p></div>
+    <div><h1>Submit Innovation Idea</h1><p>Complete all required fields to submit your innovation idea for review. Fields marked <strong>*</strong> are required.</p></div>
 </div>
 
-<div class="ims-staff-stepper">
+<div class="ims-staff-stepper" id="formStepper">
     <div class="ims-staff-stepper-step ims-staff-stepper-active" data-step="1">
         <span class="ims-staff-step-number">1</span>
-        <span class="ims-staff-step-text">Innovator Information</span>
+        <span class="ims-staff-step-text">Innovator Details</span>
     </div>
     <div class="ims-staff-stepper-connector"></div>
     <div class="ims-staff-stepper-step" data-step="2">
         <span class="ims-staff-step-number">2</span>
-        <span class="ims-staff-step-text">Innovation Idea</span>
+        <span class="ims-staff-step-text">Idea Details</span>
     </div>
     <div class="ims-staff-stepper-connector"></div>
     <div class="ims-staff-stepper-step" data-step="3">
         <span class="ims-staff-step-number">3</span>
-        <span class="ims-staff-step-text">Strategic Alignment</span>
+        <span class="ims-staff-step-text">Value &amp; Strategic Alignment</span>
     </div>
     <div class="ims-staff-stepper-connector"></div>
     <div class="ims-staff-stepper-step" data-step="4">
         <span class="ims-staff-step-number">4</span>
-        <span class="ims-staff-step-text">Benefits & Implementation</span>
+        <span class="ims-staff-step-text">Attachments &amp; Submission</span>
     </div>
 </div>
 
-<div class="card">
-    <form asp-controller="Idea" asp-action="Submit" method="post" enctype="multipart/form-data" id="submitForm">
+<form asp-controller="Idea" asp-action="Submit" method="post" enctype="multipart/form-data" id="submitForm">
+    <div class="card">
         <div class="card-body">
             <div class="ims-staff-form-page ims-staff-form-page-active" id="step1">
                 <h3 class="ims-staff-form-page-title">Innovator Details</h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="FullName" class="form-label">Full Name *</label>
-                        <input type="text" id="FullName" class="form-control" asp-for="Innovator.FullName" placeholder="Enter your full name">
-                        <span asp-validation-for="Innovator.FullName" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="Email" class="form-label">Email *</label>
-                        <input type="email" id="Email" class="form-control" asp-for="Innovator.Email" placeholder="Enter your email">
-                        <span asp-validation-for="Innovator.Email" class="text-danger"></span>
-                    </div>
-                </div>
+                <p class="ims-staff-helper-text mb-4">Please provide your personal details here.</p>
 
-                <fieldset class="mt-3 mb-3">
-                    <legend class="form-label">Are you submitting this idea as an individual or a team?</legend>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="SubmissionType" value="individual" checked asp-for="SubmissionType" onchange="toggleSubmissionType()">
-                        <label class="form-check-label">Individual</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="SubmissionType" value="team" asp-for="SubmissionType" onchange="toggleSubmissionType()">
-                        <label class="form-check-label">Team</label>
+                <fieldset class="mb-4">
+                    <legend class="form-label">Submission Type *</legend>
+                    <div class="ims-staff-form-radio-group">
+                        <label class="form-check-label">
+                            <input type="radio" name="SubmissionType" value="individual" checked asp-for="SubmissionType" onchange="toggleSubmissionType()"> Individual
+                        </label>
+                        <label class="form-check-label">
+                            <input type="radio" name="SubmissionType" value="team" asp-for="SubmissionType" onchange="toggleSubmissionType()"> Team
+                        </label>
                     </div>
                 </fieldset>
 
                 <div id="individualSection">
-                    <div class="row g-3">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label for="BusinessUnit" class="form-label">Business Unit *</label>
-                            <input type="text" id="BusinessUnit" class="form-control" asp-for="Innovator.BusinessUnit" placeholder="e.g. Finance, IT, Operations">
+                            <label asp-for="Innovator.FullName" class="form-label">Full Name *</label>
+                            <input type="text" class="ims-staff-form-control w-100" asp-for="Innovator.FullName" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label for="DutyStation" class="form-label">Duty Station *</label>
-                            <input type="text" id="DutyStation" class="form-control" asp-for="Innovator.DutyStation" placeholder="e.g. Kampala">
+                            <label asp-for="Innovator.Email" class="form-label">Email Address *</label>
+                            <input type="email" class="ims-staff-form-control w-100" asp-for="Innovator.Email" readonly>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Innovator.BusinessUnit" class="form-label">Business Unit/Directorate *</label>
+                            <select class="ims-staff-form-control w-100" asp-for="Innovator.BusinessUnit" asp-items="Model.Innovator.BusinessUnitOptions">
+                                <option value="">Select business unit...</option>
+                            </select>
+                            <span asp-validation-for="Innovator.BusinessUnit" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
-                            <label for="InnovatorAge" class="form-label">Age Bracket *</label>
-                            <input type="text" id="InnovatorAge" class="form-control" asp-for="Innovator.Age" placeholder="e.g. 25-34">
+                            <label asp-for="Innovator.Rank" class="form-label">Job Title/Rank *</label>
+                            <select class="ims-staff-form-control w-100" asp-for="Innovator.Rank" asp-items="Model.Innovator.RankOptions">
+                                <option value="">Select rank...</option>
+                            </select>
+                            <span asp-validation-for="Innovator.Rank" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Innovator.DutyStation" class="form-label">Station/Location *</label>
+                            <select class="ims-staff-form-control w-100" asp-for="Innovator.DutyStation" asp-items="Model.Innovator.DutyStationOptions">
+                                <option value="">Select station...</option>
+                            </select>
+                            <span asp-validation-for="Innovator.DutyStation" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
-                            <label for="InnovatorGender" class="form-label">Gender *</label>
-                            <input type="text" id="InnovatorGender" class="form-control" asp-for="Innovator.Gender" placeholder="e.g. Male, Female">
+                            <label asp-for="Innovator.Age" class="form-label">Age Bracket</label>
+                            <select class="ims-staff-form-control w-100" asp-for="Innovator.Age" asp-items="Model.Innovator.AgeOptions">
+                                <option value="">Select age bracket...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Gender</label>
+                            <div class="ims-staff-radio-group-vertical">
+                                @foreach (var g in Model.Innovator.GenderOptions)
+                                {
+                                    <label><input type="radio" name="Innovator.Gender" value="@g.Value" checked="@(Model.Innovator.Gender == g.Value)"> @g.Text</label>
+                                }
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <label for="InnovatorRank" class="form-label">Rank/Title *</label>
-                            <input type="text" id="InnovatorRank" class="form-control" asp-for="Innovator.Rank" placeholder="e.g. Senior Officer">
+                            <label asp-for="Innovator.PhoneNumber" class="form-label">Phone Number</label>
+                            <input type="tel" class="ims-staff-form-control w-100" asp-for="Innovator.PhoneNumber" placeholder="e.g. +256 700 000 000">
                         </div>
                     </div>
                 </div>
 
                 <div id="teamSection" style="display:none;">
                     <div class="mb-3">
-                        <label for="TeamMemberNames" class="form-label">Team Member Names *</label>
-                        <textarea id="TeamMemberNames" class="form-control" asp-for="Innovator.TeamMemberNames" rows="3" placeholder="Enter names of team members, one per line"></textarea>
+                        <label asp-for="Innovator.TeamMemberNames" class="form-label">Team Members *</label>
+                        <textarea class="ims-staff-form-control w-100" asp-for="Innovator.TeamMemberNames" rows="4" placeholder="List all team members with their departments and roles"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="ims-staff-form-page" id="step2" style="display:none;">
-                <h3 class="ims-staff-form-page-title">Innovation Idea Details</h3>
+                <h3 class="ims-staff-form-page-title">Idea Details</h3>
+                <p class="ims-staff-helper-text mb-4">Provide comprehensive details about your innovation idea.</p>
+
                 <div class="mb-3">
                     <label asp-for="Idea.Title" class="form-label">Idea Title *</label>
-                    <input type="text" class="form-control" asp-for="Idea.Title" placeholder="What is the title of your innovation?">
+                    <input type="text" class="ims-staff-form-control w-100" asp-for="Idea.Title" maxlength="100" placeholder="e.g. Centralised Digital Performance Dashboard" oninput="updateCharCount(this, 'titleCount', 100)">
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="ims-staff-field-hint">Provide a concise and descriptive title that captures the essence of the innovation.</small>
+                        <small class="text-muted"><span id="titleCount">0</span>/100</small>
+                    </div>
                     <span asp-validation-for="Idea.Title" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.SummaryDescription" class="form-label">Brief Description *</label>
-                    <textarea class="form-control" asp-for="Idea.SummaryDescription" rows="3" placeholder="Summarize your innovation in 2-3 sentences"></textarea>
+                    <label asp-for="Idea.SummaryDescription" class="form-label">Summary Description *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.SummaryDescription" rows="4" maxlength="1000" placeholder="This innovation proposes a unified digital platform that integrates performance data across departments into a real-time dashboard. It enables faster reporting, data-driven decision-making, and enhanced transparency in tracking strategic objectives." oninput="updateCharCount(this, 'summaryCount', 1000)"></textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="ims-staff-field-hint">Briefly describe the idea &mdash; what it is, how it works, and the value it intends to deliver.</small>
+                        <small class="text-muted"><span id="summaryCount">0</span>/1000</small>
+                    </div>
                     <span asp-validation-for="Idea.SummaryDescription" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.ProblemStatement" class="form-label">Problem Statement *</label>
-                    <textarea class="form-control" asp-for="Idea.ProblemStatement" rows="4" placeholder="What problem or opportunity does your innovation address?"></textarea>
+                    <label asp-for="Idea.ProblemStatement" class="form-label">Problem / Opportunity Statement *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.ProblemStatement" rows="4" maxlength="2000" placeholder="Departments currently generate manual quarterly performance reports, which delays reviews and reduces responsiveness to emerging issues."></textarea>
+                    <small class="ims-staff-field-hint">Explain the issue, gap, or opportunity the idea addresses and the trigger for this idea.</small>
                     <span asp-validation-for="Idea.ProblemStatement" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.ProposedSolution" class="form-label">Proposed Solution *</label>
-                    <textarea class="form-control" asp-for="Idea.ProposedSolution" rows="4" placeholder="Describe your proposed solution or approach"></textarea>
+                    <label asp-for="Idea.ProposedSolution" class="form-label">Proposed Solution / Concept *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.ProposedSolution" rows="4" maxlength="2000" placeholder="Automate data aggregation from departmental scorecards into an interactive dashboard accessible to management and staff."></textarea>
+                    <small class="ims-staff-field-hint">Describe the new or improved product, service, process, or business model being introduced.</small>
                     <span asp-validation-for="Idea.ProposedSolution" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Type of Innovation *</label>
+                    <div class="ims-staff-radio-group-vertical">
+                        @{
+                            var selectedTypes = Model.Idea.TypeOfInnovation ?? new List<string>();
+                        }
+                        @foreach (var t in Model.Idea.InnovationTypeDetails)
+                        {
+                            <label class="ims-staff-category-option">
+                                <input type="checkbox" name="Idea.TypeOfInnovation" value="@t.Name" checked="@selectedTypes.Contains(t.Name)">
+                                <strong>@t.Name</strong><br><small class="text-muted">@t.Description</small>
+                            </label>
+                        }
+                    </div>
+                    <small class="ims-staff-field-hint">Select all that apply.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Idea.KeyEnablers" class="form-label">Key Enablers / Resources Required *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.KeyEnablers" rows="3" placeholder="Enter your answer"></textarea>
+                    <small class="ims-staff-field-hint">List resources or partnerships needed (e.g., ICT support, budget estimate, skills, cross-departmental collaboration).</small>
+                    <span asp-validation-for="Idea.KeyEnablers" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Idea.ImplementationApproach" class="form-label">Implementation Approach / Next Steps *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.ImplementationApproach" rows="3" placeholder="Enter your answer"></textarea>
+                    <small class="ims-staff-field-hint">Brief outline of how the idea could be piloted or implemented (e.g., prototype, proof of concept, pilot phase).</small>
+                    <span asp-validation-for="Idea.ImplementationApproach" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Idea.ImpactIndicators" class="form-label">Expected Impact Indicators *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.ImpactIndicators" rows="3" placeholder="Enter your answer"></textarea>
+                    <small class="ims-staff-field-hint">State measurable results or KPIs (efficiency gains, time saved, stakeholder satisfaction scores, etc.).</small>
+                    <span asp-validation-for="Idea.ImpactIndicators" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="ims-staff-form-page" id="step3" style="display:none;">
-                <h3 class="ims-staff-form-page-title">Strategic Alignment</h3>
+                <h3 class="ims-staff-form-page-title">Expected Benefits &amp; Strategic Alignment</h3>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.Category" class="form-label">Innovation Category *</label>
-                    <select class="form-select" asp-for="Idea.Category">
-                        <option value="">Select a category...</option>
-                    </select>
-                    <span asp-validation-for="Idea.Category" class="text-danger"></span>
+                    <label asp-for="Idea.ExpectedBenefits" class="form-label">Expected Benefits / Value Addition *</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.ExpectedBenefits" rows="4" placeholder="&#x2022; Improved efficiency and timeliness in reporting&#x0a;&#x2022; Enhanced data accuracy and accountability&#x0a;&#x2022; Better decision-making and performance visibility&#x0a;&#x2022; Cost savings through reduced manual effort"></textarea>
+                    <small class="ims-staff-field-hint">Outline the tangible and intangible benefits. Bullet list formatting encouraged.</small>
+                    <span asp-validation-for="Idea.ExpectedBenefits" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.StrategicObjective" class="form-label">Strategic Objective</label>
-                    <textarea class="form-control" asp-for="Idea.StrategicObjective" rows="3" placeholder="How does this innovation align with the Bank's strategic objectives?"></textarea>
+                    <label class="form-label">Strategic Alignment *</label>
+                    <div class="ims-staff-radio-group-vertical">
+                        @{
+                            var selectedAlignments = Model.Idea.StrategicAlignment ?? new List<string>();
+                        }
+                        @foreach (var sa in Model.Idea.StrategicAlignmentOptions)
+                        {
+                            <label class="ims-staff-category-option">
+                                <input type="checkbox" name="Idea.StrategicAlignment" value="@sa.Value" checked="@selectedAlignments.Contains(sa.Value)"> @sa.Text
+                            </label>
+                        }
+                        <label class="ims-staff-category-option">
+                            <input type="checkbox" name="Idea.StrategicAlignment" value="Other" id="strategicOtherCheck" onchange="toggleStrategicOther()" checked="@selectedAlignments.Contains("Other")"> Other
+                        </label>
+                    </div>
+                    <small class="ims-staff-field-hint">Select all that apply.</small>
+                </div>
+
+                <div class="mb-3" id="strategicOtherDiv" style="display:@(selectedAlignments.Contains("Other") ? "block" : "none")">
+                    <label asp-for="Idea.OtherStrategicAlignment" class="form-label">Other Strategic Alignment</label>
+                    <input type="text" class="ims-staff-form-control w-100" asp-for="Idea.OtherStrategicAlignment" placeholder="Please specify other strategic alignment">
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Idea.InnovationPriorityArea" class="form-label">Innovation Priority Area</label>
+                        <select class="ims-staff-form-control w-100" asp-for="Idea.InnovationPriorityArea" asp-items="Model.Idea.InnovationPriorityAreaOptions">
+                            <option value="">Select priority area...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Idea.ExpectedTimeline" class="form-label">Expected Timeline for Implementation</label>
+                        <select class="ims-staff-form-control w-100" asp-for="Idea.ExpectedTimeline" asp-items="Model.Idea.ExpectedTimelineOptions">
+                            <option value="">Select timeline...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Idea.EstimatedBudgetRange" class="form-label">Estimated Budget Range</label>
+                    <select class="ims-staff-form-control w-100" asp-for="Idea.EstimatedBudgetRange" asp-items="Model.Idea.EstimatedBudgetRangeOptions">
+                        <option value="">Select budget range...</option>
+                    </select>
                 </div>
             </div>
 
             <div class="ims-staff-form-page" id="step4" style="display:none;">
-                <h3 class="ims-staff-form-page-title">Benefits & Implementation</h3>
+                <h3 class="ims-staff-form-page-title">Attachments &amp; Final Submission</h3>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.ExpectedBenefits" class="form-label">Expected Benefits *</label>
-                    <textarea class="form-control" asp-for="Idea.ExpectedBenefits" rows="3" placeholder="Describe the expected benefits of your innovation"></textarea>
-                    <span asp-validation-for="Idea.ExpectedBenefits" class="text-danger"></span>
+                    <label class="form-label">Supporting Documents / Attachments</label>
+                    <div class="ims-staff-card p-4 text-center" style="border: 2px dashed var(--ims-line); cursor:pointer;" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault()" ondrop="handleFileDrop(event)">
+                        <i class="ti ti-upload" style="font-size: 36px; color: var(--ims-muted);"></i>
+                        <p class="mt-2 mb-1 fw-semibold">Drag and drop files here, or click to browse</p>
+                        <small class="text-muted">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG &mdash; Max 10MB per file, up to 5 files</small>
+                        <input type="file" id="fileInput" name="Attachments" multiple class="d-none" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+                    </div>
+                    <ul class="list-unstyled mt-2" id="fileList"></ul>
+                    <small class="ims-staff-field-hint">Please attach any supporting documents that provide additional context, research, or validation for your idea.</small>
                 </div>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.KeyEnablers" class="form-label">Key Enablers *</label>
-                    <textarea class="form-control" asp-for="Idea.KeyEnablers" rows="3" placeholder="What key resources or support are needed to implement this innovation?"></textarea>
-                    <span asp-validation-for="Idea.KeyEnablers" class="text-danger"></span>
+                    <label asp-for="Idea.AdditionalComments" class="form-label">Additional Comments or Notes</label>
+                    <textarea class="ims-staff-form-control w-100" asp-for="Idea.AdditionalComments" rows="3" placeholder="Any additional information you'd like to share..."></textarea>
                 </div>
-                <div class="mb-3">
-                    <label asp-for="Idea.ImplementationApproach" class="form-label">Implementation Approach *</label>
-                    <textarea class="form-control" asp-for="Idea.ImplementationApproach" rows="4" placeholder="Describe your approach to implementing this innovation"></textarea>
-                    <span asp-validation-for="Idea.ImplementationApproach" class="text-danger"></span>
+
+                <div class="ims-staff-card mb-3" style="background:#faf9f7!important;">
+                    <label class="form-label fw-bold">Declaration / Terms &amp; Conditions *</label>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" asp-for="Idea.DeclarationAccurate" id="decAccurate">
+                        <label class="form-check-label" for="decAccurate">I confirm that the information provided in this submission is accurate and complete to the best of my knowledge.</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" asp-for="Idea.DeclarationReview" id="decReview">
+                        <label class="form-check-label" for="decReview">I understand that this idea will be reviewed by the Innovation Management Technical Team and may be subject to further evaluation.</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" asp-for="Idea.DeclarationParticipate" id="decParticipate">
+                        <label class="form-check-label" for="decParticipate">I agree to participate in the innovation process if my idea is selected for development.</label>
+                    </div>
                 </div>
+
                 <div class="mb-3">
-                    <label asp-for="Idea.ImpactIndicators" class="form-label">Impact Indicators *</label>
-                    <textarea class="form-control" asp-for="Idea.ImpactIndicators" rows="3" placeholder="How will success be measured?"></textarea>
-                    <span asp-validation-for="Idea.ImpactIndicators" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Attachments (optional)</label>
-                    <input type="file" id="fileInput" name="Attachments" multiple class="form-control" />
+                    <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="openPreviewModal()"><i class="ti ti-eye"></i> Preview Submission</button>
                 </div>
             </div>
         </div>
 
-        <div class="card-footer d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(currentStep)" id="prevBtn" style="display:none;">Back</button>
+        <div class="card-footer d-flex justify-content-between align-items-center">
             <div>
-                <button type="button" class="btn btn-outline-secondary me-2" onclick="nextStep(currentStep)" id="nextBtn">Next</button>
-                <button type="submit" class="btn btn-success" id="submitBtn" style="display:none;"><i class="ti ti-send me-1"></i> Submit Idea</button>
+                <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="prevStep()" id="prevBtn" style="display:none;"><i class="ti ti-arrow-left"></i> Back</button>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <small class="text-muted" id="pageIndicator">Page 1 of 4</small>
+                <button type="button" class="ims-staff-btn ims-staff-btn-primary" style="background:#DD9024!important;border-color:#DD9024!important;" onclick="nextStep()" id="nextBtn">Next <i class="ti ti-arrow-right"></i></button>
+                <button type="submit" class="ims-staff-btn ims-staff-btn-primary" style="background:#DD9024!important;border-color:#DD9024!important;display:none;" id="submitBtn"><i class="ti ti-send"></i> Submit Innovation Idea</button>
             </div>
         </div>
-    </form>
+    </div>
+</form>
+
+<!-- Preview Modal -->
+<div class="ims-staff-modal-overlay" id="previewModal" style="display:none;">
+    <div class="ims-staff-modal" style="max-width:700px;">
+        <div class="ims-staff-modal-header">
+            <h3>Preview Submission</h3>
+            <button type="button" class="ims-staff-modal-close" onclick="closePreviewModal()">&times;</button>
+        </div>
+        <div class="ims-staff-modal-body" id="previewContent">
+        </div>
+        <div class="ims-staff-modal-footer">
+            <button type="button" class="ims-staff-btn ims-staff-btn-secondary" onclick="closePreviewModal()">Close</button>
+            <button type="button" class="ims-staff-btn ims-staff-btn-primary" style="background:#DD9024!important;border-color:#DD9024!important;" onclick="closePreviewModal(); document.getElementById('submitForm').requestSubmit();">Confirm &amp; Submit</button>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
         let currentStep = 1;
+        const totalSteps = 4;
 
         function toggleSubmissionType() {
-            const isTeam = document.querySelector('input[name="SubmissionType"]:checked').value === 'team';
+            const isTeam = document.querySelector('input[name="SubmissionType"]:checked')?.value === 'team';
             document.getElementById('individualSection').style.display = isTeam ? 'none' : 'block';
             document.getElementById('teamSection').style.display = isTeam ? 'block' : 'none';
         }
 
         function showStep(step) {
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById('step' + i).style.display = i === step ? 'block' : 'none';
+            for (let i = 1; i <= totalSteps; i++) {
+                const el = document.getElementById('step' + i);
+                if (el) el.style.display = i === step ? 'block' : 'none';
             }
-            document.querySelectorAll('.ims-staff-stepper-step').forEach((s, i) => {
+            document.querySelectorAll('#formStepper .ims-staff-stepper-step').forEach((s, i) => {
                 s.classList.toggle('ims-staff-stepper-active', i + 1 === step);
             });
-            document.getElementById('prevBtn').style.display = step > 1 ? 'inline-block' : 'none';
-            document.getElementById('nextBtn').style.display = step < 4 ? 'inline-block' : 'none';
-            document.getElementById('submitBtn').style.display = step === 4 ? 'inline-block' : 'none';
+            document.getElementById('prevBtn').style.display = step > 1 ? 'inline-flex' : 'none';
+            document.getElementById('nextBtn').style.display = step < totalSteps ? 'inline-flex' : 'none';
+            document.getElementById('submitBtn').style.display = step === totalSteps ? 'inline-flex' : 'none';
+            document.getElementById('pageIndicator').textContent = 'Page ' + step + ' of ' + totalSteps;
             currentStep = step;
         }
 
-        function nextStep(step) {
-            if (step < 4) showStep(step + 1);
+        function nextStep() {
+            if (currentStep < totalSteps) showStep(currentStep + 1);
         }
 
-        function prevStep(step) {
-            if (step > 1) showStep(step - 1);
+        function prevStep() {
+            if (currentStep > 1) showStep(currentStep - 1);
         }
 
-        toggleSubmissionType();
+        function updateCharCount(input, targetId, max) {
+            document.getElementById(targetId).textContent = input.value.length;
+        }
+
+        function toggleStrategicOther() {
+            document.getElementById('strategicOtherDiv').style.display =
+                document.getElementById('strategicOtherCheck').checked ? 'block' : 'none';
+        }
+
+        // File handling
+        const allowedExtensions = ['.pdf','.doc','.docx','.ppt','.pptx','.xls','.xlsx','.jpg','.jpeg','.png'];
+        const maxFileSize = 10 * 1024 * 1024;
+        const maxFiles = 5;
+        let selectedFiles = [];
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+        }
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+        }
+
+        function handleFiles(files) {
+            for (let f of files) {
+                if (selectedFiles.length >= maxFiles) break;
+                const ext = '.' + f.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(ext)) continue;
+                if (f.size > maxFileSize) continue;
+                selectedFiles.push(f);
+            }
+            renderFileList();
+            updateFileInput();
+        }
+
+        function renderFileList() {
+            const list = document.getElementById('fileList');
+            list.innerHTML = selectedFiles.map((f, i) =>
+                '<li class="d-flex align-items-center justify-content-between py-1"><span><i class="ti ti-file me-1"></i>' +
+                f.name + ' (' + (f.size / 1024 / 1024).toFixed(1) + ' MB)</span>' +
+                '<button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile(' + i + ')">&times;</button></li>'
+            ).join('');
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+            updateFileInput();
+        }
+
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(f => dt.items.add(f));
+            document.getElementById('fileInput').files = dt.files;
+        }
+
+        // Preview modal
+        function openPreviewModal() {
+            const fields = [
+                ['Submission Type', document.querySelector('input[name="SubmissionType"]:checked')?.value],
+                ['Full Name', document.getElementById('Innovator_FullName')?.value],
+                ['Email', document.getElementById('Innovator_Email')?.value],
+                ['Business Unit', document.getElementById('Innovator_BusinessUnit')?.value],
+                ['Rank', document.getElementById('Innovator_Rank')?.value],
+                ['Station', document.getElementById('Innovator_DutyStation')?.value],
+                ['Age Bracket', document.getElementById('Innovator_Age')?.value],
+                ['Gender', document.querySelector('input[name="Innovator.Gender"]:checked')?.value],
+                ['Phone', document.getElementById('Innovator_PhoneNumber')?.value],
+                ['Title', document.getElementById('Idea_Title')?.value],
+                ['Summary', document.getElementById('Idea_SummaryDescription')?.value],
+                ['Problem', document.getElementById('Idea_ProblemStatement')?.value],
+                ['Solution', document.getElementById('Idea_ProposedSolution')?.value],
+                ['Key Enablers', document.getElementById('Idea_KeyEnablers')?.value],
+                ['Implementation', document.getElementById('Idea_ImplementationApproach')?.value],
+                ['Impact Indicators', document.getElementById('Idea_ImpactIndicators')?.value],
+                ['Expected Benefits', document.getElementById('Idea_ExpectedBenefits')?.value],
+                ['Priority Area', document.getElementById('Idea_InnovationPriorityArea')?.value],
+                ['Timeline', document.getElementById('Idea_ExpectedTimeline')?.value],
+                ['Budget', document.getElementById('Idea_EstimatedBudgetRange')?.value]
+            ];
+            let html = '<table class="table"><tbody>';
+            fields.forEach(([label, value]) => {
+                if (value) html += '<tr><td class="fw-semibold" style="width:180px">' + label + '</td><td>' + value + '</td></tr>';
+            });
+            const types = Array.from(document.querySelectorAll('input[name="Idea.TypeOfInnovation"]:checked')).map(c => c.value);
+            if (types.length) html += '<tr><td class="fw-semibold">Innovation Types</td><td>' + types.join(', ') + '</td></tr>';
+            const alignments = Array.from(document.querySelectorAll('input[name="Idea.StrategicAlignment"]:checked')).map(c => c.value);
+            if (alignments.length) html += '<tr><td class="fw-semibold">Strategic Alignment</td><td>' + alignments.join(', ') + '</td></tr>';
+            html += '</tbody></table>';
+            document.getElementById('previewContent').innerHTML = html;
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleSubmissionType();
+            // Init character counts
+            document.querySelectorAll('input[maxlength], textarea[maxlength]').forEach(el => {
+                const targetId = el.id === 'Idea_Title' ? 'titleCount' : el.id === 'Idea_SummaryDescription' ? 'summaryCount' : null;
+                if (targetId) updateCharCount(el, targetId, parseInt(el.maxLength));
+            });
+        });
     </script>
 }

@@ -1,0 +1,303 @@
+I need you to update the fields to match this: 
+Design the 'Submit Innovation Idea' form for the Bank of Uganda Innovation Management System, following the same design language as the Notification Center.
+
+LAYOUT:
+- Left sidebar navigation (same as provided design) with 'Submit New Idea' highlighted as active
+- Top app bar with search and user profile (same as provided design)
+- Main content area with #FEF7EF background
+- Multi-page form with progress indicator (4 pages total)
+
+PAGE HEADER:
+- Title: "Submit Innovation Idea"
+- Subtitle: "Complete all required fields to submit your innovation idea for review"
+- Progress indicator: Page 1 of 4 with step dots
+
+---
+
+## PAGE 1: INNOVATOR DETAILS
+
+FORM HEADER:
+- "Innovator Details" section title
+- Note: "Please provide your personal details here."
+- Required fields marked with asterisk (*)
+
+FORM FIELDS (in order):
+
+1. Submission Type *
+   - Radio button group:
+     ☐ Individual
+     ☐ Team
+
+2. Business Unit/Directorate *
+   - Dropdown select with search
+   - Options include:
+     - Accounts
+     - Agricultural Credit Facility & Other Credit Schemes
+     - Administrative Services
+     - Banking
+     - Bank Resolution
+     - Board Affairs
+     - Commercial Banking
+     - [Add all other BOU departments]
+
+3. Job Title/Rank *
+   - Dropdown select:
+     - Executive Management (Governor, Deputy Governor, Executive Directors)
+     - Senior Management (Directors and Deputy Directors)
+     - Middle Management (Team Leaders, SPBOs, and PBOs)
+     - Operational Management (SBOIs, SBOIIs, BOIs, BOIIs)
+     - Administrative Assistant
+     - Clerical Staff
+
+4. Station/Location *
+   - Dropdown select:
+     - Headquarters
+     - BOU Clinic / William Street
+     - Arua
+     - Gulu
+     - Mbale
+     - Masaka
+     - Mbarara
+     - Fort Portal
+     - [Add other locations]
+
+5. Age Bracket
+   - Dropdown select:
+     - 18 - 24
+     - 25 - 34
+     - 35 - 44
+     - 45 - 54
+     - 55 and above
+
+6. Gender
+   - Radio buttons:
+     ☐ Male
+     ☐ Female
+
+7. Full Name *
+   - Text input field
+
+8. Email Address *
+   - Text input field (email type, auto-filled from profile)
+
+9. Phone Number
+   - Text input field
+
+10. Team Members (if Team selected)
+    - Multi-line text area
+    - Placeholder: "List all team members with their departments and roles"
+
+NAVIGATION:
+- "Next" button (#DD9024) at bottom right
+- "Cancel" button (outline style) at bottom left
+- Page indicator: "Page 1 of 4"
+
+---
+
+## PAGE 2: IDEA DETAILS
+
+FORM HEADER:
+- "Idea Details" section title
+- Note: "Provide comprehensive details about your innovation idea"
+
+FORM FIELDS (in order):
+
+1. Idea Title *
+   - Text input field
+   - Help text: "Provide a concise and descriptive title that captures the essence of the innovation."
+   - Example placeholder: "Centralised Digital Performance Dashboard"
+   - Character limit: 100 characters
+   - Counter: "0/100"
+
+2. Summary Description *
+   - Multi-line text area (4-5 rows)
+   - Help text: "Briefly describe the idea — what it is, how it works, and the value it intends to deliver."
+   - Example placeholder: "This innovation proposes a unified digital platform that integrates performance data across departments into a real-time dashboard. It enables faster reporting, data-driven decision-making, and enhanced transparency in tracking strategic objectives."
+
+3. Problem / Opportunity Statement *
+   - Multi-line text area (4-5 rows)
+   - Help text: "Explain the issue, gap, or opportunity the idea addresses and the trigger for this idea."
+   - Example placeholder: "Departments currently generate manual quarterly performance reports, which delays reviews and reduces responsiveness to emerging issues."
+
+4. Proposed Solution / Concept *
+   - Multi-line text area (4-5 rows)
+   - Help text: "Describe the new or improved product, service, process, or business model being introduced."
+   - Example placeholder: "Automate data aggregation from departmental scorecards into an interactive dashboard accessible to management and staff."
+
+5. Type of Innovation *
+   - Checkbox group (select all that apply):
+     ☐ Product / Service: new or enhanced offerings that improve how BoU delivers value to stakeholders, often leveraging technology or new frameworks.
+     ☐ Process: innovative methods or workflows that make BoU operations more efficient, transparent, or resilient.
+     ☐ Business Model: novel approaches to fulfilling BoU's mandate, e.g., partnerships or new value delivery mechanisms.
+     ☐ Policy / Governance: changing or improving the rules, governance structures, policies, decision-making frameworks or regulatory approaches.
+     ☐ Technology / System: introduction or application of new technological capabilities, STEM breakthroughs, or novel technological methods that create value.
+     ☐ Sustainability: innovative initiatives that strengthen public trust, financial inclusion, and promote environmental and social sustainability in the financial system.
+     ☐ Organisational / Institutional: internal innovations that enhance agility, capacity, and collaboration within the central bank.
+
+6. Key Enablers / Resources Required *
+   - Multi-line text area (3-4 rows)
+   - Help text: "List resources or partnerships needed (e.g., ICT support, budget estimate, skills, cross-departmental collaboration)."
+   - Placeholder: "Enter your answer"
+
+7. Implementation Approach / Next Steps *
+   - Multi-line text area (3-4 rows)
+   - Help text: "Brief outline of how the idea could be piloted or implemented (e.g., prototype, proof of concept, pilot phase)."
+   - Placeholder: "Enter your answer"
+
+8. Expected Impact Indicators *
+   - Multi-line text area (3-4 rows)
+   - Help text: "State measurable results or KPIs (efficiency gains, time saved, stakeholder satisfaction scores, etc.)."
+   - Placeholder: "Enter your answer"
+
+NAVIGATION:
+- "Back" button (outline style)
+- "Next" button (#DD9024)
+- Page indicator: "Page 2 of 4"
+
+---
+
+## PAGE 3: VALUE & STRATEGIC ALIGNMENT
+
+FORM HEADER:
+- "Expected Benefits & Strategic Alignment" section title
+
+FORM FIELDS (in order):
+
+1. Expected Benefits / Value Addition *
+   - Multi-line text area (4-5 rows)
+   - Help text: "Outline the tangible and intangible benefits."
+   - Example placeholder: 
+     "• Improved efficiency and timeliness in reporting
+      • Enhanced data accuracy and accountability
+      • Better decision-making and performance visibility
+      • Cost savings through reduced manual effort"
+   - Bullet list formatting encouraged
+
+2. Strategic Alignment *
+   - Checkbox group (select all that apply):
+     ☐ Enhance Stakeholder Confidence
+     ☐ Enhance Price Stability
+     ☐ Enhance Financial System Soundness and Resilience
+     ☐ Enhance Financial System Development
+     ☐ Enhance Financial Performance
+     ☐ Improve Efficiency and Reliability of Bank Processes
+     ☐ Improve Employee Competence
+     ☐ Improve Organisational Systems and Infrastructure
+     ☐ Enhance Organisational Culture
+     ☐ Other (with text input)
+
+3. Other Strategic Alignment (if "Other" selected)
+   - Text input field
+   - Placeholder: "Please specify other strategic alignment"
+
+4. Innovation Priority Area
+   - Dropdown select:
+     - Digital Transformation
+     - Process Optimization
+     - Customer/Stakeholder Experience
+     - Financial Inclusion
+     - Risk Management
+     - Data Analytics & Insights
+     - Sustainability & ESG
+     - Regulatory Innovation
+     - Employee Engagement
+     - Other
+
+5. Expected Timeline for Implementation
+   - Dropdown select:
+     - 0-3 Months
+     - 3-6 Months
+     - 6-12 Months
+     - 12-24 Months
+     - 24+ Months
+
+6. Estimated Budget Range
+   - Dropdown select:
+     - Below 10M UGX
+     - 10M - 50M UGX
+     - 50M - 100M UGX
+     - 100M - 500M UGX
+     - Above 500M UGX
+     - Not Applicable
+
+NAVIGATION:
+- "Back" button (outline style)
+- "Next" button (#DD9024)
+- Page indicator: "Page 3 of 4"
+
+---
+
+## PAGE 4: ATTACHMENTS & SUBMISSION
+
+FORM HEADER:
+- "Attachments & Final Submission" section title
+
+FORM FIELDS (in order):
+
+1. Supporting Documents / Attachments
+   - Drag-and-drop upload area
+   - File types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG
+   - Maximum file size: 10MB per file
+   - Maximum files: 5
+   - File list with:
+     - File name
+     - File size
+     - Upload progress
+     - Remove button (×)
+   - Note: "Please attach any supporting documents that provide additional context, research, or validation for your idea."
+
+2. Additional Comments or Notes
+   - Multi-line text area (3-4 rows)
+   - Optional field
+   - Placeholder: "Any additional information you'd like to share..."
+
+3. Declaration / Terms & Conditions *
+   - Checkbox: 
+     ☐ I confirm that the information provided in this submission is accurate and complete to the best of my knowledge.
+     ☐ I understand that this idea will be reviewed by the Innovation Management Technical Team and may be subject to further evaluation.
+     ☐ I agree to participate in the innovation process if my idea is selected for development.
+
+4. Submission Preview Button
+   - "Preview Submission" button (outline style)
+   - Opens a modal showing all entered information
+
+5. Submit Button
+   - "Submit Innovation Idea" button (#DD9024) - large, prominent
+   - Loading state with spinner on click
+
+NAVIGATION:
+- "Back" button (outline style)
+- "Submit" button (#DD9024)
+- Page indicator: "Page 4 of 4"
+
+---
+
+## SUCCESS STATE
+
+After successful submission:
+- Full-page success message
+- Checkmark icon (#DD9024) in circular background
+- "Idea Submitted Successfully!" title
+- Submission reference number: "IMT-2026-0042"
+- Summary of submitted idea
+- "View My Ideas" button (#DD9024)
+- "Submit Another Idea" button (outline style)
+- Email notification confirmation message
+
+---
+
+## VALIDATION RULES
+
+1. Required fields must be filled before progressing
+2. Email must be valid format
+3. Character limits on text fields:
+   - Title: Max 100 characters
+   - Summary: Max 1000 characters
+   - Other text areas: Max 2000 characters
+4. File upload validation:
+   - File type validation
+   - File size validation
+   - Maximum 5 files
+5. At least one checkbox selected for:
+   - Type of Innovation
+   - Strategic Alignment

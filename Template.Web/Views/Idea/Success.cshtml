@@ -1,0 +1,35 @@
+@model IdeaSuccessViewModel
+@{
+    ViewData["Title"] = "Idea Submitted Successfully";
+}
+
+<div class="text-center py-5" style="max-width:600px;margin:auto;">
+    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" style="width:80px;height:80px;background:#fff3df;">
+        <i class="ti ti-circle-check" style="font-size:40px;color:#DD9024;"></i>
+    </div>
+    <h2 class="fw-bold mb-2" style="color:var(--ims-wine);">Idea Submitted Successfully!</h2>
+    <p class="text-muted mb-1">Your submission reference number is:</p>
+    <div class="fs-3 fw-bold mb-3" style="color:#DD9024;letter-spacing:0.05em;">@Model.ReferenceNumber</div>
+
+    <div class="ims-staff-card text-start mb-4">
+        <table class="ims-staff-data-table">
+            <tbody>
+                <tr><td class="fw-semibold" style="width:140px">Title</td><td>@Model.Title</td></tr>
+                <tr><td class="fw-semibold">Category</td><td>@Model.Category</td></tr>
+                <tr><td class="fw-semibold">Submitted</td><td>@Model.SubmissionDate.ToString("dd MMM yyyy HH:mm")</td></tr>
+                <tr><td class="fw-semibold">Description</td><td>@Model.SummaryDescription</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="text-muted small mb-4"><i class="ti ti-mail me-1"></i> A confirmation notification has been sent to your account.</p>
+
+    <div class="d-flex gap-3 justify-content-center">
+        <a asp-controller="Idea" asp-action="MyIdeas" class="ims-staff-btn ims-staff-btn-primary" style="background:#DD9024!important;border-color:#DD9024!important;">
+            <i class="ti ti-list"></i> View My Ideas
+        </a>
+        <a asp-controller="Idea" asp-action="Submit" class="ims-staff-btn ims-staff-btn-secondary">
+            <i class="ti ti-plus"></i> Submit Another Idea
+        </a>
+    </div>
+</div>

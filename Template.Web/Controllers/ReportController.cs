@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Template.Common.Enums;
 using Template.Common.Static;
@@ -50,9 +51,15 @@ public class ReportController(ApplicationDbContext db) : Controller
                 Date = i.SubmissionDate
             }).ToListAsync();
 
+        var statuses = await db.IdeaStatusOptions.AsNoTracking()
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new SelectListItem { Value = s.Name, Text = s.Name })
+            .ToListAsync();
+
         return View(new ReportsModel
         {
             Filters = filters,
+            Statuses = statuses,
             ReportIdeas = rows,
             Departments = await db.ApplicationUsers.AsNoTracking()
                 .Where(user => user.BusinessUnit != null && user.BusinessUnit != "")

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc.Rendering;
+
 namespace Template.Web.Models.Report
 {
     public class ReportsModel
@@ -7,6 +9,7 @@ namespace Template.Web.Models.Report
         public List<ReportIdeaItemViewModel> ReportIdeas { get; set; } = new();
         public List<string> Departments { get; set; } = new();
         public List<string> Categories { get; set; } = new();
+        public List<SelectListItem> Statuses { get; set; } = new();
         public List<string> CategoryChartLabels { get; set; } = new();
         public List<int> CategoryChartData { get; set; } = new();
         public List<string> TrendChartLabels { get; set; } = new();

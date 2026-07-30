@@ -30,11 +30,12 @@
     background: #fff;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid #e1e3df;
+    box-shadow: 0 2px 8px rgba(46,0,20,0.04);
     transition: all 0.2s;
 }
 .ims-staff-summary-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 16px rgba(46,0,20,0.06);
     transform: translateY(-2px);
 }
 .ims-staff-card-label {

@@ -1,0 +1,145 @@
+@using Template.Common.Static
+
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool IsActive(string controller, string action = "")
+    {
+        if (!string.IsNullOrEmpty(action))
+        {
+            return string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+        }
+        return string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+<div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion sb-sidenav-dark bg_app_color_crimson" id="sidenavAccordion">
+        <div class="sb-sidenav-menu">
+            <div class="nav">
+                <div class="sb-sidenav-menu-heading">CORE</div>
+                <a class="nav-link @(IsActive("Home", "Index") ? "active" : "")" asp-controller="Home" asp-action="Index">
+                    <div class="sb-nav-link-icon"><i class="ti ti-layout-dashboard"></i></div>
+                    Home
+                </a>
+
+                <permission name="@SystemPermissions.Account.ViewApplicationUsers">
+                    <div class="sb-sidenav-menu-heading">OPERATIONS</div>
+
+                    <!-- Rights Submenu -->
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseRights" aria-expanded="false" aria-controls="collapseRights">
+                        <div class="sb-nav-link-icon"><i class="ti ti-key"></i></div>
+                        Rights
+                        <div class="sb-sidenav-collapse-arrow"><i class="ti ti-chevron-down"></i></div>
+                    </a>
+                    <div class="collapse" id="collapseRights" data-bs-parent="#sidenavAccordion">
+                        <nav class="sb-sidenav-menu-nested nav">
+                            <a class="nav-link" asp-controller="FinancialYear" asp-action="Index">
+                                <i class="ti ti-calendar me-2"></i> System User Rights
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Clearance Submenu -->
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseClearance" aria-expanded="false" aria-controls="collapseClearance">
+                        <div class="sb-nav-link-icon"><i class="ti ti-checkbox"></i></div>
+                        Clearance
+                        <div class="sb-sidenav-collapse-arrow"><i class="ti ti-chevron-down"></i></div>
+                    </a>
+                    <div class="collapse" id="collapseClearance" data-bs-parent="#sidenavAccordion">
+                        <nav class="sb-sidenav-menu-nested nav">
+                            <a class="nav-link" asp-controller="FinancialYear" asp-action="Index">
+                                <i class="ti ti-calendar me-2"></i> Weekend Clearance
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Locum Submenu -->
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLocum" aria-expanded="false" aria-controls="collapseLocum">
+                        <div class="sb-nav-link-icon"><i class="ti ti-briefcase"></i></div>
+                        Locum
+                        <div class="sb-sidenav-collapse-arrow"><i class="ti ti-chevron-down"></i></div>
+                    </a>
+                    <div class="collapse" id="collapseLocum" data-bs-parent="#sidenavAccordion">
+                        <nav class="sb-sidenav-menu-nested nav">
+                            <a class="nav-link" asp-controller="FinancialYear" asp-action="Index">
+                                <i class="ti ti-calendar me-2"></i> Locum Management
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Foreign Travel Submenu -->
+                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseForeignTravel" aria-expanded="false" aria-controls="collapseForeignTravel">
+                        <div class="sb-nav-link-icon"><i class="ti ti-plane font-icon"></i></div>
+                        Foreign Travel
+                        <div class="sb-sidenav-collapse-arrow"><i class="ti ti-chevron-down"></i></div>
+                    </a>
+                    <div class="collapse" id="collapseForeignTravel" data-bs-parent="#sidenavAccordion">
+                        <nav class="sb-sidenav-menu-nested nav">
+                            <a class="nav-link" asp-controller="FinancialYear" asp-action="Index">
+                                <i class="ti ti-calendar me-2"></i> Travel Requests
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Ideas Link -->
+                    <a class="nav-link @(IsActive("Idea") ? "active" : "")" asp-controller="Idea" asp-action="AllIdeas">
+                        <div class="sb-nav-link-icon"><i class="ti ti-bulb"></i></div>
+                        Ideas
+                    </a>
+                </permission>
+
+                <permission name="@SystemPermissions.Account.ViewApplicationUsers">
+                    <div class="sb-sidenav-menu-heading">ACCOUNTS SETTINGS</div>
+
+                    <a class="nav-link @(IsActive("Account") ? "active" : "")" asp-controller="Account" asp-action="Index">
+                        <div class="sb-nav-link-icon"><i class="ti ti-users"></i></div>
+                        Users
+                    </a>
+
+                    <permission name="@SystemPermissions.Roles.ViewRoles">
+                        <a class="nav-link @(IsActive("Role") ? "active" : "")" asp-controller="Role" asp-action="Index">
+                            <div class="sb-nav-link-icon"><i class="ti ti-shield"></i></div>
+                            Roles
+                        </a>
+                    </permission>
+                </permission>
+
+                <div class="sb-sidenav-menu-heading">SYSTEM INFORMATION</div>
+
+                <permission name="@SystemPermissions.AuditLog.ViewAuditLogs">
+                    <a class="nav-link @(IsActive("AuditLog") ? "active" : "")" asp-controller="AuditLog" asp-action="Index">
+                        <div class="sb-nav-link-icon"><i class="ti ti-list"></i></div>
+                        Audit Logs
+                    </a>
+                </permission>
+
+                <a class="nav-link @(IsActive("Report") ? "active" : "")" asp-controller="Report" asp-action="Index">
+                    <div class="sb-nav-link-icon"><i class="ti ti-file-analytics"></i></div>
+                    Reports
+                </a>
+
+                <a class="nav-link @(IsActive("Resource") ? "active" : "")" asp-controller="Resource" asp-action="Index">
+                    <div class="sb-nav-link-icon"><i class="ti ti-folder"></i></div>
+                    Resources
+                </a>
+
+                <a class="nav-link @(IsActive("Notification") ? "active" : "")" asp-controller="Notification" asp-action="Index">
+                    <div class="sb-nav-link-icon"><i class="ti ti-bell"></i></div>
+                    Notifications
+                </a>
+
+                <a class="nav-link @(IsActive("Settings") ? "active" : "")" asp-controller="Settings" asp-action="Index">
+                    <div class="sb-nav-link-icon"><i class="ti ti-settings"></i></div>
+                    Settings
+                </a>
+            </div>
+        </div>
+        <div class="sb-sidenav-footer text-white-50 border-top border-light border-opacity-10 p-3">
+            <div class="small">Logged in as:</div>
+            <div class="text-white fw-semibold truncate">@User?.Identity?.Name</div>
+        </div>
+    </nav>
+</div>

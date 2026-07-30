@@ -1,0 +1,23 @@
+@using Microsoft.AspNetCore.Http
+
+<li class="nav-item dropdown ms-auto">
+    <button class="btn btn-user-brown dropdown-toggle d-flex align-items-center" type="button" id="userDropdownMenu" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="ti ti-user-circle fs-5"></i>
+        <span class="ms-1 d-none d-sm-inline">@User?.Identity?.Name</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-2" aria-labelledby="userDropdownMenu" style="min-width: 220px; border-radius: 10px; border: 1px solid #e1e3df;">
+        <li class="text-center pb-3 border-bottom mb-2">
+            <div class="avatar-circle mx-auto mb-2 bg_app_color_crimson text-white d-flex align-items-center justify-content-center rounded-circle" style="width: 50px; height: 50px; font-size: 24px;">
+                <i class="ti ti-user"></i>
+            </div>
+            <div class="fw-bold text-dark fs-6">@User?.Identity?.Name</div>
+            <div class="text-muted small">Logged in User</div>
+        </li>
+        <li>
+            <a class="dropdown-item text-danger d-flex align-items-center rounded py-2 mt-1" asp-controller="Account" asp-action="LogoutAsync" style="border-radius: 8px;">
+                <i class="ti ti-logout me-2 fs-5"></i>
+                <span>Sign out</span>
+            </a>
+        </li>
+    </ul>
+</li>

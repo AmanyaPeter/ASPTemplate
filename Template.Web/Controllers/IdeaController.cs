@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Template.Common.Enums;
@@ -45,7 +46,8 @@ public class IdeaController : Controller
                 DutyStation = user.Station,
                 Age = user.AgeBracket,
                 Gender = user.Gender,
-                Rank = user.JobTitle
+                Rank = user.JobTitle,
+                PhoneNumber = user.PhoneNumber
             }
         };
 
@@ -70,11 +72,20 @@ public class IdeaController : Controller
                 KeyEnablers = idea.KeyEnablers,
                 ImplementationApproach = idea.ImplementationApproach,
                 ImpactIndicators = idea.ImpactIndicators,
-                StrategicObjective = idea.StrategicObjective
+                StrategicObjective = idea.StrategicObjective,
+                TypeOfInnovation = idea.TypeOfInnovation?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+                StrategicAlignment = idea.StrategicAlignment?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+                InnovationPriorityArea = idea.InnovationPriorityArea,
+                ExpectedTimeline = idea.ExpectedTimeline,
+                EstimatedBudgetRange = idea.EstimatedBudgetRange,
+                AdditionalComments = idea.AdditionalComments,
+                DeclarationAccurate = idea.DeclarationAccepted
             };
             model.Innovator.TeamMemberNames = idea.TeamMemberNames;
+            model.Innovator.PhoneNumber = idea.PhoneNumber;
         }
 
+        await LoadReferenceDataAsync(model);
         return View(model);
     }
 
@@ -87,13 +98,18 @@ public class IdeaController : Controller
         var user = await GetCurrentUserAsync();
         if (user == null) return Forbid();
 
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            await LoadReferenceDataAsync(model);
+            return View(model);
+        }
 
         var category = await _context.Categories.FirstOrDefaultAsync(
             c => c.IsActive && c.Name == model.Idea.Category);
         if (category == null)
         {
             ModelState.AddModelError("Idea.Category", "Please select an available category.");
+            await LoadReferenceDataAsync(model);
             return View(model);
         }
 
@@ -136,6 +152,16 @@ public class IdeaController : Controller
         idea.TeamMemberNames = model.SubmissionType == "team" ? model.Innovator.TeamMemberNames?.Trim() : null;
         idea.CategoryId = category.Id;
         idea.SubmitterAgeBracket = user.AgeBracket;
+        idea.PhoneNumber = model.Innovator.PhoneNumber?.Trim();
+        idea.TypeOfInnovation = model.Idea.TypeOfInnovation != null && model.Idea.TypeOfInnovation.Count > 0
+            ? string.Join(",", model.Idea.TypeOfInnovation) : null;
+        idea.StrategicAlignment = model.Idea.StrategicAlignment != null && model.Idea.StrategicAlignment.Count > 0
+            ? string.Join(",", model.Idea.StrategicAlignment) : null;
+        idea.InnovationPriorityArea = model.Idea.InnovationPriorityArea;
+        idea.ExpectedTimeline = model.Idea.ExpectedTimeline;
+        idea.EstimatedBudgetRange = model.Idea.EstimatedBudgetRange;
+        idea.AdditionalComments = model.Idea.AdditionalComments?.Trim();
+        idea.DeclarationAccepted = model.Idea.DeclarationAccurate && model.Idea.DeclarationReview && model.Idea.DeclarationParticipate;
         idea.ModifiedBy = user.UserName ?? user.Id.ToString();
         idea.ModifiedDate = DateTime.UtcNow;
 
@@ -179,7 +205,7 @@ public class IdeaController : Controller
         }
 
         TempData["SuccessMessage"] = $"Idea {idea.ReferenceNumber} saved successfully.";
-        return RedirectToAction(nameof(Details), new { id = idea.Id });
+        return RedirectToAction(nameof(Success), new { id = idea.Id });
     }
 
     [Authorize(Roles = RoleConstants.Staff)]
@@ -210,9 +236,21 @@ public class IdeaController : Controller
                 SubmissionDate = i.SubmissionDate, IsRetracted = i.IsRetracted
             }).ToListAsync();
 
+        var categories = await _context.Categories.AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.Name)
+            .Select(c => new SelectListItem { Value = c.Name, Text = c.Name })
+            .ToListAsync();
+
+        var statuses = await _context.IdeaStatusOptions.AsNoTracking()
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new SelectListItem { Value = s.Name, Text = s.Name })
+            .ToListAsync();
+
         return View(new MyIdeasModel
         {
             SearchTerm = searchTerm, StatusFilter = statusFilter, CategoryFilter = categoryFilter,
+            CategoryOptions = categories, StatusOptions = statuses,
             Ideas = ideas, CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize))
         });
     }
@@ -249,9 +287,21 @@ public class IdeaController : Controller
                 NeedsReview = i.CurrentStatus == nameof(IdeaStatus.UnderReview)
             }).ToListAsync();
 
+        var categories = await _context.Categories.AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.Name)
+            .Select(c => new SelectListItem { Value = c.Name, Text = c.Name })
+            .ToListAsync();
+
+        var statuses = await _context.IdeaStatusOptions.AsNoTracking()
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new SelectListItem { Value = s.Name, Text = s.Name })
+            .ToListAsync();
+
         return View(new SubmittedIdeasModel
         {
             SearchTerm = searchTerm, StatusFilter = statusFilter, CategoryFilter = categoryFilter,
+            CategoryOptions = categories, StatusOptions = statuses,
             DepartmentFilter = departmentFilter, DateFrom = dateFrom, Ideas = ideas,
             CurrentPage = page, TotalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize))
         });
@@ -346,6 +396,30 @@ public class IdeaController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    [Authorize(Roles = RoleConstants.Staff)]
+    [HttpGet]
+    public async Task<IActionResult> Success(Guid id)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Forbid();
+
+        var idea = await _context.InnovationIdeas
+            .AsNoTracking()
+            .Include(i => i.Category)
+            .Where(i => i.Id == id && i.SubmitterId == userId && !i.IsDeleted)
+            .Select(i => new IdeaSuccessViewModel
+            {
+                ReferenceNumber = i.ReferenceNumber,
+                Title = i.Title,
+                SubmissionDate = i.SubmissionDate,
+                Category = i.Category != null ? i.Category.Name : "",
+                SummaryDescription = i.SummaryDescription
+            })
+            .FirstOrDefaultAsync();
+
+        if (idea == null) return NotFound();
+        return View(idea);
+    }
+
     #region Helpers
 
     private bool TryGetCurrentUserId(out Guid userId) =>
@@ -420,6 +494,64 @@ public class IdeaController : Controller
             }
             throw;
         }
+    }
+
+    private async Task LoadReferenceDataAsync(SubmitIdeaModel model)
+    {
+        model.CategoryOptions = await _context.Categories.AsNoTracking()
+            .Where(c => c.IsActive).OrderBy(c => c.Name)
+            .Select(c => new SelectListItem { Value = c.Name, Text = c.Name })
+            .ToListAsync();
+
+        model.Innovator.BusinessUnitOptions = await _context.BusinessUnits.AsNoTracking()
+            .Where(b => b.IsActive).OrderBy(b => b.Name)
+            .Select(b => new SelectListItem { Value = b.Name, Text = b.Name })
+            .ToListAsync();
+
+        model.Innovator.DutyStationOptions = await _context.Stations.AsNoTracking()
+            .Where(s => s.IsActive).OrderBy(s => s.Name)
+            .Select(s => new SelectListItem { Value = s.Name, Text = s.Name })
+            .ToListAsync();
+
+        model.Innovator.AgeOptions = await _context.AgeBrackets.AsNoTracking()
+            .Where(a => a.IsActive).OrderBy(a => a.DisplayOrder)
+            .Select(a => new SelectListItem { Value = a.Name, Text = a.Name })
+            .ToListAsync();
+
+        model.Innovator.GenderOptions = await _context.Genders.AsNoTracking()
+            .Where(g => g.IsActive).OrderBy(g => g.Name)
+            .Select(g => new SelectListItem { Value = g.Name, Text = g.Name })
+            .ToListAsync();
+
+        model.Innovator.RankOptions = await _context.Ranks.AsNoTracking()
+            .Where(r => r.IsActive).OrderBy(r => r.Name)
+            .Select(r => new SelectListItem { Value = r.Name, Text = r.Name })
+            .ToListAsync();
+
+        model.Idea.InnovationTypeDetails = await _context.TypesOfInnovation.AsNoTracking()
+            .Where(t => t.IsActive).OrderBy(t => t.Name).ToListAsync();
+        model.Idea.TypeOfInnovationOptions = model.Idea.InnovationTypeDetails
+            .Select(t => new SelectListItem { Value = t.Name, Text = t.Name }).ToList();
+
+        model.Idea.StrategicAlignmentOptions = await _context.StrategicAlignments.AsNoTracking()
+            .Where(s => s.IsActive).OrderBy(s => s.Name)
+            .Select(s => new SelectListItem { Value = s.Name, Text = s.Name })
+            .ToListAsync();
+
+        model.Idea.InnovationPriorityAreaOptions = await _context.InnovationPriorityAreas.AsNoTracking()
+            .Where(p => p.IsActive).OrderBy(p => p.Name)
+            .Select(p => new SelectListItem { Value = p.Name, Text = p.Name })
+            .ToListAsync();
+
+        model.Idea.ExpectedTimelineOptions = await _context.ExpectedTimelines.AsNoTracking()
+            .Where(t => t.IsActive).OrderBy(t => t.DisplayOrder)
+            .Select(t => new SelectListItem { Value = t.Name, Text = t.Name })
+            .ToListAsync();
+
+        model.Idea.EstimatedBudgetRangeOptions = await _context.EstimatedBudgetRanges.AsNoTracking()
+            .Where(b => b.IsActive).OrderBy(b => b.DisplayOrder)
+            .Select(b => new SelectListItem { Value = b.Name, Text = b.Name })
+            .ToListAsync();
     }
 
     #endregion

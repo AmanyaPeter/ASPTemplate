@@ -34,7 +34,7 @@ Dependencies flow from `Template.Web` to `Template.Core`, then `Template.Data` a
 
 - Visual Studio 2022 with the **ASP.NET and web development** workload
 - .NET 8 SDK
-- SQL Server Express LocalDB, normally installed through Visual Studio
+- SQL Server Express LocalDB, normally installed through Visual Studio or in my case localhost in the sql 
 - NuGet packages restored at least once while internet access is available
 
 ### Start the application

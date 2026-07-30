@@ -21,7 +21,7 @@
                     <div class="col-md-2"><label for="endDate" class="form-label">To</label><input id="endDate" name="EndDate" type="date" value="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" class="form-control" /></div>
                     <div class="col-md-2"><label for="department" class="form-label">Department</label><select id="department" name="Department" class="form-select"><option value="">All departments</option>@foreach (var item in Model.Departments) { <option value="@item" selected="@(item == Model.Filters.Department)">@item</option> }</select></div>
                     <div class="col-md-2"><label for="category" class="form-label">Category</label><select id="category" name="Category" class="form-select"><option value="">All categories</option>@foreach (var item in Model.Categories) { <option value="@item" selected="@(item == Model.Filters.Category)">@item</option> }</select></div>
-                    <div class="col-md-2"><label for="status" class="form-label">Status</label><select id="status" name="Status" class="form-select"><option value="">All statuses</option>@foreach (var item in new[] { "UnderReview", "PendingInformation", "Approved", "Declined" }) { <option value="@item" selected="@(item == Model.Filters.Status)">@item</option> }</select></div>
+                    <div class="col-md-2"><label for="status" class="form-label">Status</label><select id="status" name="Status" class="form-select"><option value="">All statuses</option>@foreach (var item in Model.Statuses) { <option value="@item.Value" selected="@(item.Value == Model.Filters.Status)">@item.Text</option> }</select></div>
                     <div class="col-md-2 d-flex align-items-end gap-2"><button type="submit" class="btn btn-primary flex-fill">Apply</button><a asp-controller="Report" asp-action="Index" class="btn btn-outline-secondary">Clear</a></div>
                 </div>
             </form>
@@ -48,7 +48,8 @@
                 <a asp-controller="Report" asp-action="Export" asp-route-format="csv" asp-route-startDate="@Model.Filters.StartDate?.ToString("yyyy-MM-dd")" asp-route-endDate="@Model.Filters.EndDate?.ToString("yyyy-MM-dd")" asp-route-department="@Model.Filters.Department" asp-route-category="@Model.Filters.Category" asp-route-status="@Model.Filters.Status" class="btn btn-outline-secondary btn-sm">Export CSV</a>
             </div>
         </div>
-        <div class="table-responsive"><table class="table table-vcenter card-table"><thead><tr><th>Idea</th><th>Submitter</th><th>Department</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>
+        <div class="table-responsive table-responsive-container">
+            <table class="table table-vcenter card-table responsive-table"><thead><tr><th>Idea</th><th>Submitter</th><th>Department</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>
             @if (Model.ReportIdeas.Count == 0) { <tr><td colspan="6" class="text-center text-muted py-5">No ideas match these filters.</td></tr> }
             @foreach (var idea in Model.ReportIdeas) { <tr><td>@idea.Title</td><td>@idea.Submitter</td><td>@idea.Department</td><td>@idea.Category</td><td><span class="badge bg-secondary-lt">@idea.Status</span></td><td>@idea.Date.ToString("dd MMM yyyy")</td></tr> }
         </tbody></table></div>

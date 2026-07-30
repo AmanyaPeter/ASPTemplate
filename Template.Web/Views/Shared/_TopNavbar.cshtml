@@ -1,0 +1,15 @@
+<nav class="sb-topnav navbar navbar-expand navbar-dark bg_app_color_crimson">
+    <!-- Navbar Brand-->
+    <a class="navbar-brand ps-3 d-flex align-items-center text-decoration-none fw-bold" asp-controller="Home" asp-action="Index">
+        <img src="~/img/bou.png" width="34" height="30" class="me-2" alt="Paperless Logo" />
+        <span class="fs-6 text-white">Paperless</span>
+    </a>
+    <!-- Sidebar Toggle-->
+    <button class="btn btn-link btn-sm order-1 order-lg-0 me-2 me-lg-0 text-white fs-5" id="sidebarToggle" href="#!">
+        <i class="ti ti-menu-2"></i>
+    </button>
+    <!-- Navbar User Menu-->
+    <ul class="navbar-nav ms-auto me-3 me-lg-4">
+        <partial name="_UserMenu" />
+    </ul>
+</nav>

@@ -23,7 +23,7 @@
 <section class="prototype-card prototype-section">
     <div class="prototype-section-title"><h2>Workflow status sample</h2><span>@Model.CompletionPercent% complete</span></div>
     <div class="progress mb-4"><div class="progress-bar" style="width:@(Model.CompletionPercent)%;background:#b31b34"></div></div>
-    <div class="table-responsive"><table class="prototype-table"><thead><tr><th>Stage</th><th>State</th><th>Example action</th></tr></thead><tbody>
+    <div class="table-responsive table-responsive-container"><table class="prototype-table responsive-table"><thead><tr><th>Stage</th><th>State</th><th>Example action</th></tr></thead><tbody>
     @foreach (var stage in Model.Stages) { <tr><td><strong>@stage.Name</strong></td><td><span class="prototype-badge @(stage.IsReached ? "success" : "")">@stage.State</span></td><td><button class="prototype-button secondary" type="button" onclick="alert('@stage.Name component is working')">Test</button></td></tr> }
     </tbody></table></div>
 </section>

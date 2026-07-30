@@ -6,9 +6,9 @@
 <div class="card">
     <div class="card-status-top bg_app_color_burgundy"></div>
     <div class="card-header"><h3 class="card-title">Audit Logs</h3></div>
-    <div class="table-responsive">
-        <table id="logs" class="table table-hover table-striped align-middle mb-0">
-            <thead><tr><th>Username</th><th>Event Type</th><th>Operation</th><th>Source IP</th><th>Affected Entity</th><th>Status</th><th>Timestamp</th><th>Action Details</th></tr></thead>
+    <div class="app-table-scroll">
+        <table id="logs" class="table table-hover table-striped align-middle mb-0 datatable">
+            <thead><tr><th>Username</th><th>Event Type</th><th>Operation</th><th>Source IP</th><th>Affected Entity</th><th>Status</th><th>Timestamp</th><th class="wrap-column">Action Details</th></tr></thead>
             <tbody>
             @foreach (var log in Model)
             {
@@ -16,7 +16,7 @@
                     <td>@log.Username</td><td>@log.EventType</td><td>@log.OperationPerformed</td><td>@log.SourceIP</td>
                     <td>@log.AffectedEntityType (@log.AffectedEntityId)</td>
                     <td><span class="badge @(log.Status == Template.Common.Enums.AuditStatus.Success ? "bg-success" : "bg-danger")">@log.Status</span></td>
-                    <td>@log.CreatedDate.ToString("dd MMM yyyy HH:mm:ss")</td><td>@log.ActionDetails</td>
+                    <td>@log.CreatedDate.ToString("dd MMM yyyy HH:mm:ss")</td><td class="description-column">@log.ActionDetails</td>
                 </tr>
             }
             </tbody>

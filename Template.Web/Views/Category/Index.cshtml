@@ -36,9 +36,9 @@
     </form>
 
     <section class="ims-staff-card ims-staff-table-card">
-        <div class="ims-staff-table-container">
-            <table class="ims-staff-data-table">
-                <thead><tr><th>Name</th><th>Description</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+        <div class="ims-staff-table-container table-responsive-container">
+            <table class="ims-staff-data-table responsive-table">
+                <thead><tr><th>Name</th><th class="description-column">Description</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
                 <tbody>
                 @if (Model.Categories.Count == 0)
                 {
@@ -48,7 +48,7 @@
                 {
                     <tr>
                         <td><strong>@category.Name</strong></td>
-                        <td>@category.Description</td>
+                        <td class="description-column">@category.Description</td>
                         <td><span class="ims-staff-badge @(category.IsActive ? "ims-category-active" : "ims-category-inactive")">@(category.IsActive ? "Active" : "Inactive")</span></td>
                         <td>@category.CreatedDate.ToString("dd MMM yyyy")</td>
                         <td>

@@ -2,338 +2,56 @@
 @using Microsoft.AspNetCore.Http
 
 <!DOCTYPE html>
-<html lang="en" data-coreui-theme="light">
+<html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>@ViewData["Title"] - Template</title>
-	<link rel="stylesheet" href="~/css/tabler.min.css" asp-append-version="true" />
-	<link rel="stylesheet" href="~/css/theme_styles.min.css" asp-append-version="true" />
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" href="~/Template.Web.styles.css" asp-append-version="true" />
-	<style>
-		.parent.active {
-			background-color: transparent !important;
-			color: inherit;
-		}
-
-		.parent[aria-expanded="true"] {
-			background-color: transparent !important;
-		}
-
-		.modal-cls-btn {
-			margin-left: 10px;
-		}
-	</style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Template</title>
+    <link rel="stylesheet" href="~/css/tabler.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme_styles.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Template.Web.styles.css" asp-append-version="true" />
+    <style>
+        .modal-cls-btn {
+            margin-left: 10px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-	<!--  Body Wrapper -->
-	<div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-		 data-sidebar-position="fixed" data-header-position="fixed">
-		<!-- Sidebar Start -->
-		<aside class="left-sidebar bg_app_color_crimson">
-			<!-- Sidebar scroll-->
-			<div>
-				<div class="brand-logo d-flex align-items-center justify-content-between">
-					<a class="text-nowrap logo-img d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none" asp-controller="Home" asp-action="Index">
-						<img src="~/img/bou.png" width="50" height="45" />
-						<span class="navbar-brand fs-5 text-white ps-3">Paperless</span>
-					</a>
-					<div class="close-btn d-xl-none d-block sidebartoggler cursor-pointer" id="sidebarCollapse">
-						<i class="ti ti-x fs-8"></i>
-					</div>
-				</div>
-				<!-- Sidebar navigation-->
-				<hr style="color:white;" />
-				<nav class="sidebar-nav scroll-sidebar" data-simplebar="">
-					<ul id="sidebarnav">
-						<li class="sidebar-item">
-							<a class="sidebar-link" asp-controller="Home" asp-action="Index" aria-expanded="false">
-								<span>
-									<i class="ti ti-layout-dashboard"></i>
-								</span>
-								<span class="hide-menu">Dashboard</span>
-							</a>
-						</li>
+<body class="sb-nav-fixed bg-gray-100">
+    <!-- Top Navigation Bar -->
+    <partial name="_TopNavbar" />
 
-						<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-							<li class="nav-small-cap">
-								<i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-								<span class="hide-menu">OPERATIONS</span>
-							</li>
+    <!-- Sidenav Container -->
+    <div id="layoutSidenav">
+        <!-- Left Sidebar Navigation -->
+        <partial name="_Sidebar" />
 
-							<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-								<li class="sidebar-item">
-									<a class="sidebar-link parent" data-bs-toggle="collapse" href="#collapseRights" aria-expanded="false">
-										<span>
-											<i class="ti ti-settings"></i>
-										</span>
-										<span class="hide-menu">Rights</span>
-										<span class="ms-auto">
-											<i class="ti ti-chevron-right angle-right-icon float-end"></i>
-										</span>
-									</a>
-									<div class="collapse" id="collapseRights">
-										<ul class="nav flex-column ms-3">
-											<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-												<li class="nav-item">
-													<a class="sidebar-link" asp-controller="FinancialYear" asp-action="Index" aria-expanded="false">
-														<span>
-															<i class="ti ti-calendar"></i>
-														</span>
-														<span class="hide-menu">System User Rights</span>
-													</a>
-												</li>
-											</permission>
-										</ul>
-									</div>
-								</li>
-							</permission>
-							<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-								<li class="sidebar-item">
-									<a class="sidebar-link parent" data-bs-toggle="collapse" href="#collapseClearance" aria-expanded="false">
-										<span>
-											<i class="ti ti-settings"></i>
-										</span>
-										<span class="hide-menu">Clearance</span>
-										<span>
-											<i class="ti ti-chevron-right angle-right-icon float-end"></i>
-										</span>
-									</a>
-									<div class="collapse" id="collapseClearance">
-										<ul class="nav flex-column ms-3">
-											<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-												<li class="nav-item">
-													<a class="sidebar-link" asp-controller="FinancialYear" asp-action="Index" aria-expanded="false">
-														<span>
-															<i class="ti ti-calendar"></i>
-														</span>
-														<span class="hide-menu">Weekend Clearance</span>
-													</a>
-												</li>
-											</permission>
-										</ul>
-									</div>
-								</li>
-							</permission>
-							<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-								<li class="sidebar-item">
-									<a class="sidebar-link parent" data-bs-toggle="collapse" href="#collapseLocum" aria-expanded="false">
-										<span>
-											<i class="ti ti-settings"></i>
-										</span>
-										<span class="hide-menu">Locum</span>
-										<span>
-											<i class="ti ti-chevron-right angle-right-icon float-end"></i>
-										</span>
-									</a>
-									<div class="collapse" id="collapseLocum">
-										<ul class="nav flex-column ms-3">
-											<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-												<li class="nav-item">
-													<a class="sidebar-link" asp-controller="FinancialYear" asp-action="Index" aria-expanded="false">
-														<span>
-															<i class="ti ti-calendar"></i>
-														</span>
-														<span class="hide-menu">Locum Management</span>
-													</a>
-												</li>
-											</permission>
-										</ul>
-									</div>
-								</li>
-							</permission>
-							<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-								<li class="sidebar-item">
-									<a class="sidebar-link parent" data-bs-toggle="collapse" href="#collapseForeignTravel" aria-expanded="false">
-										<span>
-											<i class="ti ti-settings"></i>
-										</span>
-										<span class="hide-menu">Foreign Travel</span>
-										<span>
-											<i class="ti ti-chevron-right angle-right-icon float-end"></i>
-										</span>
-									</a>
-									<div class="collapse" id="collapseForeignTravel">
-										<ul class="nav flex-column ms-3">
-											<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-												<li class="nav-item">
-													<a class="sidebar-link" asp-controller="FinancialYear" asp-action="Index" aria-expanded="false">
-														<span>
-															<i class="ti ti-calendar"></i>
-														</span>
-														<span class="hide-menu">Travel Requests</span>
-													</a>
-												</li>
-											</permission>
-										</ul>
-									</div>
-								</li>
-							</permission>
-						</permission>
+        <!-- Main Content Area -->
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4 py-4">
+                    <breadcrumb></breadcrumb>
+                    @RenderBody()
+                </div>
+            </main>
+            <footer class="py-3 bg-white mt-auto border-top">
+                <div class="container-fluid px-4">
+                    <div class="d-flex align-items-center justify-content-between small text-muted">
+                        <div>Copyright &copy; Paperless Template @DateTime.Now.Year</div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
 
-						<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-							<li class="nav-small-cap">
-								<i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-								<span class="hide-menu">ACCOUNTS SETTINGS</span>
-							</li>
-							<permission name="@SystemPermissions.Account.ViewApplicationUsers">
-								<li class="sidebar-item">
-									<a class="sidebar-link" href="/Account/" aria-expanded="false">
-										<span>
-											<i class="ti ti-users"></i>
-										</span>
-										<span class="hide-menu">Users</span>
-									</a>
-								</li>
-							</permission>
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/simplebar/dist/simplebar.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="_framework/blazor.server.js"></script>
 
-							<permission name="@SystemPermissions.Roles.ViewRoles">
-								<li class="sidebar-item">
-									<a class="sidebar-link" href="/Role/" aria-expanded="false">
-										<span>
-											<i class="ti ti-shield"></i>
-										</span>
-										<span class="hide-menu">Roles</span>
-									</a>
-								</li>
-							</permission>
-						</permission>
-
-						<permission name="@SystemPermissions.AuditLog.ViewAuditLogs">
-							<li class="nav-small-cap">
-								<i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-								<span class="hide-menu">SYSTEM INFORMATION</span>
-							</li>
-							<permission name="@SystemPermissions.AuditLog.ViewAuditLogs">
-								<li class="sidebar-item">
-									<a class="sidebar-link" href="/AuditLog/" aria-expanded="false">
-										<span>
-											<i class="ti ti-list"></i>
-										</span>
-										<span class="hide-menu">Audit Logs</span>
-									</a>
-								</li>
-							</permission>
-						</permission>
-					</ul>
-				</nav>
-				<!-- End Sidebar navigation -->
-			</div>
-			<!-- End Sidebar scroll-->
-		</aside>
-		<!--  Sidebar End -->
-		<!--  Main wrapper -->
-		<div class="body-wrapper">
-			<!--  Header Start -->
-			<header class="app-header shadow">
-				<nav class="navbar navbar-expand-lg navbar-light">
-					<ul class="navbar-nav">
-						<li class="nav-item d-block d-xl-none">
-							<a class="nav-link sidebartoggler nav-icon-hover" id="headerCollapse" href="javascript:void(0)">
-								<i class="ti ti-menu-2"></i>
-							</a>
-						</li>
-					</ul>
-					<a asp-controller="Account"
-					   asp-action="Logout"
-					   class="btn btn-outline-danger btn-sm ms-2">
-						<i class="ti ti-logout me-1"></i>
-						Logout
-					</a>
-					<div class="navbar-collapse justify-content-end px-0" id="navbarNav">
-						<ul class="navbar-nav flex-row ms-auto align-items-center justify-content-end">
-							<li class="nav-item dropdown">
-								<div class="d-flex align-items-center">
-									<span class="navbar-text me-2">Welcome, @User?.Identity?.Name</span>
-									<a class="nav-link nav-icon-hover" href="javascript:void(0)" id="drop2" data-bs-toggle="dropdown"
-									   aria-expanded="false">
-										<i class="ti ti-user-filled fs-6"></i>
-									</a>
-									<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="drop2">
-										<li>
-											<a class="dropdown-item" asp-controller="Account" asp-action="LogoutAsync">
-												<i class="ti ti-logout me-2"></i>Sign out
-											</a>
-										</li>
-									</ul>
-								</div>
-							</li>
-						</ul>
-					</div>
-				</nav>
-			</header>
-			<!--  Header End -->
-			<div class="container-fluid">
-				<breadcrumb></breadcrumb>
-
-				@RenderBody()
-
-			</div>
-		</div>
-	</div>
-@* <script src="~/lib/jquery/dist/jquery.min.js"></script> *@
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/js/sidebarmenu.js"></script>
-	<script src="~/js/app.min.js"></script>
-	<script src="~/lib/simplebar/dist/simplebar.min.js"></script>
-	<script src="~/js/site.js" asp-append-version="true"></script>
-	<script src="_framework/blazor.server.js"></script>
-
-	<script>
-		$('#categories').change(function() {
-			var categoryId = $(this).val();
-
-			if (categoryId) {
-				fetch('@Url.Action("GetAllCategoryItems", "Item")?id=' + categoryId, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: null
-				})
-				.then(response => response.json())
-				.then(data => {
-					$('#items').empty();
-					$('#items').append('<option value="">Select Item</option>');
-					data.forEach(function(item) {
-						$('#items').append('<option value="' + item.itemId + '">' + item.itemName + '</option>');
-					});
-				})
-				.catch(error => {
-					console.error("Error fetching items:", error);
-				});
-			}
-		});
-	</script>
-
-	<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			const collapses = document.querySelectorAll('.collapse');
-
-			collapses.forEach(collapse => {
-				const collapseId = collapse.id;
-				if (localStorage.getItem(collapseId) === 'shown') {
-					const collapseInstance = new bootstrap.Collapse(collapse, { toggle: false });
-					collapseInstance.show();
-				}
-			});
-
-			collapses.forEach(collapse => {
-				collapse.addEventListener('show.bs.collapse', function() {
-					localStorage.setItem(this.id, 'shown');
-				});
-
-				collapse.addEventListener('hide.bs.collapse', function() {
-					localStorage.removeItem(this.id);
-				});
-			});
-		});
-	</script>
-
-
-	@await RenderSectionAsync("Scripts", required: false)
-	@await RenderSectionAsync("Styles", required: false)
+    @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("Styles", required: false)
 </body>
 </html>
-

@@ -32,6 +32,18 @@ public class InnovationIdea : AuditableEntity
     public int? CategoryId { get; set; }
     public Category? Category { get; set; }
 
+    // Submitter contact
+    public string? PhoneNumber { get; set; }
+
+    // Form extended fields
+    public string? TypeOfInnovation { get; set; }
+    public string? StrategicAlignment { get; set; }
+    public string? InnovationPriorityArea { get; set; }
+    public string? ExpectedTimeline { get; set; }
+    public string? EstimatedBudgetRange { get; set; }
+    public string? AdditionalComments { get; set; }
+    public bool DeclarationAccepted { get; set; }
+
     // Snapshot information
     public int? SubmitterBusinessUnitId { get; set; }
     public int? SubmitterStationId { get; set; }

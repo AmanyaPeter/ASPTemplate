@@ -14,6 +14,9 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">My Ideas</h3>
+        <a asp-controller="Idea" asp-action="Submit" class="ims-staff-btn ims-staff-btn-primary" style="background:#DD9024!important;border-color:#DD9024!important;">
+            <i class="ti ti-plus"></i> Submit New Idea
+        </a>
     </div>
     <div class="card-body">
         <form asp-controller="Idea" asp-action="MyIdeas" method="get" class="row g-2 mb-3">
@@ -21,17 +24,12 @@
                 <input type="text" class="form-control" placeholder="Search ideas..." asp-for="SearchTerm">
             </div>
             <div class="col-auto">
-                <select class="form-select" asp-for="StatusFilter">
+                <select class="form-select" asp-for="StatusFilter" asp-items="Model.StatusOptions">
                     <option value="">All Statuses</option>
-                    <option value="Submitted">Submitted</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Pending Information">Pending Information</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Declined">Declined</option>
                 </select>
             </div>
             <div class="col-auto">
-                <select class="form-select" asp-for="CategoryFilter">
+                <select class="form-select" asp-for="CategoryFilter" asp-items="Model.CategoryOptions">
                     <option value="">All Categories</option>
                 </select>
             </div>
@@ -40,8 +38,8 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+        <div class="table-responsive table-responsive-container">
+            <table class="table table-vcenter card-table responsive-table">
                 <thead>
                     <tr>
                         <th>Idea</th>

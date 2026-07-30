@@ -77,6 +77,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<TimelineSetting> TimelineSettings { get; set; }
     public DbSet<UserSession> UserSessions { get; set; }
-
+    public DbSet<BusinessUnit> BusinessUnits { get; set; }
+    public DbSet<Station> Stations { get; set; }
+    public DbSet<Rank> Ranks { get; set; }
+    public DbSet<AgeBracket> AgeBrackets { get; set; }
+    public DbSet<Gender> Genders { get; set; }
+    public DbSet<TypeOfInnovation> TypesOfInnovation { get; set; }
+    public DbSet<StrategicAlignment> StrategicAlignments { get; set; }
+    public DbSet<InnovationPriorityArea> InnovationPriorityAreas { get; set; }
+    public DbSet<ExpectedTimeline> ExpectedTimelines { get; set; }
+    public DbSet<EstimatedBudgetRange> EstimatedBudgetRanges { get; set; }
+    public DbSet<IdeaStatusOption> IdeaStatusOptions { get; set; }
 
 }
